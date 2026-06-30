@@ -7,7 +7,7 @@ const MAX_REMOTE_IMAGE_BYTES = 20 * 1024 * 1024;
 const ALLOWED_IMAGE_MIMES = new Set(['image/png', 'image/jpeg', 'image/jpg', 'image/webp']);
 
 // IndexedDB 常量（与 background.js 一致）
-const DB_NAME = 'promptcard-lite';
+const DB_NAME = 'promptlens';
 const DB_VERSION = 2;
 const STORE_NAME = 'pending-payloads';
 
