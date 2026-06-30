@@ -1,150 +1,152 @@
 # PromptLens
 
-PromptLens 是一个轻量级 Chrome MV3 扩展，用于把网页图片或框选截图发送到你自己配置的 OpenAI-compatible Vision API，并生成可复制的图片反推提示词。
+English | [简体中文](./README.zh-CN.md) | [繁體中文](./README.zh-TW.md)
 
-它的目标是提供一个简单、透明、可自托管思路的图片提示词反推工具：不登录、不付费、不内置后端、不绑定特定模型服务。
+PromptLens is a lightweight Chrome MV3 extension that sends a web image or a selected screenshot region to your own OpenAI-compatible Vision API and generates reusable reverse image prompts.
 
-## 特性
+Its goal is to stay simple, transparent, and self-hosting-friendly: no login, no payment system, no built-in backend, and no lock-in to a specific model provider.
 
-- **右键图片分析**：在网页图片上右键，生成反向图片提示词。
-- **框选截图分析**：对当前可见页面区域框选截图并分析，适合 `blob:` 图片、防盗链图片或未授权远程图片。
-- **自定义模型服务**：自行配置 AI Base URL、API Key 和 Model。
-- **OpenAI-compatible Vision API**：请求格式兼容 `/chat/completions` 的视觉模型接口。
-- **结构化结果**：输出中文提示词、English Prompt、Tags、Negative Prompt、JSON Prompt 和 Raw JSON。
-- **内置输出模板**：提供详细分析、自然语言、标签加权、快速复制四种输出格式。
-- **自定义模板**：支持复制内置模板、新建、编辑、删除、导入和导出自定义模板。
-- **Provider 预设**：提供 OpenAI、DeepSeek、Alibaba、SiliconFlow、Groq、OpenRouter、Ollama 和 Custom。
-- **快捷键框选**：支持 `Alt+Shift+S` 触发框选截图，可在 `chrome://extensions/shortcuts` 修改。
-- **可选历史记录**：默认关闭；开启后只保存文本结果、来源域名和模板信息，不保存图片缩略图。
-- **结果导出**：支持复制单项、复制全部、下载 JSON 和下载 Markdown。
-- **本地优先**：配置保存在浏览器本地，不使用远端账号系统。
-- **纯前端实现**：无 npm 依赖、无构建步骤、无后端服务。
+## Features
 
-## 不包含
+- **Right-click image analysis**: right-click a web image and generate reverse image prompts.
+- **Selection screenshot analysis**: select a visible page region for `blob:` images, hotlink-protected images, or remote images without host permission.
+- **Bring your own model service**: configure AI Base URL, API Key, and Model.
+- **OpenAI-compatible Vision API**: uses the `/chat/completions` style vision request format.
+- **Structured results**: Chinese prompt, English Prompt, Tags, Negative Prompt, JSON Prompt, and Raw JSON.
+- **Built-in output templates**: Detailed Analysis, Natural Language, Weighted Tags, and Quick Copy.
+- **Custom templates**: copy built-ins, create, edit, delete, import, and export custom templates.
+- **Provider presets**: OpenAI, DeepSeek, Alibaba, SiliconFlow, Groq, OpenRouter, Ollama, and Custom.
+- **Keyboard selection shortcut**: `Alt+Shift+S` starts screenshot selection; users can change it at `chrome://extensions/shortcuts`.
+- **Optional local history**: off by default; stores text results, source domain, and template metadata only. No image thumbnails are saved.
+- **Result export**: copy individual fields, copy all, download JSON, and download Markdown.
+- **Local-first**: configuration stays in the browser; there is no remote account system.
+- **Frontend-only**: no npm dependencies, no build step, and no backend service.
 
-PromptLens 刻意不包含以下能力：
+## Non-goals
 
-- 登录 / OAuth
-- 支付 / 额度系统
-- 内置云服务 / Supabase
-- 云端历史记录
-- 自动填充第三方生成器网站
-- 团队协作或账号同步
+PromptLens intentionally does not include:
 
-## 工作原理
+- Login / OAuth
+- Payment / quota system
+- Built-in cloud service / Supabase
+- Cloud history sync
+- Auto-fill into third-party generation websites
+- Team collaboration or account sync
 
-1. 用户在网页中右键图片，或启动框选截图。
-2. 扩展读取图片 URL、data URL 或当前标签页可见截图。
-3. 图片会在本地被校验、裁剪、压缩，并统一转换为 JPEG。
-4. 结果页按选定模板调用用户配置的 OpenAI-compatible Vision API。
-5. 模型返回 JSON 后，结果页展示并提供复制、JSON 下载和 Markdown 下载。
+## How it works
 
-PromptLens 不提供内置模型服务。你需要自行准备支持视觉输入的 API 服务。
+1. The user right-clicks a web image or starts screenshot selection.
+2. The extension reads an image URL, data URL, or current-tab visible screenshot.
+3. The image is validated, cropped, compressed, and normalized to JPEG locally.
+4. The result page calls the user-configured OpenAI-compatible Vision API with the selected template.
+5. The model returns JSON; the result page renders it and provides copy / JSON / Markdown export.
 
-## 安装
+PromptLens does not provide a built-in model service. You need your own API service that supports vision input.
 
-### 从源码加载
+## Installation
 
-1. 下载或克隆本仓库。
-2. 打开 Chrome。
-3. 进入 `chrome://extensions`。
-4. 开启「开发者模式」。
-5. 点击「加载已解压的扩展程序」。
-6. 选择仓库根目录。
+### Load from source
+
+1. Download or clone this repository.
+2. Open Chrome.
+3. Go to `chrome://extensions`.
+4. Enable **Developer mode**.
+5. Click **Load unpacked**.
+6. Select the repository root directory.
 
 ### Chrome Web Store
 
-暂未发布。后续如发布到 Chrome Web Store，会在这里补充链接。
+Not published yet. A Chrome Web Store link will be added here when available.
 
-## 配置
+## Configuration
 
-1. 在 Chrome 扩展详情页点击「扩展程序选项」。
-2. 填写：
-   - **AI Base URL**：例如 `https://api.openai.com/v1`。
-   - **API Key**：你的模型服务密钥。
-   - **Model**：支持视觉输入的模型名称。
-   - **默认输出模板**：详细分析、自然语言、标签加权或快速复制。
-3. 点击「保存设置」。
-4. 如需直接右键分析任意网站的远程图片，点击「授权图片读取权限」。
+1. Open the extension options page from Chrome extension details.
+2. Fill in:
+   - **AI Base URL**: for example `https://api.openai.com/v1`.
+   - **API Key**: your model service key.
+   - **Model**: a model name that supports vision input.
+   - **Default output template**: Detailed Analysis, Natural Language, Weighted Tags, or Quick Copy.
+3. Click **Save settings**.
+4. To right-click analyze remote images from any website, click **Grant image read permission**.
 
-说明：
+Notes:
 
-- AI Base URL 必须使用 HTTPS。
-- 本地开发允许 `http://localhost` 和 `http://127.0.0.1`。
-- 如果不授权所有网站图片读取权限，仍可使用「框选截图并分析」。
+- AI Base URL must use HTTPS.
+- Local development may use `http://localhost` or `http://127.0.0.1`.
+- If you do not grant all-sites image read permission, you can still use screenshot selection.
 
-## 使用
+## Usage
 
-### 分析网页图片
+### Analyze a web image
 
-1. 在网页图片上右键。
-2. 选择「分析这张图片」。
-3. 新标签页会打开结果页并显示分析进度。
-4. 分析完成后复制需要的提示词。
+1. Right-click a web image.
+2. Choose **Analyze this image**.
+3. A new result tab opens and shows progress.
+4. Copy the prompt you need after analysis completes.
 
-如果页面提示没有图片读取权限，可以先到设置页授权，或改用框选截图。
+If the page reports missing image read permission, grant permission in options or use screenshot selection.
 
-### 框选截图分析
+### Analyze a selected screenshot region
 
-1. 在网页任意位置右键。
-2. 选择「框选截图并分析」。
-3. 拖拽选择当前可见区域。
-4. 等待结果页生成提示词。
+1. Right-click anywhere on a page.
+2. Choose **Select screenshot and analyze**.
+3. Drag to select the visible region.
+4. Wait for the result page to generate prompts.
 
-按 Esc 或点击取消按钮可以退出框选。
+Press Esc or click Cancel to exit selection mode.
 
-## 隐私与安全
+## Privacy and security
 
-PromptLens 的隐私边界很简单：
+PromptLens has a simple privacy boundary:
 
-- API Key 存储在浏览器本地 `chrome.storage.local`。
-- 图片只发送到你配置的 AI Base URL。
-- 扩展本身不包含后端服务，不收集遥测。
-- 历史记录默认关闭；开启后只保存在浏览器本地，且不保存图片缩略图。
-- 远程图片读取权限是可选权限，不会在安装时请求。
-- 框选截图使用 `activeTab` 权限，仅在用户触发时访问当前标签页。
+- API Key is stored locally in `chrome.storage.local`.
+- Images are sent only to the AI Base URL you configure.
+- The extension has no backend service and collects no telemetry.
+- Local history is off by default; when enabled, it stays in the browser and does not save image thumbnails.
+- Remote image read permission is optional and is not requested at install time.
+- Screenshot selection uses `activeTab` and only accesses the current tab after user action.
 
-请注意：当你使用第三方模型服务时，图片和提示词会发送给该服务。请自行确认服务商的隐私政策、数据保留策略和模型使用条款。
+When using a third-party model service, images and prompts are sent to that service. Review the provider's privacy policy, retention policy, and terms yourself.
 
-更多安全说明见 [SECURITY.md](SECURITY.md)。
+See [SECURITY.md](SECURITY.md) for more details.
 
-## 权限说明
+## Permissions
 
-`manifest.json` 中使用的权限：
+Permissions used in `manifest.json`:
 
-- `contextMenus`：创建右键菜单。
-- `storage`：保存模型配置、当前模板和临时输入。
-- `activeTab`：用户触发框选截图时访问当前标签页。
-- `scripting`：注入框选截图脚本和样式。
-- `commands`：注册框选截图快捷键。
-- `optional_host_permissions: ["<all_urls>"]`：按需请求远程图片读取权限和 API origin 访问权限。
+- `contextMenus`: create right-click menus.
+- `storage`: store model config, current template, local history settings, and temporary input.
+- `activeTab`: access the current tab when the user starts screenshot selection.
+- `scripting`: inject screenshot selection script and style.
+- `commands`: register the screenshot selection shortcut.
+- `optional_host_permissions: ["<all_urls>"]`: request remote image read permission and API origin access only when needed.
 
-## 图片格式支持
+## Supported image formats
 
-- 支持：PNG、JPEG、WebP。
-- 不支持：SVG。
-- 不支持直接读取：`blob:` 图片，请使用框选截图。
-- 远端图片文件大小上限：20MB。
-- 发送给模型前会统一转为 JPEG。
+- Supported: PNG, JPEG, WebP.
+- Not supported: SVG.
+- Not directly readable: `blob:` images. Use screenshot selection instead.
+- Remote image file size limit: 20MB.
+- Images are normalized to JPEG before sending to the model.
 
-## 开发
+## Development
 
-本项目刻意保持简单：
+This project intentionally stays simple:
 
 ```text
 manifest.json      Chrome MV3 manifest
-background.js      右键菜单、截图、临时 payload 中转
-content.js         页面内框选截图交互
-selection.css      仅注入网页的框选样式
-options.html/js    设置页
-history-store.js   本地历史记录 IndexedDB helper
-history.html/js    本地历史记录页面
-templates.js       内置 / 自定义模板和固定 JSON 输出要求
-result.html/js     结果页、导出、历史保存与模型调用
-styles.css         设置页和结果页样式
+background.js      Context menus, screenshot capture, temporary payload handoff
+content.js         In-page screenshot selection interaction
+selection.css      Screenshot selection styles injected into web pages
+options.html/js    Options page
+history-store.js   Local history IndexedDB helper
+history.html/js    Local history page
+templates.js       Built-in / custom templates and fixed JSON output schema
+result.html/js     Result page, export, history save, and model calls
+styles.css         Options and result page styles
 ```
 
-本地检查：
+Local checks:
 
 ```bash
 node --check background.js
@@ -156,27 +158,27 @@ node --check options.js
 node --check result.js
 ```
 
-开发原则：
+Development principles:
 
-- 不引入构建工具。
-- 不引入 npm 依赖。
-- 不引入远端资源。
-- 保持 Vanilla JavaScript / CSS。
-- 新功能优先保持本地优先和隐私透明。
+- No build tools.
+- No npm dependencies.
+- No remote resources.
+- Keep Vanilla JavaScript / CSS.
+- Keep new features local-first and privacy-transparent.
 
-## 路线图状态
+## Roadmap status
 
-当前分支已落地到 v0.3.0：内置 / 自定义模板、Provider 预设、快捷键、结果导出、模型测试、Token usage、可选本地历史记录、基础 i18n 和 Chrome Web Store 发布准备。
+The current branch has implemented v0.3.0: built-in / custom templates, provider presets, keyboard shortcut, result export, model tests, token usage, optional local history, basic i18n, and Chrome Web Store preparation.
 
-后续仍保留为反馈驱动的方向：
+Future feedback-driven directions:
 
-- 更完整的英文 / 繁体中文界面翻译。
-- Firefox MV3 兼容性调研。
-- 根据真实反馈继续调整图片预处理默认值。
+- More complete English / Traditional Chinese UI translation.
+- Firefox MV3 compatibility research.
+- Continue tuning image preprocessing defaults based on real feedback.
 
-## 贡献
+## Contributing
 
-欢迎提交 issue 和 pull request。请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。
+Issues and pull requests are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
 
 ## License
 
