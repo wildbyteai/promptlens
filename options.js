@@ -11,6 +11,7 @@ const modelInput = document.getElementById('api-model');
 const statusEl = document.getElementById('options-status');
 const toggleApiKeyButton = document.getElementById('toggle-api-key');
 const resetFormButton = document.getElementById('reset-form');
+const grantImageButton = document.getElementById('grant-image-permission');
 
 function setStatus(message, tone = 'neutral') {
   statusEl.textContent = message;
@@ -142,6 +143,19 @@ resetFormButton.addEventListener('click', () => {
   }).catch(error => {
     setStatus(`清空失败：${error.message}`, 'error');
   });
+});
+
+grantImageButton.addEventListener('click', async () => {
+  try {
+    const granted = await chrome.permissions.request({ origins: ['<all_urls>'] });
+    if (granted) {
+      setStatus('图片读取权限已授权。现在可以右键分析任意网站的图片。', 'success');
+    } else {
+      setStatus('权限请求被拒绝。如需分析远程图片，请重新点击授权，或使用"框选截图并分析"。', 'error');
+    }
+  } catch (error) {
+    setStatus(`授权失败：${error.message}`, 'error');
+  }
 });
 
 loadConfig().catch(error => {

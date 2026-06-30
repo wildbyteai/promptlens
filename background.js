@@ -61,19 +61,18 @@ function generateJobId() {
 }
 
 /**
- * 为给定 URL 的 origin 动态请求 optional_host_permissions。
+ * 检查是否已拥有给定 URL origin 的 host 权限（只读，不弹授权弹窗）。
  * data: / blob: 等非 http(s) 协议直接返回 true。
+ * 未授权时返回 false，由调用方写入友好提示。
  */
-async function ensureOriginPermission(urlString) {
+async function hasOriginPermission(urlString) {
   try {
     const url = new URL(urlString);
     if (url.protocol !== 'http:' && url.protocol !== 'https:') {
       return true;
     }
     const origin = url.origin + '/*';
-    const has = await chrome.permissions.contains({ origins: [origin] });
-    if (has) return true;
-    return chrome.permissions.request({ origins: [origin] });
+    return chrome.permissions.contains({ origins: [origin] });
   } catch {
     return true;
   }
@@ -164,12 +163,12 @@ async function handleAnalyzeImage(info, tab) {
     return;
   }
 
-  // http/https 图片 URL — 动态请求图片来源 origin 权限
-  const granted = await ensureOriginPermission(srcUrl);
+  // http/https 图片 URL — 仅检查已有权限，不弹授权弹窗（右键流程无用户手势）
+  const granted = await hasOriginPermission(srcUrl);
   if (!granted) {
     await setPendingInput({
       type: 'error',
-      message: '需要图片来源网站的访问权限才能读取图片。请授权后重试，或使用"框选截图并分析"。'
+      message: '需要先在扩展设置页点击"授权图片读取权限（所有网站）"，或使用"框选截图并分析"作为替代方案。'
     });
     await openResultPage();
     return;
