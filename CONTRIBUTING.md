@@ -1,6 +1,6 @@
 # 贡献指南
 
-感谢你关注 PromptCard Lite。这个项目的目标是保持轻量、透明、可审计：不引入后端账号系统，不绑定特定模型供应商，不增加不必要的依赖。
+感谢你关注 PromptLens。这个项目的目标是保持轻量、透明、可审计：不引入后端账号系统，不绑定特定模型供应商，不增加不必要的依赖。
 
 ## 贡献方式
 
@@ -28,11 +28,11 @@
 
 ## 开发环境
 
-PromptCard Lite 是纯 Chrome MV3 扩展，没有 npm 依赖，也没有构建步骤。
+PromptLens 是纯 Chrome MV3 扩展，没有 npm 依赖，也没有构建步骤。
 
 ```bash
 git clone <repo-url>
-cd promptcard-lite
+cd promptlens
 ```
 
 本地加载：

@@ -1,4 +1,4 @@
-# PromptCard Lite v2 收敛版规划审查说明
+# PromptLens v2 收敛版规划审查说明
 
 > 用途：发给其他 agent 做第二轮方案审查。  
 > 要求：只做方案审查，不执行代码实现，不创建功能代码，不修改现有扩展逻辑。
@@ -35,7 +35,7 @@
 
 # 1. 项目背景
 
-PromptCard Lite v0.1.0 已完成。
+PromptLens v0.1.0 已完成。
 
 它是一个轻量级 Chrome MV3 扩展，用于：
 
@@ -205,7 +205,7 @@ templates.js
 Markdown 结构大致为：
 
 ```markdown
-# PromptCard Result
+# PromptLens Result
 
 ## English Prompt
 
@@ -564,7 +564,7 @@ Firefox MV3 兼容性需要单独验证，不作为近期承诺。
 4. 页面图片发现、队列、失败重试、速率限制、进度 UI 都会让项目变重。
 5. 单图右键 / 框选截图已经覆盖当前核心场景。
 
-如果未来确实有批量需求，应作为独立高级工具或独立产品重新评估，而不是塞进 PromptCard Lite。
+如果未来确实有批量需求，应作为独立高级工具或独立产品重新评估，而不是塞进 PromptLens。
 
 ## 建议审查点
 
@@ -619,7 +619,7 @@ Firefox MV3 兼容性需要单独验证，不作为近期承诺。
 # 12. 请按这个格式输出审查意见
 
 ```markdown
-# PromptCard Lite v2 收敛版审查
+# PromptLens v2 收敛版审查
 
 ## 总体结论
 

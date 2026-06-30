@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  const DB_NAME = 'promptcard-lite';
+  const DB_NAME = 'promptlens';
   const DB_VERSION = 2;
   const STORE_NAME = 'history-items';
   const MAX_HISTORY_ITEMS = 200;

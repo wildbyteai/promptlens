@@ -7,7 +7,7 @@ const MAX_REMOTE_IMAGE_BYTES = 20 * 1024 * 1024;
 const ALLOWED_IMAGE_MIMES = new Set(['image/png', 'image/jpeg', 'image/jpg', 'image/webp']);
 
 // IndexedDB 常量（与 background.js 一致）
-const DB_NAME = 'promptcard-lite';
+const DB_NAME = 'promptlens';
 const DB_VERSION = 2;
 const STORE_NAME = 'pending-payloads';
 
@@ -244,7 +244,7 @@ function buildExportData() {
     throw new Error('当前没有可导出的结果。');
   }
   return {
-    app: 'PromptCard Lite',
+    app: 'PromptLens',
     exportedAt: new Date().toISOString(),
     template: currentTemplate ? {
       id: currentTemplate.id,
@@ -314,7 +314,7 @@ function buildCopyAllText() {
 
 function makeExportFilename(extension) {
   const stamp = new Date().toISOString().slice(0, 16).replace(/:/g, '-');
-  return `promptcard-lite-${stamp}.${extension}`;
+  return `promptlens-${stamp}.${extension}`;
 }
 
 function downloadText(filename, text, mimeType) {

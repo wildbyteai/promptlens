@@ -1,7 +1,7 @@
 const MENU_ANALYZE_IMAGE = 'analyze-image';
 const MENU_CAPTURE_SELECTION = 'capture-selection';
 const PENDING_INPUT_KEY = 'pendingInput';
-const DB_NAME = 'promptcard-lite';
+const DB_NAME = 'promptlens';
 const DB_VERSION = 2;
 const STORE_NAME = 'pending-payloads';
 const MAX_DECODED_IMAGE_BYTES = 20 * 1024 * 1024; // 20MB
