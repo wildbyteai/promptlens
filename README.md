@@ -1,84 +1,168 @@
 # PromptCard Lite
 
-极简 Chrome MV3 扩展：右键图片或框选截图，调用用户自己的 OpenAI-compatible Vision API，反向生成图片提示词。
+PromptCard Lite 是一个轻量级 Chrome MV3 扩展，用于把网页图片或框选截图发送到你自己配置的 OpenAI-compatible Vision API，并生成可复制的图片反推提示词。
 
-## 功能
+它的目标是提供一个简单、透明、可自托管思路的 PromptCard 替代方案：不登录、不付费、不内置后端、不绑定特定模型服务。
 
-- 右键图片 → 分析这张图片
-- 右键页面 → 框选截图并分析
-- 自定义 AI Base URL、API Key、Model
-- 结果页展示中文提示词、英文提示词、标签、Negative Prompt、JSON Prompt 和原始 JSON
+## 特性
+
+- **右键图片分析**：在网页图片上右键，生成反向图片提示词。
+- **框选截图分析**：对当前可见页面区域框选截图并分析，适合 `blob:` 图片、防盗链图片或未授权远程图片。
+- **自定义模型服务**：自行配置 AI Base URL、API Key 和 Model。
+- **OpenAI-compatible Vision API**：请求格式兼容 `/chat/completions` 的视觉模型接口。
+- **结构化结果**：输出中文提示词、English Prompt、Tags、Negative Prompt、JSON Prompt 和 Raw JSON。
+- **本地优先**：配置保存在浏览器本地，不使用远端账号系统。
+- **纯前端实现**：无 npm 依赖、无构建步骤、无后端服务。
 
 ## 不包含
 
-- 登录
-- OAuth
-- 支付
-- 额度系统
-- Supabase
-- 历史记录
-- 自动填充生成器网站
+PromptCard Lite 刻意不包含以下能力：
+
+- 登录 / OAuth
+- 支付 / 额度系统
+- 内置云服务 / Supabase
+- 云端历史记录
+- 自动填充第三方生成器网站
+- 团队协作或账号同步
+
+## 工作原理
+
+1. 用户在网页中右键图片，或启动框选截图。
+2. 扩展读取图片 URL、data URL 或当前标签页可见截图。
+3. 图片会在本地被校验、裁剪、压缩，并统一转换为 JPEG。
+4. 结果页调用用户配置的 OpenAI-compatible Vision API。
+5. 模型返回 JSON 后，结果页展示并提供复制。
+
+PromptCard Lite 不提供内置模型服务。你需要自行准备支持视觉输入的 API 服务。
 
 ## 安装
 
-1. 打开 Chrome。
-2. 进入 `chrome://extensions`。
-3. 开启"开发者模式"。
-4. 点击"加载已解压的扩展程序"。
-5. 选择本目录：`promptcard-lite/`。
+### 从源码加载
+
+1. 下载或克隆本仓库。
+2. 打开 Chrome。
+3. 进入 `chrome://extensions`。
+4. 开启「开发者模式」。
+5. 点击「加载已解压的扩展程序」。
+6. 选择仓库根目录。
+
+### Chrome Web Store
+
+暂未发布。后续如发布到 Chrome Web Store，会在这里补充链接。
 
 ## 配置
 
-1. 在扩展详情中点击"扩展程序选项"。
+1. 在 Chrome 扩展详情页点击「扩展程序选项」。
 2. 填写：
-   - AI Base URL，例如 `https://api.openai.com/v1`（必须使用 https，本地开发可使用 `http://localhost` 或 `http://127.0.0.1`）
-   - API Key
-   - Model，例如 `gpt-4.1-mini` 或其他兼容视觉输入的模型
-3. 点击"保存设置"。
-4. **（可选但推荐）** 点击"授权图片读取权限（所有网站）"按钮，一次性授权后即可右键分析任意网站的远程图片。如果不授权，右键分析远程图片时会提示权限不足，此时可改用"框选截图并分析"。
+   - **AI Base URL**：例如 `https://api.openai.com/v1`。
+   - **API Key**：你的模型服务密钥。
+   - **Model**：支持视觉输入的模型名称。
+3. 点击「保存设置」。
+4. 如需直接右键分析任意网站的远程图片，点击「授权图片读取权限」。
 
-分析时，图片会发送到你配置的 AI 服务。
+说明：
+
+- AI Base URL 必须使用 HTTPS。
+- 本地开发允许 `http://localhost` 和 `http://127.0.0.1`。
+- 如果不授权所有网站图片读取权限，仍可使用「框选截图并分析」。
 
 ## 使用
 
-### 分析图片
+### 分析网页图片
 
 1. 在网页图片上右键。
-2. 点击"分析这张图片"。
-3. 等待新标签页展示结果。
+2. 选择「分析这张图片」。
+3. 新标签页会打开结果页并显示分析进度。
+4. 分析完成后复制需要的提示词。
 
-如果未提前授权图片读取权限，右键分析远程图片时会提示需要先在设置页授权。此时可以：
-- 打开设置页，点击"授权图片读取权限（所有网站）"按钮后重试。
-- 或改用"框选截图并分析"（不需要额外权限）。
+如果页面提示没有图片读取权限，可以先到设置页授权，或改用框选截图。
 
-### 框选截图
+### 框选截图分析
 
 1. 在网页任意位置右键。
-2. 点击"框选截图并分析"。
+2. 选择「框选截图并分析」。
 3. 拖拽选择当前可见区域。
-4. 等待新标签页展示结果。
+4. 等待结果页生成提示词。
 
-按 Esc 或点击"取消"可以退出框选。
+按 Esc 或点击取消按钮可以退出框选。
+
+## 隐私与安全
+
+PromptCard Lite 的隐私边界很简单：
+
+- API Key 存储在浏览器本地 `chrome.storage.local`。
+- 图片只发送到你配置的 AI Base URL。
+- 扩展本身不包含后端服务，不收集遥测，不上传历史记录。
+- 远程图片读取权限是可选权限，不会在安装时请求。
+- 框选截图使用 `activeTab` 权限，仅在用户触发时访问当前标签页。
+
+请注意：当你使用第三方模型服务时，图片和提示词会发送给该服务。请自行确认服务商的隐私政策、数据保留策略和模型使用条款。
+
+更多安全说明见 [SECURITY.md](SECURITY.md)。
 
 ## 权限说明
 
-本扩展使用 `optional_host_permissions: ["<all_urls>"]`，不会在安装时请求全部网站权限。实际访问权限按需获取：
+`manifest.json` 中使用的权限：
 
-- **保存 API Base URL 时**：自动请求该 API origin 的网络权限，用于后续发送图片到 AI 服务。
-- **右键分析图片时**：需要提前在设置页点击"授权图片读取权限（所有网站）"按钮，一次性获取所有网站的读取权限。未授权时会提示使用"框选截图并分析"作为替代方案。
-- **框选截图**：使用 `activeTab` 权限（用户触发时自动授予），不需要额外 host 权限。
+- `contextMenus`：创建右键菜单。
+- `storage`：保存模型配置和临时输入。
+- `activeTab`：用户触发框选截图时访问当前标签页。
+- `scripting`：注入框选截图脚本和样式。
+- `optional_host_permissions: ["<all_urls>"]`：按需请求远程图片读取权限和 API origin 访问权限。
 
 ## 图片格式支持
 
-- 支持：PNG、JPEG、WebP
-- 不支持：SVG（会被拒绝并提示使用框选截图）
-- 不支持：直接读取 `blob:` 图片（请使用框选截图）
-- 远端图片文件大小上限：20MB
-- 所有发送给 AI 模型的图片统一转为 JPEG 格式
+- 支持：PNG、JPEG、WebP。
+- 不支持：SVG。
+- 不支持直接读取：`blob:` 图片，请使用框选截图。
+- 远端图片文件大小上限：20MB。
+- 发送给模型前会统一转为 JPEG。
 
-## 已知限制
+## 开发
 
-- 不支持直接读取 `blob:` 图片，请使用框选截图。
-- 框选截图只支持当前可见视口，不支持整页长截图。
-- 只支持 OpenAI-compatible `/chat/completions` Vision API 格式。
-- AI Base URL 必须使用 HTTPS 协议（本地开发 `localhost` / `127.0.0.1` 除外）。
+本项目刻意保持简单：
+
+```text
+manifest.json      Chrome MV3 manifest
+background.js      右键菜单、截图、临时 payload 中转
+content.js         页面内框选截图交互
+selection.css      仅注入网页的框选样式
+options.html/js    设置页
+result.html/js     结果页与模型调用
+styles.css         设置页和结果页样式
+```
+
+本地检查：
+
+```bash
+node --check options.js
+node --check result.js
+```
+
+开发原则：
+
+- 不引入构建工具。
+- 不引入 npm 依赖。
+- 不引入远端资源。
+- 保持 Vanilla JavaScript / CSS。
+- 新功能优先保持本地优先和隐私透明。
+
+## 二期路线图
+
+二期方向暂不执行，已整理在 [docs/ROADMAP.md](docs/ROADMAP.md)。重点方向包括：
+
+- Prompt 模板与内置预设。
+- 结果导出和复制增强。
+- Provider URL 预设。
+- 快捷键触发框选。
+- 可选本地历史记录。
+- 模型测试与 token usage 展示。
+- 批量处理和图片预处理配置。
+
+## 贡献
+
+欢迎提交 issue 和 pull request。请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
+## License
+
+MIT License. See [LICENSE](LICENSE).
