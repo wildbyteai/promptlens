@@ -1,15 +1,47 @@
 const DEFAULT_CONFIG = {
   apiBaseUrl: '',
   apiKey: '',
-  apiModel: ''
+  apiModel: '',
+  activeTemplateId: window.PromptTemplates.DEFAULT_TEMPLATE_ID
 };
+
+const PROVIDER_PRESETS = [
+  { id: 'custom', name: 'Custom', baseUrl: '' },
+  { id: 'openai', name: 'OpenAI', baseUrl: 'https://api.openai.com/v1' },
+  { id: 'deepseek', name: 'DeepSeek', baseUrl: 'https://api.deepseek.com/v1' },
+  { id: 'alibaba', name: 'Alibaba DashScope', baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1' },
+  { id: 'siliconflow', name: 'SiliconFlow', baseUrl: 'https://api.siliconflow.cn/v1' },
+  { id: 'groq', name: 'Groq', baseUrl: 'https://api.groq.com/openai/v1' },
+  { id: 'openrouter', name: 'OpenRouter', baseUrl: 'https://openrouter.ai/api/v1' },
+  { id: 'ollama', name: 'Ollama 本地', baseUrl: 'http://localhost:11434/v1' }
+];
 
 /* ── DOM refs ──────────────────────────────────────────── */
 
 const form = document.getElementById('options-form');
+const providerPresetSelect = document.getElementById('provider-preset');
 const baseUrlInput = document.getElementById('api-base-url');
 const apiKeyInput = document.getElementById('api-key');
 const modelInput = document.getElementById('api-model');
+const templateSelect = document.getElementById('prompt-template');
+const templateHint = document.getElementById('template-hint');
+const templateNameInput = document.getElementById('template-name-input');
+const templateDescriptionInput = document.getElementById('template-description-input');
+const templateInstructionInput = document.getElementById('template-instruction-input');
+const templateEditorHint = document.getElementById('template-editor-hint');
+const copyTemplateButton = document.getElementById('copy-template');
+const newTemplateButton = document.getElementById('new-template');
+const deleteTemplateButton = document.getElementById('delete-template');
+const exportTemplatesButton = document.getElementById('export-templates');
+const importTemplatesButton = document.getElementById('import-templates');
+const templateImportFile = document.getElementById('template-import-file');
+const saveTemplateButton = document.getElementById('save-template');
+const quickTestButton = document.getElementById('quick-test');
+const visionTestButton = document.getElementById('vision-test');
+const historyEnabledInput = document.getElementById('history-enabled');
+const clearHistoryButton = document.getElementById('clear-history');
+const maxImageSideInput = document.getElementById('max-image-side');
+const jpegQualityInput = document.getElementById('jpeg-quality');
 const toggleApiKeyButton = document.getElementById('toggle-api-key');
 const resetFormButton = document.getElementById('reset-form');
 const testConnectionButton = document.getElementById('test-connection');
@@ -19,6 +51,7 @@ const grantImageButton = document.getElementById('grant-image-permission');
 const configSummary = document.getElementById('config-summary');
 const summaryUrl = document.getElementById('summary-url');
 const summaryModel = document.getElementById('summary-model');
+const summaryTemplate = document.getElementById('summary-template');
 
 const permImageDesc = document.getElementById('perm-image-desc');
 const permImageBadge = document.getElementById('perm-image-badge');
@@ -56,9 +89,95 @@ function showPermStatus(message, tone) {
   showBanner(permStatusBanner, message, tone);
 }
 
+/* ── Provider presets ─────────────────────────────────── */
+
+function populateProviderPresets() {
+  providerPresetSelect.replaceChildren();
+  PROVIDER_PRESETS.forEach(provider => {
+    const option = document.createElement('option');
+    option.value = provider.id;
+    option.textContent = provider.name;
+    providerPresetSelect.appendChild(option);
+  });
+}
+
+function syncProviderPresetFromUrl() {
+  const value = baseUrlInput.value.trim().replace(/\/+$/, '');
+  const matched = PROVIDER_PRESETS.find(provider => provider.baseUrl && provider.baseUrl.replace(/\/+$/, '') === value);
+  providerPresetSelect.value = matched ? matched.id : 'custom';
+}
+
+/* ── Template helpers ─────────────────────────────────── */
+
+async function getSelectedTemplate() {
+  return window.PromptTemplates.getTemplateById(templateSelect.value);
+}
+
+async function updateTemplateHint() {
+  const template = await getSelectedTemplate();
+  templateHint.textContent = template.description;
+  templateNameInput.value = template.name;
+  templateDescriptionInput.value = template.description;
+  templateInstructionInput.value = template.instruction;
+
+  const isBuiltIn = Boolean(template.builtIn);
+  templateNameInput.disabled = isBuiltIn;
+  templateDescriptionInput.disabled = isBuiltIn;
+  templateInstructionInput.disabled = isBuiltIn;
+  saveTemplateButton.disabled = isBuiltIn;
+  deleteTemplateButton.disabled = isBuiltIn;
+  templateEditorHint.textContent = isBuiltIn
+    ? '内置模板不可直接编辑。可点击“复制当前模板”后再维护平台专属差异。'
+    : `自定义 instruction 上限 ${window.PromptTemplates.INSTRUCTION_MAX_LENGTH} 字符，系统会固定追加 JSON 输出结构要求。`;
+}
+
+async function populateTemplateSelect(selectedId) {
+  const templates = await window.PromptTemplates.listTemplates();
+  templateSelect.replaceChildren();
+  templates.forEach(template => {
+    const option = document.createElement('option');
+    option.value = template.id;
+    option.textContent = `${template.name} — ${template.description}`;
+    templateSelect.appendChild(option);
+  });
+  templateSelect.value = selectedId || templateSelect.value || window.PromptTemplates.DEFAULT_TEMPLATE_ID;
+  if (!templateSelect.value) {
+    templateSelect.value = window.PromptTemplates.DEFAULT_TEMPLATE_ID;
+  }
+  await updateTemplateHint();
+}
+
+async function saveCurrentCustomTemplate() {
+  hideBanner(configStatusBanner);
+  const template = await getSelectedTemplate();
+  if (template.builtIn) {
+    showConfigStatus('内置模板不可直接编辑，请先复制为自定义模板。', 'warning');
+    return;
+  }
+  const updated = await window.PromptTemplates.updateCustomTemplate(template.id, {
+    name: templateNameInput.value,
+    description: templateDescriptionInput.value,
+    instruction: templateInstructionInput.value
+  });
+  await populateTemplateSelect(updated.id);
+  showConfigStatus('自定义模板已保存。', 'success');
+}
+
+function downloadText(filename, text, mimeType) {
+  const blob = new Blob([text], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
 /* ── Config summary ────────────────────────────────────── */
 
-function showSummary(config) {
+async function showSummary(config) {
   if (!config.apiBaseUrl || !config.apiModel) {
     configSummary.hidden = true;
     form.hidden = false;
@@ -66,6 +185,8 @@ function showSummary(config) {
   }
   summaryUrl.textContent = config.apiBaseUrl;
   summaryModel.textContent = config.apiModel;
+  const template = await window.PromptTemplates.getTemplateById(config.activeTemplateId);
+  summaryTemplate.textContent = template.name;
   configSummary.hidden = false;
   form.hidden = true;
 }
@@ -120,8 +241,6 @@ function validateApiBaseUrl(urlString) {
   return 'AI Base URL 必须使用 http 或 https 协议。';
 }
 
-/* ── Permission request ────────────────────────────────── */
-
 async function requestApiOriginPermission(apiBaseUrl) {
   try {
     const url = new URL(apiBaseUrl);
@@ -135,27 +254,36 @@ async function requestApiOriginPermission(apiBaseUrl) {
   }
 }
 
-/* ── Trim helper ───────────────────────────────────────── */
-
 function trimConfig(config) {
   return {
     apiBaseUrl: String(config.apiBaseUrl || '').trim(),
     apiKey: String(config.apiKey || '').trim(),
-    apiModel: String(config.apiModel || '').trim()
+    apiModel: String(config.apiModel || '').trim(),
+    activeTemplateId: String(config.activeTemplateId || window.PromptTemplates.DEFAULT_TEMPLATE_ID).trim()
   };
 }
 
 /* ── Load / Save ───────────────────────────────────────── */
 
 async function loadConfig() {
-  const stored = await chrome.storage.local.get(DEFAULT_CONFIG);
+  const stored = await chrome.storage.local.get({
+    ...DEFAULT_CONFIG,
+    historyEnabled: false,
+    maxImageSide: 2048,
+    jpegQuality: 0.85
+  });
   const config = trimConfig(stored);
   baseUrlInput.value = config.apiBaseUrl;
   apiKeyInput.value = config.apiKey;
   modelInput.value = config.apiModel;
+  historyEnabledInput.checked = Boolean(stored.historyEnabled);
+  maxImageSideInput.value = Number(stored.maxImageSide) || 2048;
+  jpegQualityInput.value = Number(stored.jpegQuality) || 0.85;
+  syncProviderPresetFromUrl();
+  await populateTemplateSelect(config.activeTemplateId);
 
   if (config.apiBaseUrl && config.apiKey && config.apiModel) {
-    showSummary(config);
+    await showSummary(config);
   }
 }
 
@@ -165,8 +293,11 @@ async function saveConfig() {
   const config = trimConfig({
     apiBaseUrl: baseUrlInput.value,
     apiKey: apiKeyInput.value,
-    apiModel: modelInput.value
+    apiModel: modelInput.value,
+    activeTemplateId: templateSelect.value
   });
+  const maxImageSide = Math.min(4096, Math.max(512, Number(maxImageSideInput.value) || 2048));
+  const jpegQuality = Math.min(0.95, Math.max(0.4, Number(jpegQualityInput.value) || 0.85));
 
   if (!config.apiBaseUrl) {
     showConfigStatus('请填写 AI Base URL。', 'error');
@@ -203,9 +334,14 @@ async function saveConfig() {
     return;
   }
 
-  await chrome.storage.local.set(config);
+  await chrome.storage.local.set({
+    ...config,
+    historyEnabled: historyEnabledInput.checked,
+    maxImageSide,
+    jpegQuality
+  });
   showConfigStatus('设置已保存。', 'success');
-  showSummary(config);
+  await showSummary(config);
 }
 
 /* ── Connection test ───────────────────────────────────── */
@@ -216,7 +352,8 @@ async function testConnection() {
   const config = trimConfig({
     apiBaseUrl: baseUrlInput.value,
     apiKey: apiKeyInput.value,
-    apiModel: modelInput.value
+    apiModel: modelInput.value,
+    activeTemplateId: templateSelect.value
   });
 
   if (!config.apiBaseUrl || !config.apiKey || !config.apiModel) {
@@ -267,6 +404,60 @@ async function testConnection() {
   }
 }
 
+async function runQuickTest() {
+  await testConnection();
+}
+
+async function runVisionTest() {
+  if (!window.confirm('将发送一次极小测试图片到你的 API，可能产生少量费用。是否继续？')) return;
+  hideBanner(configStatusBanner);
+  const config = trimConfig({
+    apiBaseUrl: baseUrlInput.value,
+    apiKey: apiKeyInput.value,
+    apiModel: modelInput.value,
+    activeTemplateId: templateSelect.value
+  });
+  if (!config.apiBaseUrl || !config.apiKey || !config.apiModel) {
+    showConfigStatus('请先填写完整的 AI Base URL、API Key 和 Model。', 'warning');
+    return;
+  }
+  const tinyJpeg = '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAAgACADASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAX/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAH/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAEFAqf/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAEDAQE/ASP/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAECAQE/ASP/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAY/Ap//xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAE/IV//2gAMAwEAAgADAAAAEP/EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQMBAT8QH//EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQIBAT8QH//EABQQAQAAAAAAAAAAAAAAAAAAABD/2gAIAQEAAT8QH//Z';
+  visionTestButton.disabled = true;
+  visionTestButton.textContent = '视觉测试中...';
+  try {
+    const response = await fetch(buildChatCompletionsUrl(config.apiBaseUrl), {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${config.apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: config.apiModel,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Reply with OK if you can see this test image.' },
+            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${tinyJpeg}` } }
+          ]
+        }],
+        max_tokens: 8
+      })
+    });
+    if (response.ok) {
+      showConfigStatus('视觉测试成功：模型可接收图片输入。', 'success');
+    } else if (response.status === 401 || response.status === 403) {
+      showConfigStatus('视觉测试失败：API Key 或模型权限不正确。', 'error');
+    } else {
+      showConfigStatus(`视觉测试失败：HTTP ${response.status}。请检查模型是否支持图片输入。`, 'error');
+    }
+  } catch (error) {
+    showConfigStatus(`视觉测试失败：${error.message}`, 'error');
+  } finally {
+    visionTestButton.disabled = false;
+    visionTestButton.textContent = '视觉测试';
+  }
+}
+
 function buildChatCompletionsUrl(baseUrl) {
   const trimmed = baseUrl.trim().replace(/\/+$/, '');
   if (/\/chat\/completions$/i.test(trimmed)) return trimmed;
@@ -282,6 +473,87 @@ form.addEventListener('submit', event => {
   });
 });
 
+providerPresetSelect.addEventListener('change', () => {
+  const selected = PROVIDER_PRESETS.find(provider => provider.id === providerPresetSelect.value);
+  if (selected && selected.baseUrl) {
+    baseUrlInput.value = selected.baseUrl;
+    baseUrlInput.classList.remove('input-error');
+  }
+});
+
+baseUrlInput.addEventListener('input', syncProviderPresetFromUrl);
+
+templateSelect.addEventListener('change', () => {
+  updateTemplateHint().catch(error => showConfigStatus(`模板加载失败：${error.message}`, 'error'));
+});
+
+copyTemplateButton.addEventListener('click', () => {
+  window.PromptTemplates.duplicateTemplate(templateSelect.value).then(template => {
+    return populateTemplateSelect(template.id).then(() => {
+      showConfigStatus('已复制为自定义模板，可以编辑后保存。', 'success');
+    });
+  }).catch(error => showConfigStatus(`复制失败：${error.message}`, 'error'));
+});
+
+newTemplateButton.addEventListener('click', () => {
+  window.PromptTemplates.createCustomTemplate({
+    name: '新建自定义模板',
+    description: '用户自定义模板。',
+    instruction: 'Describe the visible image for a specific image-generation workflow. Keep all details grounded in visible evidence.'
+  }).then(template => {
+    return populateTemplateSelect(template.id).then(() => {
+      showConfigStatus('已创建自定义模板。', 'success');
+    });
+  }).catch(error => showConfigStatus(`创建失败：${error.message}`, 'error'));
+});
+
+saveTemplateButton.addEventListener('click', () => {
+  saveCurrentCustomTemplate().catch(error => showConfigStatus(`保存模板失败：${error.message}`, 'error'));
+});
+
+deleteTemplateButton.addEventListener('click', () => {
+  getSelectedTemplate().then(template => {
+    if (template.builtIn) {
+      showConfigStatus('内置模板不可删除。', 'warning');
+      return null;
+    }
+    return window.PromptTemplates.deleteCustomTemplate(template.id).then(() => {
+      return populateTemplateSelect(window.PromptTemplates.DEFAULT_TEMPLATE_ID).then(() => {
+        showConfigStatus('自定义模板已删除。', 'info');
+      });
+    });
+  }).catch(error => showConfigStatus(`删除失败：${error.message}`, 'error'));
+});
+
+exportTemplatesButton.addEventListener('click', () => {
+  window.PromptTemplates.exportCustomTemplates().then(payload => {
+    const stamp = new Date().toISOString().slice(0, 16).replace(/:/g, '-');
+    downloadText(`promptcard-lite-templates-${stamp}.json`, JSON.stringify(payload, null, 2), 'application/json;charset=utf-8');
+    showConfigStatus('自定义模板已导出。', 'success');
+  }).catch(error => showConfigStatus(`导出失败：${error.message}`, 'error'));
+});
+
+importTemplatesButton.addEventListener('click', () => {
+  templateImportFile.click();
+});
+
+templateImportFile.addEventListener('change', () => {
+  const file = templateImportFile.files && templateImportFile.files[0];
+  if (!file) return;
+  file.text().then(text => {
+    return window.PromptTemplates.importCustomTemplates(JSON.parse(text));
+  }).then(imported => {
+    const selectedId = imported[0] ? imported[0].id : window.PromptTemplates.DEFAULT_TEMPLATE_ID;
+    return populateTemplateSelect(selectedId).then(() => {
+      showConfigStatus(`已导入 ${imported.length} 个自定义模板。`, 'success');
+    });
+  }).catch(error => {
+    showConfigStatus(`导入失败：${error.message}`, 'error');
+  }).finally(() => {
+    templateImportFile.value = '';
+  });
+});
+
 toggleApiKeyButton.addEventListener('click', () => {
   const shouldShow = apiKeyInput.type === 'password';
   apiKeyInput.type = shouldShow ? 'text' : 'password';
@@ -292,9 +564,12 @@ resetFormButton.addEventListener('click', () => {
   baseUrlInput.value = '';
   apiKeyInput.value = '';
   modelInput.value = '';
+  providerPresetSelect.value = 'custom';
+  templateSelect.value = window.PromptTemplates.DEFAULT_TEMPLATE_ID;
+  updateTemplateHint().catch(() => {});
   baseUrlInput.classList.remove('input-error');
   hideBanner(configStatusBanner);
-  chrome.storage.local.remove(['apiBaseUrl', 'apiKey', 'apiModel']).then(() => {
+  chrome.storage.local.remove(['apiBaseUrl', 'apiKey', 'apiModel', 'activeTemplateId']).then(() => {
     showConfigStatus('设置已清空。', 'info');
     hideSummary();
   }).catch(error => {
@@ -329,6 +604,26 @@ grantImageButton.addEventListener('click', async () => {
   }
 });
 
+quickTestButton.addEventListener('click', () => {
+  runQuickTest().catch(error => showConfigStatus(`快速测试失败：${error.message}`, 'error'));
+});
+
+visionTestButton.addEventListener('click', () => {
+  runVisionTest().catch(error => showConfigStatus(`视觉测试失败：${error.message}`, 'error'));
+});
+
+historyEnabledInput.addEventListener('change', () => {
+  window.PromptHistory.setHistoryEnabled(historyEnabledInput.checked).then(() => {
+    showConfigStatus(historyEnabledInput.checked ? '本地历史记录已开启。' : '本地历史记录已关闭。', 'info');
+  }).catch(error => showConfigStatus(`历史记录设置失败：${error.message}`, 'error'));
+});
+
+clearHistoryButton.addEventListener('click', () => {
+  window.PromptHistory.clearHistory().then(() => {
+    showConfigStatus('本地历史记录已清空。', 'info');
+  }).catch(error => showConfigStatus(`清空历史失败：${error.message}`, 'error'));
+});
+
 // 清除输入框错误样式
 [baseUrlInput, apiKeyInput, modelInput].forEach(input => {
   input.addEventListener('input', () => {
@@ -337,6 +632,8 @@ grantImageButton.addEventListener('click', async () => {
 });
 
 /* ── Init ──────────────────────────────────────────────── */
+
+populateProviderPresets();
 
 loadConfig().catch(error => {
   showConfigStatus(`加载设置失败：${error.message}`, 'error');

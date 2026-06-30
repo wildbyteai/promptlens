@@ -52,11 +52,21 @@
               <dt>Model</dt>
               <dd id="summary-model">-</dd>
             </div>
+            <div>
+              <dt>模板</dt>
+              <dd id="summary-template">-</dd>
+            </div>
           </dl>
           <button id="edit-config" type="button" class="text-button">修改配置</button>
         </div>
 
         <form id="options-form" class="settings-form">
+          <label class="field-row">
+            <span class="field-label">Provider 预设</span>
+            <select id="provider-preset" name="providerPreset"></select>
+            <span class="field-hint">预设只填充 Base URL，不包含 API Key 或 Model。</span>
+          </label>
+
           <label class="field-row">
             <span class="field-label">AI Base URL</span>
             <input id="api-base-url" name="apiBaseUrl" type="url" placeholder="https://api.openai.com/v1" autocomplete="off" required>
@@ -78,15 +88,108 @@
             <span class="field-hint">请输入支持视觉输入的模型名称。</span>
           </label>
 
+          <label class="field-row">
+            <span class="field-label">默认输出模板</span>
+            <select id="prompt-template" name="promptTemplate"></select>
+            <span class="field-hint" id="template-hint">内置模板按输出格式划分；平台专属差异后续可通过自定义模板维护。</span>
+          </label>
+
+          <div class="template-manager" aria-labelledby="template-manager-title">
+            <div class="section-heading compact-heading">
+              <div>
+                <h3 id="template-manager-title">自定义模板</h3>
+                <p>内置模板不可直接编辑，可复制为自定义模板后维护平台专属差异。</p>
+              </div>
+            </div>
+
+            <div class="button-row template-actions">
+              <button id="copy-template" type="button" class="secondary-button compact-button">复制当前模板</button>
+              <button id="new-template" type="button" class="secondary-button compact-button">新建模板</button>
+              <button id="delete-template" type="button" class="ghost-button compact-button">删除自定义模板</button>
+              <button id="export-templates" type="button" class="ghost-button compact-button">导出模板</button>
+              <button id="import-templates" type="button" class="ghost-button compact-button">导入模板</button>
+              <input id="template-import-file" type="file" accept="application/json,.json" hidden>
+            </div>
+
+            <label class="field-row">
+              <span class="field-label">模板名称</span>
+              <input id="template-name-input" type="text" maxlength="80" placeholder="Seedance 专用 / 即梦优化 / ComfyUI 工作流">
+            </label>
+
+            <label class="field-row">
+              <span class="field-label">模板说明</span>
+              <input id="template-description-input" type="text" maxlength="160" placeholder="说明这个模板适合什么输出格式或平台差异">
+            </label>
+
+            <label class="field-row">
+              <span class="field-label">Instruction</span>
+              <textarea id="template-instruction-input" maxlength="4000" rows="8" placeholder="只写模板差异指令；系统会固定追加 JSON 输出结构要求。"></textarea>
+              <span class="field-hint" id="template-editor-hint">自定义 instruction 上限 4000 字符，不能修改最终 JSON schema。</span>
+            </label>
+
+            <div class="button-row">
+              <button id="save-template" type="button" class="secondary-button compact-button">保存自定义模板</button>
+            </div>
+          </div>
+
           <div class="button-row form-actions">
             <button type="submit" class="primary-button">保存设置</button>
             <button id="reset-form" type="button" class="ghost-button">清空</button>
           </div>
         </form>
 
+        <div class="settings-block">
+          <div class="section-heading compact-heading">
+            <div>
+              <h3>模型测试</h3>
+              <p>快速测试只验证鉴权；视觉测试会发送一张极小测试图，可能产生少量费用。</p>
+            </div>
+          </div>
+          <div class="button-row">
+            <button id="quick-test" type="button" class="secondary-button compact-button">快速测试</button>
+            <button id="vision-test" type="button" class="secondary-button compact-button">视觉测试</button>
+          </div>
+        </div>
+
+        <div class="settings-block">
+          <div class="section-heading compact-heading">
+            <div>
+              <h3>本地历史记录</h3>
+              <p>默认关闭。开启后只保存结果文本和来源域名，不保存图片缩略图。</p>
+            </div>
+          </div>
+          <label class="checkbox-row">
+            <input id="history-enabled" type="checkbox">
+            <span>保存本地历史记录（最多 200 条）</span>
+          </label>
+          <div class="button-row">
+            <a class="secondary-button compact-button link-button" href="history.html" target="_blank" rel="noreferrer">打开历史记录</a>
+            <button id="clear-history" type="button" class="ghost-button compact-button">清空历史记录</button>
+          </div>
+        </div>
+
+        <div class="settings-block">
+          <div class="section-heading compact-heading">
+            <div>
+              <h3>高级图片预处理</h3>
+              <p>仅在图片过大或输出质量不稳定时调整。</p>
+            </div>
+          </div>
+          <label class="field-row">
+            <span class="field-label">最大边长</span>
+            <input id="max-image-side" type="number" min="512" max="4096" step="128" placeholder="2048">
+          </label>
+          <label class="field-row">
+            <span class="field-label">JPEG 质量</span>
+            <input id="jpeg-quality" type="number" min="0.4" max="0.95" step="0.05" placeholder="0.85">
+          </label>
+        </div>
+
         <div id="config-status-banner" class="status-banner" hidden></div>
       </section>
     </main>
+    <script src="templates.js"></script>
+    <script src="history-store.js"></script>
     <script src="options.js"></script>
   </body>
 </html>

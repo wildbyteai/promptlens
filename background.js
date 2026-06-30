@@ -2,7 +2,7 @@ const MENU_ANALYZE_IMAGE = 'analyze-image';
 const MENU_CAPTURE_SELECTION = 'capture-selection';
 const PENDING_INPUT_KEY = 'pendingInput';
 const DB_NAME = 'promptcard-lite';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = 'pending-payloads';
 const MAX_DECODED_IMAGE_BYTES = 20 * 1024 * 1024; // 20MB
 
@@ -12,7 +12,13 @@ function openDB() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
     request.onupgradeneeded = () => {
-      request.result.createObjectStore(STORE_NAME);
+      const db = request.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+      if (!db.objectStoreNames.contains('history-items')) {
+        db.createObjectStore('history-items', { keyPath: 'id' });
+      }
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
@@ -113,6 +119,14 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === MENU_CAPTURE_SELECTION) {
     startSelection(tab).catch(error => openErrorResult(error.message));
   }
+});
+
+chrome.commands.onCommand.addListener(command => {
+  if (command !== MENU_CAPTURE_SELECTION) return;
+  chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+    const tab = tabs && tabs[0];
+    startSelection(tab).catch(error => openErrorResult(error.message));
+  });
 });
 
 /* ── SELECTION_COMPLETE handler (top-level for SW lifecycle) ── */

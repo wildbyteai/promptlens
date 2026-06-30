@@ -8,8 +8,11 @@ const ALLOWED_IMAGE_MIMES = new Set(['image/png', 'image/jpeg', 'image/jpg', 'im
 
 // IndexedDB 常量（与 background.js 一致）
 const DB_NAME = 'promptcard-lite';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = 'pending-payloads';
+
+let maxImageSide = 2048;
+let jpegQuality = 0.85;
 
 /* ── IndexedDB helpers ────────────────────────────────── */
 
@@ -17,7 +20,13 @@ function openDB() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
     request.onupgradeneeded = () => {
-      request.result.createObjectStore(STORE_NAME);
+      const db = request.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+      if (!db.objectStoreNames.contains('history-items')) {
+        db.createObjectStore('history-items', { keyPath: 'id' });
+      }
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
@@ -65,7 +74,17 @@ const elements = {
   promptTags: document.getElementById('prompt-tags'),
   negativePrompt: document.getElementById('negative-prompt'),
   jsonPrompt: document.getElementById('json-prompt'),
-  rawJson: document.getElementById('raw-json')
+  rawJson: document.getElementById('raw-json'),
+  templateName: document.getElementById('template-name'),
+  templateDescription: document.getElementById('template-description'),
+  copyAll: document.getElementById('copy-all'),
+  downloadJson: document.getElementById('download-json'),
+  downloadMarkdown: document.getElementById('download-markdown'),
+  usageCard: document.getElementById('usage-card'),
+  usagePrompt: document.getElementById('usage-prompt'),
+  usageCompletion: document.getElementById('usage-completion'),
+  usageTotal: document.getElementById('usage-total'),
+  usageTime: document.getElementById('usage-time')
 };
 
 /* ── Step SVG icons ───────────────────────────────────── */
@@ -148,13 +167,41 @@ function setText(id, value) {
   }
 }
 
-function renderResult(result, rawText) {
+let currentResult = null;
+let currentRawText = '';
+let currentTemplate = null;
+let currentUsage = null;
+let currentResponseTimeMs = null;
+
+function renderUsage(usage, responseTimeMs) {
+  if (!usage && !responseTimeMs) {
+    elements.usageCard.hidden = true;
+    return;
+  }
+  elements.usageCard.hidden = false;
+  elements.usagePrompt.textContent = usage && Number.isFinite(Number(usage.prompt_tokens)) ? String(usage.prompt_tokens) : '-';
+  elements.usageCompletion.textContent = usage && Number.isFinite(Number(usage.completion_tokens)) ? String(usage.completion_tokens) : '-';
+  elements.usageTotal.textContent = usage && Number.isFinite(Number(usage.total_tokens)) ? String(usage.total_tokens) : '-';
+  elements.usageTime.textContent = responseTimeMs ? `${Math.round(responseTimeMs)} ms` : '-';
+}
+
+function renderResult(result, rawText, template) {
+  currentResult = result;
+  currentRawText = rawText || JSON.stringify(result, null, 2);
+  currentTemplate = template || currentTemplate;
+
+  if (currentTemplate) {
+    elements.templateName.textContent = currentTemplate.name;
+    elements.templateDescription.textContent = currentTemplate.description;
+  }
+
   setText('prompt-zh', result.prompt_zh || '');
   setText('prompt-en', result.prompt_en || '');
   setText('prompt-tags', Array.isArray(result.prompt_tags) ? result.prompt_tags.join(', ') : '');
   setText('negative-prompt', result.negative_prompt || '');
   setText('json-prompt', JSON.stringify(result.json_prompt || {}, null, 2));
-  setText('raw-json', rawText || JSON.stringify(result, null, 2));
+  setText('raw-json', currentRawText);
+  renderUsage(currentUsage, currentResponseTimeMs);
   showResult();
 }
 
@@ -186,6 +233,129 @@ function setupCopyButtons() {
       window.setTimeout(() => {
         button.textContent = oldText;
       }, 1200);
+    });
+  });
+}
+
+/* ── Export helpers ────────────────────────────────────── */
+
+function buildExportData() {
+  if (!currentResult) {
+    throw new Error('当前没有可导出的结果。');
+  }
+  return {
+    app: 'PromptCard Lite',
+    exportedAt: new Date().toISOString(),
+    template: currentTemplate ? {
+      id: currentTemplate.id,
+      name: currentTemplate.name,
+      description: currentTemplate.description
+    } : null,
+    result: currentResult
+  };
+}
+
+function buildMarkdownExport() {
+  const data = buildExportData();
+  const result = data.result;
+  const tags = Array.isArray(result.prompt_tags) ? result.prompt_tags.join(', ') : '';
+  return [
+    '# Image Prompt Analysis Result',
+    '',
+    `- App: ${data.app}`,
+    `- Exported At: ${data.exportedAt}`,
+    `- Template: ${data.template ? data.template.name : 'Unknown'}`,
+    '',
+    '## English Prompt',
+    '',
+    result.prompt_en || '',
+    '',
+    '## 中文提示词',
+    '',
+    result.prompt_zh || '',
+    '',
+    '## Tags',
+    '',
+    tags,
+    '',
+    '## Negative Prompt',
+    '',
+    result.negative_prompt || '',
+    '',
+    '## JSON Prompt',
+    '',
+    '```json',
+    JSON.stringify(result.json_prompt || {}, null, 2),
+    '```',
+    ''
+  ].join('\n');
+}
+
+function buildCopyAllText() {
+  const result = buildExportData().result;
+  const tags = Array.isArray(result.prompt_tags) ? result.prompt_tags.join(', ') : '';
+  return [
+    'English Prompt',
+    result.prompt_en || '',
+    '',
+    '中文提示词',
+    result.prompt_zh || '',
+    '',
+    'Tags',
+    tags,
+    '',
+    'Negative Prompt',
+    result.negative_prompt || '',
+    '',
+    'JSON Prompt',
+    JSON.stringify(result.json_prompt || {}, null, 2)
+  ].join('\n');
+}
+
+function makeExportFilename(extension) {
+  const stamp = new Date().toISOString().slice(0, 16).replace(/:/g, '-');
+  return `promptcard-lite-${stamp}.${extension}`;
+}
+
+function downloadText(filename, text, mimeType) {
+  const blob = new Blob([text], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+async function withButtonFeedback(button, action) {
+  const oldText = button.textContent;
+  try {
+    await action();
+    button.textContent = '已完成';
+  } catch {
+    button.textContent = '失败';
+  }
+  window.setTimeout(() => {
+    button.textContent = oldText;
+  }, 1200);
+}
+
+function setupExportButtons() {
+  elements.copyAll.addEventListener('click', () => {
+    withButtonFeedback(elements.copyAll, () => navigator.clipboard.writeText(buildCopyAllText()));
+  });
+
+  elements.downloadJson.addEventListener('click', () => {
+    withButtonFeedback(elements.downloadJson, () => {
+      downloadText(makeExportFilename('json'), JSON.stringify(buildExportData(), null, 2), 'application/json;charset=utf-8');
+    });
+  });
+
+  elements.downloadMarkdown.addEventListener('click', () => {
+    withButtonFeedback(elements.downloadMarkdown, () => {
+      downloadText(makeExportFilename('md'), buildMarkdownExport(), 'text/markdown;charset=utf-8');
     });
   });
 }
@@ -336,7 +506,7 @@ async function cropScreenshot(screenshotDataUrl, rect) {
   canvas.height = sh;
   const ctx = canvas.getContext('2d');
   ctx.drawImage(image, sx, sy, sw, sh, 0, 0, sw, sh);
-  const croppedDataUrl = canvas.toDataURL('image/jpeg', JPEG_QUALITY);
+  const croppedDataUrl = canvas.toDataURL('image/jpeg', jpegQuality);
   return normalizeImageDataUrl(croppedDataUrl);
 }
 
@@ -347,7 +517,7 @@ async function normalizeImageDataUrl(dataUrl) {
 
   if (parsed.mimeType === 'image/jpeg' &&
       parsed.base64.length <= MAX_BASE64_LENGTH &&
-      Math.max(image.naturalWidth, image.naturalHeight) <= MAX_IMAGE_SIDE) {
+      Math.max(image.naturalWidth, image.naturalHeight) <= maxImageSide) {
     return {
       mimeType: 'image/jpeg',
       dataUrl,
@@ -357,8 +527,8 @@ async function normalizeImageDataUrl(dataUrl) {
 
   setLoading('正在压缩图片...', stepImage);
 
-  let scale = Math.min(1, MAX_IMAGE_SIDE / Math.max(image.naturalWidth, image.naturalHeight));
-  let quality = JPEG_QUALITY;
+  let scale = Math.min(1, maxImageSide / Math.max(image.naturalWidth, image.naturalHeight));
+  let quality = jpegQuality;
 
   for (let attempt = 0; attempt < 6; attempt++) {
     const width = Math.max(1, Math.round(image.naturalWidth * scale));
@@ -457,45 +627,11 @@ function buildChatCompletionsUrl(baseUrl) {
   return `${trimmed}/chat/completions`;
 }
 
-function buildReversePromptInstruction() {
-  return [
-    'You are an elite reverse-prompt analyst for image generation.',
-    'Your task is not to caption the image. Your task is to reconstruct a practical image-generation prompt that could recreate the visible image as closely as possible.',
-    'Analyze only visible evidence. Be specific about subject, pose or action, appearance, environment, composition, lighting, atmosphere, color palette, materials, texture, camera/framing, style, and image quality.',
-    'If something is uncertain, use broader but visually useful wording instead of guessing. Do not invent brands, logos, named artists, exact camera bodies, lens models, exact locations, hidden objects, identities, or unreadable text.',
-    'Do not claim text content unless it is clearly readable. If text is visible but unreadable, describe it only as unreadable text or text-like marks. Avoid empty generic phrases unless they help visual recreation.',
-    'Return valid JSON only. Do not use markdown fences. Do not include analysis outside the JSON.',
-    'Language and quality rules:',
-    '- prompt_zh must be Simplified Chinese and should preserve the same visual details as prompt_en.',
-    '- prompt_en must be English and should be the most complete recreation prompt, around 100-180 words.',
-    '- prompt_tags must contain 6-10 concise English tags covering subject, medium/style, lighting, mood, composition, and visual technique when visible.',
-    '- negative_prompt must be English, practical for image generation, and tailored to the image type. Include quality/artifact negatives and content-specific negatives only when relevant.',
-    '- json_prompt must be English and should break the image into reusable structured visual components.',
-    'Return exactly this JSON shape:',
-    '{',
-    '  "prompt_zh": "简体中文反向提示词，完整描述主体、动作姿态、外观细节、环境背景、构图、光线氛围、风格、色彩、材质和画面质感。",',
-    '  "prompt_en": "English reverse prompt optimized for recreating the image, not merely describing it.",',
-    '  "prompt_tags": ["tag1", "tag2", "tag3", "tag4", "tag5", "tag6"],',
-    '  "negative_prompt": "English negative prompt tailored to avoid likely generation errors.",',
-    '  "json_prompt": {',
-    '    "subject": "main subject and visible identity-neutral attributes",',
-    '    "action_pose": "pose, gesture, motion, or stillness",',
-    '    "details_appearance": "clothing, expression, shape, surface details, accessories, visible design features",',
-    '    "environment_background": "setting, background elements, depth, context",',
-    '    "lighting_atmosphere": "light source, contrast, shadows, mood, time-of-day impression if visually supported",',
-    '    "composition_framing": "camera distance, angle, crop, perspective, subject placement, aspect ratio impression",',
-    '    "style_camera": "visual medium, rendering style, photographic or illustrative qualities, lens/framing feel without inventing exact gear",',
-    '    "colors": ["dominant color", "accent color"],',
-    '    "materials_textures": ["visible material or texture"],',
-    '    "aspect_ratio": "best estimate such as 1:1, 4:3, 3:4, 16:9, 9:16, or unknown",',
-    '    "quality_modifiers": "useful generation modifiers based on visible quality, detail level, sharpness, finish",',
-    '    "likely_generation_intent": "brief description of what the original prompt likely aimed to produce"',
-    '  }',
-    '}'
-  ].join('\n');
+function buildReversePromptInstruction(template) {
+  return window.PromptTemplates.buildFinalPrompt(template);
 }
 
-async function callVisionApi(preparedImage) {
+async function callVisionApi(preparedImage, template) {
   const config = await loadConfig();
   const url = buildChatCompletionsUrl(config.apiBaseUrl);
   const controller = new AbortController();
@@ -511,7 +647,7 @@ async function callVisionApi(preparedImage) {
         content: [
           {
             type: 'text',
-            text: buildReversePromptInstruction()
+            text: buildReversePromptInstruction(template)
           },
           {
             type: 'image_url',
@@ -526,6 +662,7 @@ async function callVisionApi(preparedImage) {
 
   try {
     setLoading('正在调用 AI 模型分析图片...', stepApi);
+    const startedAt = performance.now();
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -550,7 +687,7 @@ async function callVisionApi(preparedImage) {
     if (!parsed) {
       throw new Error(`模型没有返回可解析的 JSON。原始返回：\n${rawText}`);
     }
-    return { parsed, rawText };
+    return { parsed, rawText, usage: responseJson.usage || null, responseTimeMs: performance.now() - startedAt };
   } catch (error) {
     if (error && error.name === 'AbortError') {
       throw new Error('API 请求超时（2 分钟）。请换更小的选区，或使用响应更快的模型。');
@@ -630,20 +767,50 @@ function validateResultSchema(parsed) {
 
 let currentInput = null;
 
+async function loadRuntimeSettings() {
+  const stored = await chrome.storage.local.get({ maxImageSide: 2048, jpegQuality: 0.85 });
+  maxImageSide = Math.min(4096, Math.max(512, Number(stored.maxImageSide) || 2048));
+  jpegQuality = Math.min(0.95, Math.max(0.4, Number(stored.jpegQuality) || 0.85));
+}
+
+async function maybeSaveHistory(input, result, template) {
+  if (!window.PromptHistory || !await window.PromptHistory.isHistoryEnabled()) return;
+  const sourceDomain = window.PromptHistory.sourceDomainFromUrl(input.pageUrl || input.srcUrl || '');
+  await window.PromptHistory.addHistoryItem({
+    sourceDomain,
+    inputType: input.type,
+    templateId: template.id,
+    templateName: template.name,
+    promptEn: result.prompt_en || '',
+    promptTags: Array.isArray(result.prompt_tags) ? result.prompt_tags : [],
+    result
+  });
+}
+
 async function analyzeInput(input) {
   const prepared = await prepareImage(input);
   elements.previewImage.src = prepared.dataUrl;
 
-  const { parsed, rawText } = await callVisionApi(prepared);
+  const template = await window.PromptTemplates.getActiveTemplate();
+  currentTemplate = template;
+  elements.templateName.textContent = template.name;
+  elements.templateDescription.textContent = template.description;
+
+  const { parsed, rawText, usage, responseTimeMs } = await callVisionApi(prepared, template);
+  currentUsage = usage;
+  currentResponseTimeMs = responseTimeMs;
   validateResultSchema(parsed);
-  renderResult(parsed, rawText);
+  await maybeSaveHistory(input, parsed, template);
+  renderResult(parsed, rawText, template);
 }
 
 async function main() {
   setupCopyButtons();
+  setupExportButtons();
   setLoading('正在读取待分析输入...', stepRead);
 
   const input = await loadPendingInput();
+  await loadRuntimeSettings();
 
   if (input.jobId) {
     const payload = await loadJobPayload(input.jobId);
