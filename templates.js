@@ -235,8 +235,8 @@
   async function exportCustomTemplates() {
     const customTemplates = await getCustomTemplates();
     return {
-      app: 'PromptCard Lite',
-      type: 'promptcard-lite-custom-templates',
+      app: 'PromptLens',
+      type: 'promptlens-custom-templates',
       version: 1,
       exportedAt: new Date().toISOString(),
       templates: customTemplates
@@ -244,7 +244,7 @@
   }
 
   async function importCustomTemplates(payload) {
-    if (!payload || payload.type !== 'promptcard-lite-custom-templates' || payload.version !== 1 || !Array.isArray(payload.templates)) {
+    if (!payload || payload.type !== 'promptlens-custom-templates' || payload.version !== 1 || !Array.isArray(payload.templates)) {
       throw new Error('模板文件格式不正确或版本不兼容。');
     }
     const existing = await getCustomTemplates();

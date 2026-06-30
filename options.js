@@ -528,7 +528,7 @@ deleteTemplateButton.addEventListener('click', () => {
 exportTemplatesButton.addEventListener('click', () => {
   window.PromptTemplates.exportCustomTemplates().then(payload => {
     const stamp = new Date().toISOString().slice(0, 16).replace(/:/g, '-');
-    downloadText(`promptcard-lite-templates-${stamp}.json`, JSON.stringify(payload, null, 2), 'application/json;charset=utf-8');
+    downloadText(`promptlens-templates-${stamp}.json`, JSON.stringify(payload, null, 2), 'application/json;charset=utf-8');
     showConfigStatus('自定义模板已导出。', 'success');
   }).catch(error => showConfigStatus(`导出失败：${error.message}`, 'error'));
 });
