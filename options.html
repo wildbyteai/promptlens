@@ -7,46 +7,85 @@
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <main class="page-shell">
-      <h1>PromptCard Lite 设置</h1>
-      <p class="muted">配置你的 OpenAI-compatible Vision API。分析时，图片会发送到你配置的 AI 服务。</p>
+    <main class="page-shell options-shell">
+      <header class="brand-header">
+        <div class="brand-mark" aria-hidden="true">P</div>
+        <div>
+          <h1>PromptCard Lite</h1>
+          <p class="subtitle">将图片快速转换为可复制的提示词卡片。</p>
+        </div>
+      </header>
 
-      <form id="options-form" class="card-form">
-        <label class="field-row">
-          <span>AI Base URL</span>
-          <input id="api-base-url" name="apiBaseUrl" type="url" placeholder="https://api.openai.com/v1" autocomplete="off" required>
-        </label>
-
-        <label class="field-row">
-          <span>API Key</span>
-          <div class="password-row">
-            <input id="api-key" name="apiKey" type="password" placeholder="sk-..." autocomplete="off" required>
-            <button id="toggle-api-key" type="button" class="secondary-button">显示</button>
+      <section class="surface-card permission-card" aria-labelledby="permission-title">
+        <div>
+          <h2 id="permission-title">图片读取权限</h2>
+          <p>右键分析远程图片需要一次性授权；框选截图可作为无需授权的替代方案。</p>
+        </div>
+        <div class="permission-row" id="perm-image-status">
+          <div class="permission-copy">
+            <span class="permission-label">所有网站图片读取</span>
+            <span class="permission-desc" id="perm-image-desc">检测中...</span>
           </div>
-        </label>
-
-        <label class="field-row">
-          <span>Model</span>
-          <input id="api-model" name="apiModel" type="text" placeholder="gpt-4.1-mini / qwen-vl-max / gemini-2.5-flash" autocomplete="off" required>
-        </label>
-
-        <div class="action-row">
-          <button type="submit" class="primary-button">保存设置</button>
-          <button id="reset-form" type="button" class="secondary-button">清空</button>
+          <span class="badge" id="perm-image-badge"><span class="badge-dot"></span>检测中</span>
         </div>
-      </form>
-
-      <p id="options-status" class="status-text" role="status"></p>
-
-      <hr style="margin:28px 0;border:none;border-top:1px solid #e2e6ef">
-
-      <div class="card-form">
-        <div class="field-row">
-          <span>图片读取权限</span>
-          <p class="muted" style="margin:0">右键分析远程图片需要所有网站的读取权限。点击下方按钮一次性授权，之后右键图片即可直接分析。</p>
-          <button id="grant-image-permission" type="button" class="primary-button">授权图片读取权限（所有网站）</button>
+        <div class="button-row">
+          <button id="grant-image-permission" type="button" class="primary-button">授权图片读取权限</button>
         </div>
-      </div>
+        <div id="perm-status-banner" class="status-banner" hidden></div>
+      </section>
+
+      <section class="surface-card" aria-labelledby="config-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="config-title">AI 服务配置</h2>
+            <p>填写你的 OpenAI-compatible Vision API 信息。分析时，图片只会发送到你配置的 AI 服务。</p>
+          </div>
+        </div>
+
+        <div id="config-summary" class="config-summary" hidden>
+          <dl>
+            <div>
+              <dt>Base URL</dt>
+              <dd id="summary-url">-</dd>
+            </div>
+            <div>
+              <dt>Model</dt>
+              <dd id="summary-model">-</dd>
+            </div>
+          </dl>
+          <button id="edit-config" type="button" class="text-button">修改配置</button>
+        </div>
+
+        <form id="options-form" class="settings-form">
+          <label class="field-row">
+            <span class="field-label">AI Base URL</span>
+            <input id="api-base-url" name="apiBaseUrl" type="url" placeholder="https://api.openai.com/v1" autocomplete="off" required>
+            <span class="field-hint">必须使用 HTTPS；本地开发可用 http://localhost 或 http://127.0.0.1。</span>
+          </label>
+
+          <label class="field-row">
+            <span class="field-label">API Key</span>
+            <div class="password-row">
+              <input id="api-key" name="apiKey" type="password" placeholder="sk-..." autocomplete="off" required>
+              <button id="toggle-api-key" type="button" class="secondary-button compact-button">显示</button>
+            </div>
+            <span class="field-hint">密钥保存在浏览器本地 chrome.storage.local，不会同步或上传到其他服务。</span>
+          </label>
+
+          <label class="field-row">
+            <span class="field-label">Model</span>
+            <input id="api-model" name="apiModel" type="text" placeholder="gpt-4.1-mini / qwen-vl-max / gemini-2.5-flash" autocomplete="off" required>
+            <span class="field-hint">请输入支持视觉输入的模型名称。</span>
+          </label>
+
+          <div class="button-row form-actions">
+            <button type="submit" class="primary-button">保存设置</button>
+            <button id="reset-form" type="button" class="ghost-button">清空</button>
+          </div>
+        </form>
+
+        <div id="config-status-banner" class="status-banner" hidden></div>
+      </section>
     </main>
     <script src="options.js"></script>
   </body>

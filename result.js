@@ -46,23 +46,99 @@ async function idbDelete(key) {
 
 /* ── DOM refs ─────────────────────────────────────────── */
 
+const resultStatus = document.getElementById('result-status');
+const loadingPanel = document.getElementById('loading-panel');
+const loadingText = document.getElementById('loading-text');
+const stepRead = document.getElementById('step-read');
+const stepImage = document.getElementById('step-image');
+const stepApi = document.getElementById('step-api');
+const errorPanel = document.getElementById('error-panel');
+const errorTitleText = document.getElementById('error-title-text');
+const errorMessage = document.getElementById('error-message');
+const retryBtn = document.getElementById('retry-btn');
+const resultContent = document.getElementById('result-content');
+
 const elements = {
-  status: document.getElementById('result-status'),
   previewImage: document.getElementById('preview-image'),
   promptZh: document.getElementById('prompt-zh'),
   promptEn: document.getElementById('prompt-en'),
   promptTags: document.getElementById('prompt-tags'),
   negativePrompt: document.getElementById('negative-prompt'),
   jsonPrompt: document.getElementById('json-prompt'),
-  rawJson: document.getElementById('raw-json'),
-  errorDetail: document.getElementById('error-detail')
+  rawJson: document.getElementById('raw-json')
 };
 
-/* ── Rendering helpers ────────────────────────────────── */
+/* ── Step SVG icons ───────────────────────────────────── */
+
+const STEP_ICONS = {
+  pending: '<svg class="progress-step-icon" viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="10" r="3" opacity="0.3"/></svg>',
+  active: '<svg class="progress-step-icon" viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="10" r="3"/></svg>',
+  done: '<svg class="progress-step-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>'
+};
+
+/* ── Progress / state helpers ─────────────────────────── */
+
+function setStepState(stepEl, state) {
+  stepEl.className = `progress-step progress-step--${state}`;
+  const icon = stepEl.querySelector('.progress-step-icon');
+  if (icon) {
+    icon.outerHTML = STEP_ICONS[state] || STEP_ICONS.pending;
+  }
+}
+
+function setLoading(text, activeStep) {
+  loadingPanel.hidden = false;
+  errorPanel.hidden = true;
+  resultContent.hidden = true;
+  loadingText.textContent = text;
+  if (resultStatus) {
+    resultStatus.textContent = text;
+    resultStatus.dataset.tone = 'neutral';
+  }
+
+  const steps = [stepRead, stepImage, stepApi];
+  const activeIdx = steps.indexOf(activeStep);
+
+  steps.forEach((step, i) => {
+    if (i < activeIdx) {
+      setStepState(step, 'done');
+    } else if (i === activeIdx) {
+      setStepState(step, 'active');
+    } else {
+      setStepState(step, 'pending');
+    }
+  });
+}
+
+function showError(title, message) {
+  loadingPanel.hidden = true;
+  errorPanel.hidden = false;
+  resultContent.hidden = true;
+  if (resultStatus) {
+    resultStatus.textContent = title;
+    resultStatus.dataset.tone = 'error';
+  }
+  errorTitleText.textContent = title;
+  errorMessage.textContent = message;
+}
+
+function showResult() {
+  loadingPanel.hidden = true;
+  errorPanel.hidden = true;
+  resultContent.hidden = false;
+  if (resultStatus) {
+    resultStatus.textContent = '分析完成。';
+    resultStatus.dataset.tone = 'success';
+  }
+}
 
 function setStatus(message, tone = 'neutral') {
-  elements.status.textContent = message;
-  elements.status.dataset.tone = tone;
+  // 兼容旧调用，同时更新页面标题下方状态
+  if (resultStatus) {
+    resultStatus.textContent = message;
+    resultStatus.dataset.tone = tone;
+  }
+  loadingText.textContent = message;
 }
 
 function setText(id, value) {
@@ -73,29 +149,40 @@ function setText(id, value) {
 }
 
 function renderResult(result, rawText) {
-  setStatus('分析完成。', 'success');
   setText('prompt-zh', result.prompt_zh || '');
   setText('prompt-en', result.prompt_en || '');
   setText('prompt-tags', Array.isArray(result.prompt_tags) ? result.prompt_tags.join(', ') : '');
   setText('negative-prompt', result.negative_prompt || '');
   setText('json-prompt', JSON.stringify(result.json_prompt || {}, null, 2));
   setText('raw-json', rawText || JSON.stringify(result, null, 2));
+  showResult();
 }
 
 function renderError(error) {
-  setStatus('处理失败。', 'error');
-  elements.errorDetail.textContent = error instanceof Error ? error.stack || error.message : String(error);
+  const message = error instanceof Error ? error.message : String(error);
+  showError('分析失败', message);
 }
+
+/* ── Copy buttons ─────────────────────────────────────── */
 
 function setupCopyButtons() {
   document.querySelectorAll('[data-copy-target]').forEach(button => {
-    button.addEventListener('click', async () => {
+    button.addEventListener('click', async event => {
+      event.preventDefault();
+      event.stopPropagation();
+
       const targetId = button.getAttribute('data-copy-target');
       const target = document.getElementById(targetId);
       const text = target ? target.textContent : '';
-      await navigator.clipboard.writeText(text || '');
       const oldText = button.textContent;
-      button.textContent = '已复制';
+
+      try {
+        await navigator.clipboard.writeText(text || '');
+        button.textContent = '已复制';
+      } catch {
+        button.textContent = '复制失败';
+      }
+
       window.setTimeout(() => {
         button.textContent = oldText;
       }, 1200);
@@ -123,9 +210,6 @@ async function loadJobPayload(jobId) {
 
 /* ── Image validation ─────────────────────────────────── */
 
-/**
- * 校验 data URL 的 MIME 类型：拒绝 SVG 和非 png/jpeg/webp。
- */
 function validateDataUrlMime(dataUrl) {
   if (!dataUrl.startsWith('data:')) {
     throw new Error('不是有效的 data URL。');
@@ -143,10 +227,6 @@ function validateDataUrlMime(dataUrl) {
   }
 }
 
-/**
- * 完整校验 data URL：MIME 白名单 + base64 解码字节估算 <= 20MB + 总长度合理。
- * 必须在 loadImage 前调用。
- */
 function validateDataUrl(dataUrl) {
   validateDataUrlMime(dataUrl);
   const parsed = dataUrl.match(/^data:[^;]+;base64,(.+)$/s);
@@ -154,21 +234,16 @@ function validateDataUrl(dataUrl) {
     throw new Error('data URL 不是 base64 编码。');
   }
   const base64 = parsed[1];
-  // base64 每 4 字符编码 3 原始字节
   const estimatedBytes = Math.floor(base64.length * 3 / 4);
   if (estimatedBytes > MAX_REMOTE_IMAGE_BYTES) {
     throw new Error('图片文件过大（超过 20MB）。请使用更小的图片。');
   }
-  // 总 dataUrl 长度合理性检查
   const maxTotalLength = base64.length + 64;
   if (dataUrl.length > maxTotalLength) {
     throw new Error('data URL 格式异常。');
   }
 }
 
-/**
- * 校验远端图片响应的 content-type / content-length 头。
- */
 function validateRemoteResponse(response) {
   const contentType = response.headers.get('content-type');
   if (contentType) {
@@ -186,9 +261,6 @@ function validateRemoteResponse(response) {
   }
 }
 
-/**
- * 校验下载后的 blob 大小和 MIME。
- */
 function validateBlob(blob) {
   if (blob.size > MAX_REMOTE_IMAGE_BYTES) {
     throw new Error('图片文件过大（超过 20MB）。请使用更小的图片。');
@@ -212,7 +284,7 @@ async function prepareImage(input) {
   }
 
   if (input.type === 'image_url') {
-    setStatus('正在读取图片...');
+    setLoading('正在读取图片...', stepImage);
     const url = new URL(input.srcUrl);
     if (url.protocol !== 'http:' && url.protocol !== 'https:') {
       throw new Error('不支持的图片 URL 协议。');
@@ -228,13 +300,13 @@ async function prepareImage(input) {
   }
 
   if (input.type === 'data_url') {
-    setStatus('正在解析图片...');
+    setLoading('正在解析图片...', stepImage);
     validateDataUrl(input.dataUrl);
     return normalizeImageDataUrl(input.dataUrl);
   }
 
   if (input.type === 'screenshot_selection') {
-    setStatus('正在裁剪截图...');
+    setLoading('正在裁剪截图...', stepImage);
     return cropScreenshot(input.screenshotDataUrl, input.rect);
   }
 
@@ -268,17 +340,11 @@ async function cropScreenshot(screenshotDataUrl, rect) {
   return normalizeImageDataUrl(croppedDataUrl);
 }
 
-/**
- * 归一化图片为 image/jpeg，确保 base64 <= MAX_BASE64_LENGTH。
- * 已是 JPEG 且在限制内则直接通过，否则迭代压缩（逐步降尺寸 + 降质量）。
- * 仍超限则抛错。
- */
 async function normalizeImageDataUrl(dataUrl) {
   validateDataUrl(dataUrl);
   const image = await loadImage(dataUrl);
   const parsed = parseDataUrl(dataUrl);
 
-  // 已是 JPEG 且满足尺寸和大小限制 — 直接通过
   if (parsed.mimeType === 'image/jpeg' &&
       parsed.base64.length <= MAX_BASE64_LENGTH &&
       Math.max(image.naturalWidth, image.naturalHeight) <= MAX_IMAGE_SIDE) {
@@ -289,7 +355,7 @@ async function normalizeImageDataUrl(dataUrl) {
     };
   }
 
-  setStatus('正在压缩图片...');
+  setLoading('正在压缩图片...', stepImage);
 
   let scale = Math.min(1, MAX_IMAGE_SIDE / Math.max(image.naturalWidth, image.naturalHeight));
   let quality = JPEG_QUALITY;
@@ -315,7 +381,6 @@ async function normalizeImageDataUrl(dataUrl) {
       };
     }
 
-    // 缩小尺寸和质量，继续迭代
     scale *= 0.7;
     quality = Math.max(0.3, quality * 0.8);
   }
@@ -370,7 +435,6 @@ async function loadConfig() {
     throw new Error('请先打开设置页，填写 AI Base URL、API Key 和 Model。');
   }
 
-  // 请求前再次校验 API Base URL 协议
   try {
     const url = new URL(apiBaseUrl);
     if (url.protocol !== 'https:' &&
@@ -395,26 +459,37 @@ function buildChatCompletionsUrl(baseUrl) {
 
 function buildReversePromptInstruction() {
   return [
-    'You are a reverse prompt analyst for image generation.',
-    'Analyze the provided image and infer a practical image-generation prompt that could recreate it.',
-    'Return valid JSON only. Do not use markdown fences.',
-    'Do not invent brands, named artists, exact camera models, exact locations, hidden objects, or unreadable text.',
-    'If something is uncertain, use broader but visually useful wording.',
-    'Use Simplified Chinese for prompt_zh.',
-    'Use English for prompt_en, prompt_tags, negative_prompt, and json_prompt.',
+    'You are an elite reverse-prompt analyst for image generation.',
+    'Your task is not to caption the image. Your task is to reconstruct a practical image-generation prompt that could recreate the visible image as closely as possible.',
+    'Analyze only visible evidence. Be specific about subject, pose or action, appearance, environment, composition, lighting, atmosphere, color palette, materials, texture, camera/framing, style, and image quality.',
+    'If something is uncertain, use broader but visually useful wording instead of guessing. Do not invent brands, logos, named artists, exact camera bodies, lens models, exact locations, hidden objects, identities, or unreadable text.',
+    'Do not claim text content unless it is clearly readable. If text is visible but unreadable, describe it only as unreadable text or text-like marks. Avoid empty generic phrases unless they help visual recreation.',
+    'Return valid JSON only. Do not use markdown fences. Do not include analysis outside the JSON.',
+    'Language and quality rules:',
+    '- prompt_zh must be Simplified Chinese and should preserve the same visual details as prompt_en.',
+    '- prompt_en must be English and should be the most complete recreation prompt, around 100-180 words.',
+    '- prompt_tags must contain 6-10 concise English tags covering subject, medium/style, lighting, mood, composition, and visual technique when visible.',
+    '- negative_prompt must be English, practical for image generation, and tailored to the image type. Include quality/artifact negatives and content-specific negatives only when relevant.',
+    '- json_prompt must be English and should break the image into reusable structured visual components.',
     'Return exactly this JSON shape:',
     '{',
-    '  "prompt_zh": "中文反向提示词，具体描述主体、构图、光线、风格、色彩和细节。",',
-    '  "prompt_en": "English reverse prompt describing subject, composition, lighting, style, colors, and details.",',
-    '  "prompt_tags": ["tag1", "tag2", "tag3", "tag4"],',
-    '  "negative_prompt": "English negative prompt for artifacts, low quality, distortion, bad anatomy, wrong text, watermark.",',
+    '  "prompt_zh": "简体中文反向提示词，完整描述主体、动作姿态、外观细节、环境背景、构图、光线氛围、风格、色彩、材质和画面质感。",',
+    '  "prompt_en": "English reverse prompt optimized for recreating the image, not merely describing it.",',
+    '  "prompt_tags": ["tag1", "tag2", "tag3", "tag4", "tag5", "tag6"],',
+    '  "negative_prompt": "English negative prompt tailored to avoid likely generation errors.",',
     '  "json_prompt": {',
-    '    "subject": "...",',
-    '    "composition": "...",',
-    '    "lighting": "...",',
-    '    "style": "...",',
-    '    "colors": ["..."],',
-    '    "aspect_ratio": "..."',
+    '    "subject": "main subject and visible identity-neutral attributes",',
+    '    "action_pose": "pose, gesture, motion, or stillness",',
+    '    "details_appearance": "clothing, expression, shape, surface details, accessories, visible design features",',
+    '    "environment_background": "setting, background elements, depth, context",',
+    '    "lighting_atmosphere": "light source, contrast, shadows, mood, time-of-day impression if visually supported",',
+    '    "composition_framing": "camera distance, angle, crop, perspective, subject placement, aspect ratio impression",',
+    '    "style_camera": "visual medium, rendering style, photographic or illustrative qualities, lens/framing feel without inventing exact gear",',
+    '    "colors": ["dominant color", "accent color"],',
+    '    "materials_textures": ["visible material or texture"],',
+    '    "aspect_ratio": "best estimate such as 1:1, 4:3, 3:4, 16:9, 9:16, or unknown",',
+    '    "quality_modifiers": "useful generation modifiers based on visible quality, detail level, sharpness, finish",',
+    '    "likely_generation_intent": "brief description of what the original prompt likely aimed to produce"',
     '  }',
     '}'
   ].join('\n');
@@ -426,11 +501,10 @@ async function callVisionApi(preparedImage) {
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
-  // 所有图片统一为 image/jpeg
   const body = {
     model: config.apiModel,
     temperature: 0.2,
-    max_tokens: 2500,
+    max_tokens: 3500,
     messages: [
       {
         role: 'user',
@@ -451,7 +525,7 @@ async function callVisionApi(preparedImage) {
   };
 
   try {
-    setStatus('正在调用 AI 模型...');
+    setLoading('正在调用 AI 模型分析图片...', stepApi);
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -479,7 +553,7 @@ async function callVisionApi(preparedImage) {
     return { parsed, rawText };
   } catch (error) {
     if (error && error.name === 'AbortError') {
-      throw new Error('API 请求超时。请换更小的选区，或使用响应更快的模型。');
+      throw new Error('API 请求超时（2 分钟）。请换更小的选区，或使用响应更快的模型。');
     }
     if (error.message && error.message.includes('Failed to fetch')) {
       throw new Error('无法连接到 AI API。请检查 Base URL 是否正确，以及是否已在设置中保存并授权网络权限。');
@@ -531,10 +605,6 @@ function extractJSON(text) {
 
 /* ── Schema validation ────────────────────────────────── */
 
-/**
- * 校验模型返回的 JSON 是否包含所有必需字段且类型正确。
- * 缺字段或类型错误时抛出异常，阻止显示"分析完成"。
- */
 function validateResultSchema(parsed) {
   if (!parsed || typeof parsed !== 'object') {
     throw new Error('模型返回的 JSON 不是对象。');
@@ -558,11 +628,23 @@ function validateResultSchema(parsed) {
 
 /* ── Main ─────────────────────────────────────────────── */
 
+let currentInput = null;
+
+async function analyzeInput(input) {
+  const prepared = await prepareImage(input);
+  elements.previewImage.src = prepared.dataUrl;
+
+  const { parsed, rawText } = await callVisionApi(prepared);
+  validateResultSchema(parsed);
+  renderResult(parsed, rawText);
+}
+
 async function main() {
   setupCopyButtons();
+  setLoading('正在读取待分析输入...', stepRead);
+
   const input = await loadPendingInput();
 
-  // 如果有 jobId，从 IndexedDB 加载大 payload 并删除
   if (input.jobId) {
     const payload = await loadJobPayload(input.jobId);
     if (payload) {
@@ -571,11 +653,16 @@ async function main() {
     }
   }
 
-  const prepared = await prepareImage(input);
-  elements.previewImage.src = prepared.dataUrl;
-  const { parsed, rawText } = await callVisionApi(prepared);
-  validateResultSchema(parsed);
-  renderResult(parsed, rawText);
+  currentInput = { ...input };
+  await analyzeInput(currentInput);
 }
+
+retryBtn.addEventListener('click', () => {
+  if (!currentInput) {
+    showError('无法重试', '没有可重试的输入。请回到网页右键图片或框选截图。');
+    return;
+  }
+  analyzeInput({ ...currentInput }).catch(renderError);
+});
 
 main().catch(renderError);

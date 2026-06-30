@@ -10,67 +10,109 @@
     <main class="page-shell result-shell">
       <header class="result-header">
         <div>
-          <h1>PromptCard Lite 结果</h1>
+          <div class="eyebrow">PromptCard Lite</div>
+          <h1>图片提示词卡片</h1>
           <p id="result-status" class="status-text" role="status">正在读取待分析输入...</p>
         </div>
         <a class="secondary-button link-button" href="options.html" target="_blank" rel="noreferrer">打开设置</a>
       </header>
 
-      <section class="preview-panel">
-        <img id="preview-image" alt="待分析图片预览">
+      <section id="loading-panel" class="surface-card state-panel">
+        <div class="spinner" aria-hidden="true"></div>
+        <div>
+          <h2>正在分析图片</h2>
+          <p class="loading-text" id="loading-text">正在准备...</p>
+        </div>
+        <div class="progress-steps" id="progress-steps" aria-label="分析进度">
+          <div class="progress-step" id="step-read">
+            <svg class="progress-step-icon" viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="10" r="3"/></svg>
+            <span>读取输入</span>
+          </div>
+          <div class="progress-step" id="step-image">
+            <svg class="progress-step-icon" viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="10" r="3"/></svg>
+            <span>处理图片</span>
+          </div>
+          <div class="progress-step" id="step-api">
+            <svg class="progress-step-icon" viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="10" r="3"/></svg>
+            <span>调用 AI 模型</span>
+          </div>
+        </div>
       </section>
 
-      <section class="result-grid">
-        <article class="result-card">
-          <div class="card-title-row">
-            <h2>中文提示词</h2>
-            <button class="copy-button" data-copy-target="prompt-zh">复制</button>
-          </div>
-          <pre id="prompt-zh"></pre>
-        </article>
-
-        <article class="result-card">
-          <div class="card-title-row">
-            <h2>English Prompt</h2>
-            <button class="copy-button" data-copy-target="prompt-en">复制</button>
-          </div>
-          <pre id="prompt-en"></pre>
-        </article>
-
-        <article class="result-card">
-          <div class="card-title-row">
-            <h2>Tags</h2>
-            <button class="copy-button" data-copy-target="prompt-tags">复制</button>
-          </div>
-          <pre id="prompt-tags"></pre>
-        </article>
-
-        <article class="result-card">
-          <div class="card-title-row">
-            <h2>Negative Prompt</h2>
-            <button class="copy-button" data-copy-target="negative-prompt">复制</button>
-          </div>
-          <pre id="negative-prompt"></pre>
-        </article>
-
-        <article class="result-card result-card-wide">
-          <div class="card-title-row">
-            <h2>JSON Prompt</h2>
-            <button class="copy-button" data-copy-target="json-prompt">复制</button>
-          </div>
-          <pre id="json-prompt"></pre>
-        </article>
-
-        <article class="result-card result-card-wide">
-          <div class="card-title-row">
-            <h2>Raw JSON</h2>
-            <button class="copy-button" data-copy-target="raw-json">复制</button>
-          </div>
-          <pre id="raw-json"></pre>
-        </article>
+      <section id="error-panel" class="surface-card error-panel" hidden>
+        <div class="error-title">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+          <h2 id="error-title-text">处理失败</h2>
+        </div>
+        <p class="error-message" id="error-message"></p>
+        <div class="button-row">
+          <button id="retry-btn" type="button" class="primary-button compact-button">重试</button>
+          <a class="secondary-button compact-button link-button" href="options.html" target="_blank" rel="noreferrer">检查设置</a>
+        </div>
       </section>
 
-      <pre id="error-detail" class="error-detail"></pre>
+      <div id="result-content" class="result-workbench" hidden>
+        <aside class="preview-column">
+          <section class="preview-panel surface-card" aria-label="已分析图片预览">
+            <img id="preview-image" alt="已分析图片预览">
+          </section>
+        </aside>
+
+        <section class="result-column" aria-label="生成结果">
+          <article class="result-card result-card-primary">
+            <div class="card-title-row">
+              <div>
+                <span class="card-kicker">Main output</span>
+                <h2>English Prompt</h2>
+              </div>
+              <button class="primary-button copy-button-main" data-copy-target="prompt-en">Copy English Prompt</button>
+            </div>
+            <pre id="prompt-en"></pre>
+          </article>
+
+          <article class="result-card">
+            <div class="card-title-row">
+              <h2>中文提示词</h2>
+              <button class="copy-button" data-copy-target="prompt-zh">复制</button>
+            </div>
+            <pre id="prompt-zh"></pre>
+          </article>
+
+          <div class="result-card-row">
+            <article class="result-card">
+              <div class="card-title-row">
+                <h2>Tags</h2>
+                <button class="copy-button" data-copy-target="prompt-tags">复制</button>
+              </div>
+              <pre id="prompt-tags" class="tag-output"></pre>
+            </article>
+
+            <article class="result-card">
+              <div class="card-title-row">
+                <h2>Negative Prompt</h2>
+                <button class="copy-button" data-copy-target="negative-prompt">复制</button>
+              </div>
+              <pre id="negative-prompt"></pre>
+            </article>
+          </div>
+
+          <article class="result-card code-card">
+            <div class="card-title-row">
+              <h2>JSON Prompt</h2>
+              <button class="copy-button" data-copy-target="json-prompt">复制</button>
+            </div>
+            <pre id="json-prompt"></pre>
+          </article>
+
+          <details class="result-card code-card raw-card">
+            <summary>
+              <span>Raw JSON</span>
+              <button class="copy-button" data-copy-target="raw-json">复制</button>
+            </summary>
+            <pre id="raw-json"></pre>
+          </details>
+        </section>
+      </div>
     </main>
     <script src="result.js"></script>
   </body>
