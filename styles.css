@@ -285,6 +285,10 @@ p {
   gap: 16px;
 }
 
+.settings-form + .settings-block {
+  margin-top: 22px;
+}
+
 .field-row {
   display: grid;
   gap: 7px;
