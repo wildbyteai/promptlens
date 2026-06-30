@@ -14,7 +14,9 @@
           <h1>图片提示词卡片</h1>
           <p id="result-status" class="status-text" role="status">正在读取待分析输入...</p>
         </div>
-        <a class="secondary-button link-button" href="options.html" target="_blank" rel="noreferrer">打开设置</a>
+          <div class="result-header-actions">
+            <a class="secondary-button link-button" href="options.html" target="_blank" rel="noreferrer">打开设置</a>
+          </div>
       </header>
 
       <section id="loading-panel" class="surface-card state-panel">
@@ -59,6 +61,26 @@
         </aside>
 
         <section class="result-column" aria-label="生成结果">
+          <article class="template-summary result-card" aria-label="当前输出模板">
+            <div>
+              <span class="card-kicker">Output template</span>
+              <h2 id="template-name">详细分析</h2>
+            </div>
+            <p id="template-description">完整结构化输出，适合通用分析和二次编辑。</p>
+          </article>
+
+          <div class="export-toolbar result-card" aria-label="结果导出">
+            <div>
+              <span class="card-kicker">Export</span>
+              <h2>复制与导出</h2>
+            </div>
+            <div class="button-row">
+              <button id="copy-all" type="button" class="secondary-button compact-button">复制全部</button>
+              <button id="download-json" type="button" class="secondary-button compact-button">下载 JSON</button>
+              <button id="download-markdown" type="button" class="secondary-button compact-button">下载 Markdown</button>
+            </div>
+          </div>
+
           <article class="result-card result-card-primary">
             <div class="card-title-row">
               <div>
@@ -104,6 +126,18 @@
             <pre id="json-prompt"></pre>
           </article>
 
+          <article id="usage-card" class="result-card usage-card" hidden>
+            <div class="card-title-row">
+              <h2>用量与耗时</h2>
+            </div>
+            <dl class="usage-list">
+              <div><dt>Prompt tokens</dt><dd id="usage-prompt">-</dd></div>
+              <div><dt>Completion tokens</dt><dd id="usage-completion">-</dd></div>
+              <div><dt>Total tokens</dt><dd id="usage-total">-</dd></div>
+              <div><dt>Response time</dt><dd id="usage-time">-</dd></div>
+            </dl>
+          </article>
+
           <details class="result-card code-card raw-card">
             <summary>
               <span>Raw JSON</span>
@@ -114,6 +148,8 @@
         </section>
       </div>
     </main>
+    <script src="templates.js"></script>
+    <script src="history-store.js"></script>
     <script src="result.js"></script>
   </body>
 </html>

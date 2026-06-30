@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PromptCard Lite 历史记录</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="page-shell result-shell">
+      <header class="result-header">
+        <div>
+          <div class="eyebrow">PromptCard Lite</div>
+          <h1>本地历史记录</h1>
+          <p id="history-status" class="status-text" role="status">正在读取本地历史...</p>
+        </div>
+        <a class="secondary-button link-button" href="options.html" target="_blank" rel="noreferrer">打开设置</a>
+      </header>
+
+      <section id="history-disabled-banner" class="status-banner status-banner--info" hidden>
+        <span>本地历史记录当前已关闭。以下只显示之前已保存的数据，不会继续新增记录。</span>
+      </section>
+
+      <section class="surface-card">
+        <div class="button-row">
+          <input id="history-search" type="text" placeholder="搜索 Prompt、Tags、来源域名或模板">
+          <button id="refresh-history" type="button" class="secondary-button compact-button">刷新</button>
+          <button id="clear-history-page" type="button" class="ghost-button compact-button">清空全部</button>
+        </div>
+      </section>
+
+      <section id="history-list" class="history-list" aria-label="历史记录列表"></section>
+    </main>
+    <script src="history-store.js"></script>
+    <script src="history.js"></script>
+  </body>
+</html>
