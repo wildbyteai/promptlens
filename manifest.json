@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "PromptCard Lite",
+  "version": "0.1.0",
+  "description": "右键图片或框选截图，AI 反向生成图片提示词",
+  "permissions": [
+    "contextMenus",
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "optional_host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_page": "options.html"
+}

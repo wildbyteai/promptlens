@@ -1,0 +1,46 @@
+.promptcard-selection-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  cursor: crosshair;
+  background: rgba(10, 14, 24, 0.28);
+  user-select: none;
+}
+
+.promptcard-selection-hint {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.92);
+  color: #fff;
+  font: 600 14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+}
+
+.promptcard-selection-box {
+  position: fixed;
+  display: none;
+  border: 2px solid #ffffff;
+  background: rgba(79, 70, 229, 0.18);
+  box-shadow: 0 0 0 9999px rgba(10, 14, 24, 0.42), 0 0 0 1px rgba(79, 70, 229, 0.9) inset;
+}
+
+.promptcard-selection-box.is-visible {
+  display: block;
+}
+
+.promptcard-selection-cancel {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #1f2430;
+  font: 700 14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  cursor: pointer;
+}

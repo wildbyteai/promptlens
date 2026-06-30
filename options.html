@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PromptCard Lite 设置</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="page-shell">
+      <h1>PromptCard Lite 设置</h1>
+      <p class="muted">配置你的 OpenAI-compatible Vision API。分析时，图片会发送到你配置的 AI 服务。</p>
+
+      <form id="options-form" class="card-form">
+        <label class="field-row">
+          <span>AI Base URL</span>
+          <input id="api-base-url" name="apiBaseUrl" type="url" placeholder="https://api.openai.com/v1" autocomplete="off" required>
+        </label>
+
+        <label class="field-row">
+          <span>API Key</span>
+          <div class="password-row">
+            <input id="api-key" name="apiKey" type="password" placeholder="sk-..." autocomplete="off" required>
+            <button id="toggle-api-key" type="button" class="secondary-button">显示</button>
+          </div>
+        </label>
+
+        <label class="field-row">
+          <span>Model</span>
+          <input id="api-model" name="apiModel" type="text" placeholder="gpt-4.1-mini / qwen-vl-max / gemini-2.5-flash" autocomplete="off" required>
+        </label>
+
+        <div class="action-row">
+          <button type="submit" class="primary-button">保存设置</button>
+          <button id="reset-form" type="button" class="secondary-button">清空</button>
+        </div>
+      </form>
+
+      <p id="options-status" class="status-text" role="status"></p>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>

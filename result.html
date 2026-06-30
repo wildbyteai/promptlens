@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PromptCard Lite 结果</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="page-shell result-shell">
+      <header class="result-header">
+        <div>
+          <h1>PromptCard Lite 结果</h1>
+          <p id="result-status" class="status-text" role="status">正在读取待分析输入...</p>
+        </div>
+        <a class="secondary-button link-button" href="options.html" target="_blank" rel="noreferrer">打开设置</a>
+      </header>
+
+      <section class="preview-panel">
+        <img id="preview-image" alt="待分析图片预览">
+      </section>
+
+      <section class="result-grid">
+        <article class="result-card">
+          <div class="card-title-row">
+            <h2>中文提示词</h2>
+            <button class="copy-button" data-copy-target="prompt-zh">复制</button>
+          </div>
+          <pre id="prompt-zh"></pre>
+        </article>
+
+        <article class="result-card">
+          <div class="card-title-row">
+            <h2>English Prompt</h2>
+            <button class="copy-button" data-copy-target="prompt-en">复制</button>
+          </div>
+          <pre id="prompt-en"></pre>
+        </article>
+
+        <article class="result-card">
+          <div class="card-title-row">
+            <h2>Tags</h2>
+            <button class="copy-button" data-copy-target="prompt-tags">复制</button>
+          </div>
+          <pre id="prompt-tags"></pre>
+        </article>
+
+        <article class="result-card">
+          <div class="card-title-row">
+            <h2>Negative Prompt</h2>
+            <button class="copy-button" data-copy-target="negative-prompt">复制</button>
+          </div>
+          <pre id="negative-prompt"></pre>
+        </article>
+
+        <article class="result-card result-card-wide">
+          <div class="card-title-row">
+            <h2>JSON Prompt</h2>
+            <button class="copy-button" data-copy-target="json-prompt">复制</button>
+          </div>
+          <pre id="json-prompt"></pre>
+        </article>
+
+        <article class="result-card result-card-wide">
+          <div class="card-title-row">
+            <h2>Raw JSON</h2>
+            <button class="copy-button" data-copy-target="raw-json">复制</button>
+          </div>
+          <pre id="raw-json"></pre>
+        </article>
+      </section>
+
+      <pre id="error-detail" class="error-detail"></pre>
+    </main>
+    <script src="result.js"></script>
+  </body>
+</html>
