@@ -29,13 +29,13 @@ Core capabilities:
 
 PromptLens does not provide model service access. Users need their own API service that supports vision input.
 
-## Permissions explanation
+## Permissions and shortcut explanation
 
 - `contextMenus`: adds right-click actions for image analysis and screenshot selection.
 - `storage`: stores local settings, selected templates, optional local history, and temporary input data.
 - `activeTab`: accesses the current tab only after a user action starts screenshot selection.
 - `scripting`: injects the screenshot selection script and styles after user action.
-- `commands`: registers the screenshot selection shortcut, currently `Alt+Shift+S` by default.
+- Shortcut registration: the manifest `commands` entry registers the screenshot selection shortcut, currently `Alt+Shift+S` by default.
 - Optional host permissions (`<all_urls>`): requested only when the user chooses to grant image read permission for remote images or when needed for the configured API origin.
 
 ## Screenshot plan

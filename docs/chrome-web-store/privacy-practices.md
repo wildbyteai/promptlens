@@ -8,16 +8,16 @@ PromptLens has no project-operated backend, no telemetry, no account system, and
 
 ## Data stored locally
 
-PromptLens stores the following in `chrome.storage.local` or browser-local storage mechanisms:
+PromptLens stores the following in `chrome.storage.local` and IndexedDB:
 
 - AI Base URL.
 - API Key.
 - Model name.
-- Provider preset selection.
 - Default output template.
 - Custom templates.
 - Local history setting.
-- Optional local history entries when the user enables history.
+- Image normalization settings, including maximum image side length and JPEG quality.
+- Optional local history entries in the browser-local IndexedDB database when the user enables history.
 
 Optional local history entries contain text results, source domain, timestamps, and template metadata. PromptLens does not save image thumbnails in local history.
 
