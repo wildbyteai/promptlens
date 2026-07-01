@@ -118,15 +118,13 @@ Press Esc or click Cancel to exit selection mode.
 
 ## Screenshots
 
-> These are lightweight placeholders. Replace them with real extension screenshots when publishing.
-
 | Context menu | Options |
 | --- | --- |
-| <img src="./docs/assets/demo-context-menu.svg" alt="PromptLens context menu" /> | <img src="./docs/assets/demo-options.svg" alt="PromptLens options page" /> |
+| <img src="./docs/assets/promptlens-context-menu.png" alt="PromptLens context menu" /> | <img src="./docs/assets/promptlens-options.png" alt="PromptLens options page" /> |
 
 | Result |
 | --- |
-| <img src="./docs/assets/demo-result.svg" alt="PromptLens result page" /> |
+| <img src="./docs/assets/promptlens-result.png" alt="PromptLens result page" /> |
 
 ## Privacy and security
 

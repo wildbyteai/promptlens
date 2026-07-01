@@ -118,15 +118,13 @@ PromptLens 不提供內建模型服務。你需要自行準備支援視覺輸入
 
 ## 截圖
 
-> 下方是輕量占位圖。正式發布前建議替換為真實擴充功能截圖。
-
 | 右鍵選單 | 設定頁 |
 | --- | --- |
-| <img src="./docs/assets/demo-context-menu.svg" alt="PromptLens 右鍵選單" /> | <img src="./docs/assets/demo-options.svg" alt="PromptLens 設定頁" /> |
+| <img src="./docs/assets/promptlens-context-menu.png" alt="PromptLens 右鍵選單" /> | <img src="./docs/assets/promptlens-options.png" alt="PromptLens 設定頁" /> |
 
 | 分析結果 |
 | --- |
-| <img src="./docs/assets/demo-result.svg" alt="PromptLens 分析結果頁" /> |
+| <img src="./docs/assets/promptlens-result.png" alt="PromptLens 分析結果頁" /> |
 
 ## 隱私與安全
 
