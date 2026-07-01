@@ -299,9 +299,9 @@ p {
 h1 {
   margin-bottom: 22px;
   max-width: 780px;
-  font-size: clamp(3rem, 7.2vw, 6.1rem);
-  line-height: 0.9;
-  letter-spacing: -0.078em;
+  font-size: clamp(2rem, 4.5vw, 3.5rem);
+  line-height: 1.05;
+  letter-spacing: -0.045em;
   text-wrap: balance;
 }
 
