@@ -1,6 +1,23 @@
 # PromptLens
 
-[English](./README.md) | 简体中文 | [繁體中文](./README.zh-TW.md)
+<p align="center">
+  <img src="./docs/assets/banner.svg" alt="PromptLens 横幅" />
+</p>
+
+<p align="center">
+  从网页图片或框选截图中反向分析可复用的 AI 图片提示词。
+</p>
+
+<p align="center">
+  <a href="./README.md">English</a> · 简体中文 · <a href="./README.zh-TW.md">繁體中文</a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/github/license/wildbyteai/promptlens" alt="License" />
+  <img src="https://img.shields.io/badge/Chrome-MV3-4285F4" alt="Chrome MV3" />
+  <img src="https://img.shields.io/badge/backend-none-22c55e" alt="无需后端" />
+  <img src="https://img.shields.io/badge/build-none-7c3aed" alt="无需构建" />
+</p>
 
 PromptLens 是一个轻量级 Chrome MV3 扩展，用于把网页图片或框选截图发送到你自己配置的 OpenAI-compatible Vision API，并生成可复制的图片反推提示词。
 
@@ -42,6 +59,10 @@ PromptLens 刻意不包含以下能力：
 5. 模型返回 JSON 后，结果页展示并提供复制、JSON 下载和 Markdown 下载。
 
 PromptLens 不提供内置模型服务。你需要自行准备支持视觉输入的 API 服务。
+
+<p align="center">
+  <img src="./docs/assets/workflow.svg" alt="PromptLens 工作流" />
+</p>
 
 ## 安装
 
@@ -94,6 +115,18 @@ PromptLens 不提供内置模型服务。你需要自行准备支持视觉输入
 4. 等待结果页生成提示词。
 
 按 Esc 或点击取消按钮可以退出框选。
+
+## 截图
+
+> 下面是轻量占位图。正式发布前建议替换为真实扩展截图。
+
+| 右键菜单 | 设置页 |
+| --- | --- |
+| <img src="./docs/assets/demo-context-menu.svg" alt="PromptLens 右键菜单" /> | <img src="./docs/assets/demo-options.svg" alt="PromptLens 设置页" /> |
+
+| 分析结果 |
+| --- |
+| <img src="./docs/assets/demo-result.svg" alt="PromptLens 分析结果页" /> |
 
 ## 隐私与安全
 

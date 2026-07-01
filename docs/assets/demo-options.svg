@@ -1,0 +1,13 @@
+<svg width="960" height="600" viewBox="0 0 960 600" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">PromptLens options page screenshot placeholder</title>
+  <desc id="desc">Placeholder for a real screenshot of the PromptLens options page.</desc>
+  <rect width="960" height="600" rx="28" fill="#f7f6f2"/>
+  <rect x="250" y="58" width="460" height="484" rx="22" fill="#ffffff" stroke="#e4e1da"/>
+  <rect x="292" y="112" width="376" height="34" rx="10" fill="#f1f0ec"/>
+  <rect x="292" y="176" width="376" height="44" rx="10" fill="#ffffff" stroke="#e4e1da"/>
+  <rect x="292" y="250" width="376" height="44" rx="10" fill="#ffffff" stroke="#e4e1da"/>
+  <rect x="292" y="324" width="376" height="44" rx="10" fill="#ffffff" stroke="#e4e1da"/>
+  <rect x="292" y="408" width="132" height="42" rx="10" fill="#111827"/>
+  <rect x="438" y="408" width="84" height="42" rx="10" fill="#f1f0ec"/>
+  <text x="480" y="504" text-anchor="middle" fill="#6e6a62" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="18">Replace with real options screenshot</text>
+</svg>

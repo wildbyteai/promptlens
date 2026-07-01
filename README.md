@@ -1,6 +1,23 @@
 # PromptLens
 
-English | [简体中文](./README.zh-CN.md) | [繁體中文](./README.zh-TW.md)
+<p align="center">
+  <img src="./docs/assets/banner.svg" alt="PromptLens banner" />
+</p>
+
+<p align="center">
+  Reverse-engineer image prompts from any web image or selected screenshot region.
+</p>
+
+<p align="center">
+  English · <a href="./README.zh-CN.md">简体中文</a> · <a href="./README.zh-TW.md">繁體中文</a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/github/license/wildbyteai/promptlens" alt="License" />
+  <img src="https://img.shields.io/badge/Chrome-MV3-4285F4" alt="Chrome MV3" />
+  <img src="https://img.shields.io/badge/backend-none-22c55e" alt="No backend" />
+  <img src="https://img.shields.io/badge/build-none-7c3aed" alt="No build step" />
+</p>
 
 PromptLens is a lightweight Chrome MV3 extension that sends a web image or a selected screenshot region to your own OpenAI-compatible Vision API and generates reusable reverse image prompts.
 
@@ -42,6 +59,10 @@ PromptLens intentionally does not include:
 5. The model returns JSON; the result page renders it and provides copy / JSON / Markdown export.
 
 PromptLens does not provide a built-in model service. You need your own API service that supports vision input.
+
+<p align="center">
+  <img src="./docs/assets/workflow.svg" alt="PromptLens workflow" />
+</p>
 
 ## Installation
 
@@ -94,6 +115,18 @@ If the page reports missing image read permission, grant permission in options o
 4. Wait for the result page to generate prompts.
 
 Press Esc or click Cancel to exit selection mode.
+
+## Screenshots
+
+> These are lightweight placeholders. Replace them with real extension screenshots when publishing.
+
+| Context menu | Options |
+| --- | --- |
+| <img src="./docs/assets/demo-context-menu.svg" alt="PromptLens context menu" /> | <img src="./docs/assets/demo-options.svg" alt="PromptLens options page" /> |
+
+| Result |
+| --- |
+| <img src="./docs/assets/demo-result.svg" alt="PromptLens result page" /> |
 
 ## Privacy and security
 
