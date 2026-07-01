@@ -44,6 +44,7 @@ FILES=(
   "background.js"
   "content.js"
   "history-store.js"
+  "history-format.js"
   "history.html"
   "history.js"
   "options.html"

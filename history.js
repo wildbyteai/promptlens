@@ -54,7 +54,8 @@ function renderItems() {
     title.textContent = item.sourceDomain || '未知来源';
     const meta = document.createElement('p');
     meta.className = 'history-meta';
-    meta.textContent = new Date(item.createdAt).toLocaleString();
+    const inputType = item.inputType ? ` · ${item.inputType}` : '';
+    meta.textContent = `${new Date(item.createdAt).toLocaleString()}${inputType}`;
     titleBox.append(kicker, title, meta);
 
     const actions = document.createElement('div');
@@ -62,11 +63,13 @@ function renderItems() {
     const copyButton = document.createElement('button');
     copyButton.type = 'button';
     copyButton.className = 'copy-button';
-    copyButton.textContent = '复制 Prompt';
+    copyButton.textContent = '复制全部';
     copyButton.addEventListener('click', async () => {
+      const copyText = window.PromptHistoryFormat.buildHistoryCopyText(item);
+
       const oldText = copyButton.textContent;
       try {
-        await navigator.clipboard.writeText(item.promptEn || '');
+        await navigator.clipboard.writeText(copyText);
         copyButton.textContent = '已复制';
       } catch {
         copyButton.textContent = '复制失败';
@@ -85,14 +88,23 @@ function renderItems() {
     actions.append(copyButton, deleteButton);
     header.append(titleBox, actions);
 
-    const prompt = document.createElement('pre');
-    prompt.textContent = item.promptEn || '';
+    const fieldList = document.createElement('div');
+    fieldList.className = 'history-field-list';
+    window.PromptHistoryFormat.getHistoryDisplayFields(item).forEach(field => {
+      if (!field.value) return;
+      const section = document.createElement('section');
+      section.className = `history-field history-field--${field.kind}`;
 
-    const tags = document.createElement('p');
-    tags.className = 'history-tags';
-    tags.textContent = Array.isArray(item.promptTags) ? item.promptTags.join(', ') : '';
+      const label = document.createElement('h3');
+      label.textContent = field.label;
+      const value = document.createElement('pre');
+      value.textContent = field.value;
 
-    article.append(header, prompt, tags);
+      section.append(label, value);
+      fieldList.appendChild(section);
+    });
+
+    article.append(header, fieldList);
     historyList.appendChild(article);
   });
 

@@ -782,7 +782,13 @@ async function maybeSaveHistory(input, result, template) {
     templateId: template.id,
     templateName: template.name,
     promptEn: result.prompt_en || '',
+    promptZh: result.prompt_zh || '',
     promptTags: Array.isArray(result.prompt_tags) ? result.prompt_tags : [],
+    negativePrompt: result.negative_prompt || '',
+    jsonPrompt: result.json_prompt || {},
+    rawText: currentRawText,
+    usage: currentUsage,
+    responseTimeMs: currentResponseTimeMs,
     result
   });
 }

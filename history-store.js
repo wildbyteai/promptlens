@@ -43,7 +43,13 @@
       templateId: item.templateId || '',
       templateName: item.templateName || '',
       promptEn: item.promptEn || '',
+      promptZh: item.promptZh || '',
       promptTags: Array.isArray(item.promptTags) ? item.promptTags : [],
+      negativePrompt: item.negativePrompt || '',
+      jsonPrompt: item.jsonPrompt && typeof item.jsonPrompt === 'object' ? item.jsonPrompt : {},
+      rawText: item.rawText || '',
+      usage: item.usage && typeof item.usage === 'object' ? item.usage : null,
+      responseTimeMs: Number.isFinite(Number(item.responseTimeMs)) ? Number(item.responseTimeMs) : null,
       result: item.result || {}
     };
 
