@@ -2,6 +2,12 @@
 
 本文档用于发布前自检，不包含任何本机绝对路径或密钥。
 
+## 详细材料
+
+- [商店文案草稿](store-listing.md)
+- [隐私实践表单辅助说明](privacy-practices.md)
+- [v0.3.0 发布检查清单](release-checklist.md)
+
 ## 基础信息
 
 - 扩展名称：PromptLens
