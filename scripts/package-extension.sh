@@ -106,7 +106,7 @@ for dir in "${DIRS[@]}"; do
   has_prefix "${dir}/" || fail "zip is missing required directory contents: ${dir}/"
 done
 
-FORBIDDEN_REGEX='(^|/)(\.git|docs|site|dist)/|(^|/)skills-lock\.json$|(^|/)README(\.[^/]*)?\.md$|(^|/)promptlens-.*-readme\.png$'
+FORBIDDEN_REGEX='(^|/)(\.git|docs|site|dist)/|(^|/)(skills-lock\.json|README(\.[^/]*)?\.md|SECURITY\.md|CONTRIBUTING\.md|LICENSE|promptlens-.*-readme\.png)$'
 for entry in "${ZIP_ENTRIES[@]}"; do
   if [[ "${entry}" =~ ${FORBIDDEN_REGEX} ]]; then
     fail "zip contains forbidden entry: ${entry}"
