@@ -71,6 +71,8 @@ const elements = {
   previewImage: document.getElementById('preview-image'),
   promptZh: document.getElementById('prompt-zh'),
   promptEn: document.getElementById('prompt-en'),
+  promptVariantsCard: document.getElementById('prompt-variants-card'),
+  promptVariantsList: document.getElementById('prompt-variants-list'),
   promptTags: document.getElementById('prompt-tags'),
   negativePrompt: document.getElementById('negative-prompt'),
   jsonPrompt: document.getElementById('json-prompt'),
@@ -185,6 +187,95 @@ function renderUsage(usage, responseTimeMs) {
   elements.usageTime.textContent = responseTimeMs ? `${Math.round(responseTimeMs)} ms` : '-';
 }
 
+function createTextElement(tagName, className, text) {
+  const element = document.createElement(tagName);
+  if (className) element.className = className;
+  element.textContent = text || '';
+  return element;
+}
+
+async function copyTextWithFeedback(button, text) {
+  const oldText = button.textContent;
+  try {
+    await navigator.clipboard.writeText(text || '');
+    button.textContent = '已复制';
+  } catch {
+    button.textContent = '复制失败';
+  }
+  window.setTimeout(() => {
+    button.textContent = oldText;
+  }, 1200);
+}
+
+function renderPromptVariants(result) {
+  const variants = window.PromptVariants.normalizePromptVariants(result);
+  elements.promptVariantsList.replaceChildren();
+
+  const visibleVariants = variants.filter(variant => variant && variant.isComplete);
+  if (!visibleVariants.length) {
+    elements.promptVariantsCard.hidden = true;
+    return variants;
+  }
+
+  visibleVariants.forEach(variant => {
+    const card = document.createElement('section');
+    card.className = `prompt-variant prompt-variant--${variant.id}`;
+
+    const header = document.createElement('div');
+    header.className = 'prompt-variant-header';
+
+    const titleBox = document.createElement('div');
+    titleBox.append(
+      createTextElement('h3', '', variant.title),
+      createTextElement('p', 'prompt-variant-intent', variant.prompt_zh_summary || variant.intent)
+    );
+
+    const actions = document.createElement('div');
+    actions.className = 'button-row';
+
+    const copyPromptButton = document.createElement('button');
+    copyPromptButton.type = 'button';
+    copyPromptButton.className = 'copy-button';
+    copyPromptButton.textContent = 'Copy Prompt';
+    copyPromptButton.addEventListener('click', () => copyTextWithFeedback(copyPromptButton, variant.prompt_en));
+
+    const copyCardButton = document.createElement('button');
+    copyCardButton.type = 'button';
+    copyCardButton.className = 'copy-button';
+    copyCardButton.textContent = 'Copy Card';
+    copyCardButton.addEventListener('click', () => {
+      copyTextWithFeedback(copyCardButton, window.PromptVariants.formatPromptVariantCard(variant));
+    });
+
+    actions.append(copyPromptButton, copyCardButton);
+    header.append(titleBox, actions);
+
+    const prompt = createTextElement('pre', 'prompt-variant-prompt', variant.prompt_en);
+
+    const meta = document.createElement('dl');
+    meta.className = 'prompt-variant-meta';
+
+    const metaRows = [
+      ['Tags', variant.tags.join(', ')],
+      ['Negative Prompt', variant.negative_prompt],
+      ['适用场景', variant.use_cases.join(', ')]
+    ];
+
+    metaRows.forEach(([labelText, valueText]) => {
+      if (!valueText) return;
+      const row = document.createElement('div');
+      row.append(createTextElement('dt', '', labelText), createTextElement('dd', '', valueText));
+      meta.appendChild(row);
+    });
+
+    card.append(header, prompt, meta);
+    elements.promptVariantsList.appendChild(card);
+  });
+
+  elements.promptVariantsCard.hidden = false;
+  return variants;
+}
+
 function renderResult(result, rawText, template) {
   currentResult = result;
   currentRawText = rawText || JSON.stringify(result, null, 2);
@@ -197,6 +288,7 @@ function renderResult(result, rawText, template) {
 
   setText('prompt-zh', result.prompt_zh || '');
   setText('prompt-en', result.prompt_en || '');
+  renderPromptVariants(result);
   setText('prompt-tags', Array.isArray(result.prompt_tags) ? result.prompt_tags.join(', ') : '');
   setText('negative-prompt', result.negative_prompt || '');
   setText('json-prompt', JSON.stringify(result.json_prompt || {}, null, 2));
@@ -221,18 +313,7 @@ function setupCopyButtons() {
       const targetId = button.getAttribute('data-copy-target');
       const target = document.getElementById(targetId);
       const text = target ? target.textContent : '';
-      const oldText = button.textContent;
-
-      try {
-        await navigator.clipboard.writeText(text || '');
-        button.textContent = '已复制';
-      } catch {
-        button.textContent = '复制失败';
-      }
-
-      window.setTimeout(() => {
-        button.textContent = oldText;
-      }, 1200);
+      await copyTextWithFeedback(button, text || '');
     });
   });
 }
@@ -259,7 +340,9 @@ function buildMarkdownExport() {
   const data = buildExportData();
   const result = data.result;
   const tags = Array.isArray(result.prompt_tags) ? result.prompt_tags.join(', ') : '';
-  return [
+  const variants = window.PromptVariants.normalizePromptVariants(result);
+  const variantsMarkdown = window.PromptVariants.formatPromptVariantsMarkdown(variants);
+  const sections = [
     '# Image Prompt Analysis Result',
     '',
     `- App: ${data.app}`,
@@ -288,13 +371,19 @@ function buildMarkdownExport() {
     JSON.stringify(result.json_prompt || {}, null, 2),
     '```',
     ''
-  ].join('\n');
+  ];
+  if (variantsMarkdown) {
+    sections.push(variantsMarkdown, '');
+  }
+  return sections.join('\n');
 }
 
 function buildCopyAllText() {
   const result = buildExportData().result;
   const tags = Array.isArray(result.prompt_tags) ? result.prompt_tags.join(', ') : '';
-  return [
+  const variants = window.PromptVariants.normalizePromptVariants(result);
+  const variantsMarkdown = window.PromptVariants.formatPromptVariantsMarkdown(variants);
+  const sections = [
     'English Prompt',
     result.prompt_en || '',
     '',
@@ -309,7 +398,11 @@ function buildCopyAllText() {
     '',
     'JSON Prompt',
     JSON.stringify(result.json_prompt || {}, null, 2)
-  ].join('\n');
+  ];
+  if (variantsMarkdown) {
+    sections.push('', variantsMarkdown);
+  }
+  return sections.join('\n');
 }
 
 function makeExportFilename(extension) {
