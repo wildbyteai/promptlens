@@ -1169,3 +1169,72 @@ a:active {
   border-radius: 12px;
   background: #fbfaf7;
 }
+
+.marketing-context-card {
+  display: grid;
+  gap: 14px;
+}
+
+.marketing-context-card textarea {
+  width: 100%;
+  min-height: 112px;
+  resize: vertical;
+  padding: 12px 13px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--text);
+  line-height: 1.55;
+}
+
+.marketing-context-card textarea::placeholder {
+  color: var(--faint);
+}
+
+
+.marketing-diagnosis-result {
+  display: grid;
+  gap: 16px;
+}
+
+.marketing-diagnosis-sections {
+  display: grid;
+  gap: 14px;
+}
+
+.marketing-diagnosis-section {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-muted);
+}
+
+.marketing-diagnosis-section h3 {
+  margin: 2px 0 10px;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+
+.marketing-diagnosis-section dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.marketing-diagnosis-section div {
+  display: grid;
+  gap: 3px;
+}
+
+.marketing-diagnosis-section dt {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.marketing-diagnosis-section dd {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.55;
+  font-size: 13px;
+}

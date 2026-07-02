@@ -30,7 +30,8 @@ PromptLens 是一個輕量級 Chrome MV3 擴充功能，用於把網頁圖片或
 - **自訂模型服務**：自行設定 AI Base URL、API Key 和 Model。
 - **OpenAI-compatible Vision API**：請求格式相容 `/chat/completions` 的視覺模型介面。
 - **結構化結果**：輸出中文提示詞、English Prompt、Tags、Negative Prompt、JSON Prompt 和 Raw JSON。
-- **內建輸出模板**：提供詳細分析、自然語言、標籤加權、快速複製四種輸出格式。
+- **內建輸出模板**：提供詳細分析、自然語言、標籤加權、快速複製和視覺行銷診斷等輸出格式。
+- **視覺行銷診斷**：面向商業視覺圖的可選業務分析，輸出老闆摘要、行銷診斷、低成本改編 brief 和可發布 Markdown 案例初稿。
 - **自訂模板**：支援複製內建模板、新建、編輯、刪除、匯入和匯出自訂模板。
 - **Provider 預設**：提供 OpenAI、DeepSeek、Alibaba、SiliconFlow、Groq、OpenRouter、Ollama 和 Custom。
 - **快捷鍵框選**：支援 `Alt+Shift+S` 觸發框選截圖，可在 `chrome://extensions/shortcuts` 修改。
@@ -49,6 +50,7 @@ PromptLens 刻意不包含以下能力：
 - 雲端歷史記錄
 - 自動填入第三方生成器網站
 - 團隊協作或帳號同步
+- 廣告帳戶自動化、投放出價建議或轉換效果保證
 
 ## 工作原理
 

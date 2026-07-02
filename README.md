@@ -31,6 +31,7 @@ Its goal is to stay simple, transparent, and self-hosting-friendly: no login, no
 - **OpenAI-compatible Vision API**: uses the `/chat/completions` style vision request format.
 - **Structured results**: Chinese prompt, English Prompt, Tags, Negative Prompt, JSON Prompt, and Raw JSON.
 - **Professional prompt variants**: generates recreate, creative extension, and commercial visual prompt cards for professional design workflows.
+- **Visual marketing diagnosis**: optional business-focused analysis for commercial visuals, with owner-friendly summary, marketing diagnosis, low-cost adaptation brief, and Markdown case export.
 - **Built-in output templates**: Detailed Analysis, Natural Language, Weighted Tags, and Quick Copy.
 - **Custom templates**: copy built-ins, create, edit, delete, import, and export custom templates.
 - **Provider presets**: OpenAI, DeepSeek, Alibaba, SiliconFlow, Groq, OpenRouter, Ollama, and Custom.
@@ -50,6 +51,7 @@ PromptLens intentionally does not include:
 - Cloud history sync
 - Auto-fill into third-party generation websites
 - Team collaboration or account sync
+- Advertising account automation, bidding advice, or guaranteed conversion predictions
 
 ## How it works
 

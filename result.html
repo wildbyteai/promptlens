@@ -53,6 +53,21 @@
         </div>
       </section>
 
+      <section id="marketing-context-card" class="surface-card marketing-context-card" hidden>
+        <div class="section-heading">
+          <span class="card-kicker">Business context</span>
+          <h2>可选业务背景</h2>
+          <p>补充行业、产品、渠道或目标用户，可以让视觉营销诊断更贴近真实业务。不填写也可以直接分析。</p>
+        </div>
+        <label class="field-label" for="marketing-context-input">业务背景（可选）</label>
+        <textarea id="marketing-context-input" rows="4" maxlength="1200" placeholder="例如：这是一个本地美容院的小红书封面，目标是吸引 25-40 岁女性预约体验。"></textarea>
+        <p class="field-hint">仅用于本次请求，会发送给你配置的 AI 服务商；PromptLens 不会将其默认写入历史记录。</p>
+        <div class="button-row">
+          <button id="marketing-context-start" type="button" class="primary-button compact-button">开始诊断</button>
+          <button id="marketing-context-skip" type="button" class="secondary-button compact-button">不填写，直接分析</button>
+        </div>
+      </section>
+
       <div id="result-content" class="result-workbench" hidden>
         <aside class="preview-column">
           <section class="preview-panel surface-card" aria-label="已分析图片预览">
@@ -80,6 +95,17 @@
               <button id="download-markdown" type="button" class="secondary-button compact-button">下载 Markdown</button>
             </div>
           </div>
+
+          <article id="marketing-diagnosis-card" class="result-card marketing-diagnosis-result" hidden>
+            <div class="card-title-row">
+              <div>
+                <span class="card-kicker">Marketing diagnosis</span>
+                <h2>视觉营销诊断</h2>
+              </div>
+              <p class="variant-card-hint">面向中小企业老板和业务团队的商业视觉拆解。</p>
+            </div>
+            <div id="marketing-diagnosis-sections" class="marketing-diagnosis-sections"></div>
+          </article>
 
           <article class="result-card result-card-primary">
             <div class="card-title-row">
@@ -161,6 +187,7 @@
     </main>
     <script src="templates.js"></script>
     <script src="prompt-variants.js"></script>
+    <script src="marketing-diagnosis.js"></script>
     <script src="history-store.js"></script>
     <script src="result.js"></script>
   </body>
