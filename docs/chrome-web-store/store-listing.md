@@ -3,7 +3,7 @@
 ## Basic details
 
 - Extension name: PromptLens
-- Version for this release: 0.3.0
+- Version for this release: 0.3.1
 - Category suggestion: Productivity or Developer Tools
 - Language: English listing first; Chinese copy can be adapted from README files.
 

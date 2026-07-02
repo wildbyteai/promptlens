@@ -1,6 +1,6 @@
 # Chrome Web Store Privacy Practices Notes
 
-This document supports Chrome Web Store privacy-practices form preparation for PromptLens v0.3.0. It is not legal advice.
+This document supports Chrome Web Store privacy-practices form preparation for PromptLens v0.3.1. It is not legal advice.
 
 ## Product privacy boundary
 

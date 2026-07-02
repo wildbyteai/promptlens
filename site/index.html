@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#3f3a32">
   <link rel="icon" href="./assets/favicon.png" type="image/png">
   <meta name="description" content="PromptLens is a local-first Chrome extension that analyzes web images or selected screenshot regions with your own OpenAI-compatible Vision API.">
-  <link rel="stylesheet" href="./assets/site.css?v=20260701-hero">
+  <link rel="stylesheet" href="./assets/site.css?v=20260702-i18n">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to content</a>
@@ -24,7 +24,11 @@
         <a href="./privacy/">Privacy</a>
         <a href="./support/">Support</a>
         <a href="https://github.com/wildbyteai/promptlens">GitHub</a>
-        <a class="nav-cta" href="https://github.com/wildbyteai/promptlens/releases/tag/v0.3.0">Download from GitHub Releases</a>
+        <div class="language-switcher" aria-label="Language switcher">
+          <button class="language-option" type="button" data-lang-option="en" aria-pressed="true">EN</button>
+          <button class="language-option" type="button" data-lang-option="zh-CN" aria-pressed="false">中文</button>
+        </div>
+        <a class="nav-cta" href="https://github.com/wildbyteai/promptlens/releases/tag/v0.3.1">Download from GitHub Releases</a>
       </div>
     </nav>
   </header>
@@ -42,7 +46,7 @@
             <li>Works from right-click or screenshot selection.</li>
           </ul>
           <div class="hero-actions">
-            <a class="button button-primary" href="https://github.com/wildbyteai/promptlens/releases/tag/v0.3.0">Get PromptLens</a>
+            <a class="button button-primary" href="https://github.com/wildbyteai/promptlens/releases/tag/v0.3.1">Get PromptLens</a>
             <a class="button button-secondary" href="https://github.com/wildbyteai/promptlens">View on GitHub</a>
           </div>
           <p class="availability-note">Chrome Web Store listing is planned.</p>
@@ -226,7 +230,7 @@
           <p class="eyebrow">Install</p>
           <h2>Get PromptLens before the Chrome Web Store listing is available.</h2>
           <p>Use the latest release package or follow the source install instructions.</p>
-          <a class="button button-primary" href="https://github.com/wildbyteai/promptlens/releases/tag/v0.3.0">Download from GitHub Releases</a>
+          <a class="button button-primary" href="https://github.com/wildbyteai/promptlens/releases/tag/v0.3.1">Download from GitHub Releases</a>
           <p class="availability-note dark">Chrome Web Store listing is planned.</p>
         </div>
         <div class="install-card">
@@ -294,5 +298,6 @@
   </footer>
 
   <script src="./assets/site.js"></script>
+  <script src="./assets/i18n.js"></script>
 </body>
 </html>

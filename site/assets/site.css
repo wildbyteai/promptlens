@@ -189,6 +189,42 @@ code {
   color: var(--text);
 }
 
+.language-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 6px 18px rgba(40, 36, 28, 0.05);
+}
+
+.language-option {
+  min-height: 30px;
+  padding: 5px 9px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 760;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, box-shadow 150ms ease;
+}
+
+.language-option.is-active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(38, 35, 31, 0.12);
+}
+
+.language-option:not(.is-active):hover {
+  color: var(--text);
+  background: var(--surface-muted);
+}
+
 .nav-cta,
 .button,
 .secondary-link,
@@ -825,8 +861,10 @@ details p {
     padding: 9px 0;
   }
 
-  .nav-cta {
+  .nav-cta,
+  .language-switcher {
     text-align: center;
+    justify-content: center;
   }
 
   .hero-grid,

@@ -202,7 +202,7 @@ Development principles:
 
 ## Roadmap status
 
-The current branch has implemented v0.3.0: built-in / custom templates, provider presets, keyboard shortcut, result export, model tests, token usage, optional local history, basic i18n, and Chrome Web Store preparation.
+The current branch has implemented v0.3.1: built-in / custom templates, provider presets, keyboard shortcut, result export, model tests, token usage, optional local history, basic i18n, and Chrome Web Store preparation.
 
 Future feedback-driven directions:
 

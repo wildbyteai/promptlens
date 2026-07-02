@@ -11,6 +11,10 @@
       toggle.setAttribute('aria-label', nextExpanded ? 'Close navigation' : 'Open navigation');
       toggle.textContent = nextExpanded ? 'Close' : 'Menu';
       links.classList.toggle('is-open', nextExpanded);
+
+      if (window.PromptLensI18n && typeof window.PromptLensI18n.refresh === 'function') {
+        window.PromptLensI18n.refresh();
+      }
     });
   }
 }());

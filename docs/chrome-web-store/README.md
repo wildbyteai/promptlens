@@ -6,12 +6,12 @@
 
 - [商店文案草稿](store-listing.md)
 - [隐私实践表单辅助说明](privacy-practices.md)
-- [v0.3.0 发布检查清单](release-checklist.md)
+- [v0.3.1 发布检查清单](release-checklist.md)
 
 ## 基础信息
 
 - 扩展名称：PromptLens
-- 当前版本：0.3.0
+- 当前版本：0.3.1
 - 类型：Chrome MV3 扩展
 - 数据处理：无后端、无遥测，图片只发送到用户配置的 AI API。
 
