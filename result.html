@@ -92,6 +92,17 @@
             <pre id="prompt-en"></pre>
           </article>
 
+          <article id="prompt-variants-card" class="result-card prompt-variants-card" hidden>
+            <div class="card-title-row">
+              <div>
+                <span class="card-kicker">Professional variants</span>
+                <h2>专业用途 Prompt 候选</h2>
+              </div>
+              <p class="variant-card-hint">三种方向只读展示，可直接复制到图像生成工具中试跑。</p>
+            </div>
+            <div id="prompt-variants-list" class="prompt-variants-list"></div>
+          </article>
+
           <article class="result-card">
             <div class="card-title-row">
               <h2>中文提示词</h2>
@@ -149,6 +160,7 @@
       </div>
     </main>
     <script src="templates.js"></script>
+    <script src="prompt-variants.js"></script>
     <script src="history-store.js"></script>
     <script src="result.js"></script>
   </body>

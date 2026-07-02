@@ -1,10 +1,11 @@
 (function (root, factory) {
-  const api = factory();
+  const variantsApi = root.PromptVariants || (typeof require === 'function' ? require('./prompt-variants.js') : null);
+  const api = factory(variantsApi);
   if (typeof module === 'object' && module.exports) {
     module.exports = api;
   }
   root.PromptHistoryFormat = api;
-}(typeof globalThis !== 'undefined' ? globalThis : window, function () {
+}(typeof globalThis !== 'undefined' ? globalThis : window, function (PromptVariants) {
   'use strict';
 
   function normalizeString(value) {
@@ -20,6 +21,12 @@
     return JSON.stringify(value, null, 2);
   }
 
+  function getPromptVariantsMarkdown(result) {
+    if (!PromptVariants || !result || typeof result !== 'object') return '';
+    const variants = PromptVariants.normalizePromptVariants(result);
+    return PromptVariants.formatPromptVariantsMarkdown(variants);
+  }
+
   function getHistoryDisplayFields(item) {
     const result = item && item.result && typeof item.result === 'object' ? item.result : {};
     const promptEn = normalizeString(item && item.promptEn) || normalizeString(result.prompt_en);
@@ -29,16 +36,23 @@
     const tags = itemTags.length ? itemTags : resultTags;
     const negativePrompt = normalizeString(item && item.negativePrompt) || normalizeString(result.negative_prompt);
     const jsonPrompt = stringifyJsonPrompt(item && item.jsonPrompt) || stringifyJsonPrompt(result.json_prompt);
+    const variantsMarkdown = getPromptVariantsMarkdown(result);
     const rawText = normalizeString(item && item.rawText);
 
-    return [
+    const fields = [
       { key: 'promptEn', label: 'English Prompt', value: promptEn, kind: 'text' },
       { key: 'promptZh', label: '中文提示词', value: promptZh, kind: 'text' },
       { key: 'tags', label: 'Tags', value: tags.join(', '), kind: 'tags' },
       { key: 'negativePrompt', label: 'Negative Prompt', value: negativePrompt, kind: 'text' },
-      { key: 'jsonPrompt', label: 'JSON Prompt', value: jsonPrompt, kind: 'code' },
-      { key: 'rawText', label: 'Raw JSON', value: rawText, kind: 'code' }
+      { key: 'jsonPrompt', label: 'JSON Prompt', value: jsonPrompt, kind: 'code' }
     ];
+
+    if (variantsMarkdown) {
+      fields.push({ key: 'promptVariants', label: '专业用途 Prompt 候选', value: variantsMarkdown, kind: 'variant-card' });
+    }
+
+    fields.push({ key: 'rawText', label: 'Raw JSON', value: rawText, kind: 'code' });
+    return fields;
   }
 
   function buildHistoryCopyText(item) {
