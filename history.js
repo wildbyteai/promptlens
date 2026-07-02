@@ -93,7 +93,7 @@ function renderItems() {
     window.PromptHistoryFormat.getHistoryDisplayFields(item).forEach(field => {
       if (!field.value) return;
       const section = document.createElement('section');
-      section.className = `history-field history-field--${field.kind}`;
+      section.className = `history-field history-field--${field.kind || 'text'}`;
 
       const label = document.createElement('h3');
       label.textContent = field.label;
