@@ -30,6 +30,7 @@ Its goal is to stay simple, transparent, and self-hosting-friendly: no login, no
 - **Bring your own model service**: configure AI Base URL, API Key, and Model.
 - **OpenAI-compatible Vision API**: uses the `/chat/completions` style vision request format.
 - **Structured results**: Chinese prompt, English Prompt, Tags, Negative Prompt, JSON Prompt, and Raw JSON.
+- **Professional prompt variants**: generates recreate, creative extension, and commercial visual prompt cards for professional design workflows.
 - **Built-in output templates**: Detailed Analysis, Natural Language, Weighted Tags, and Quick Copy.
 - **Custom templates**: copy built-ins, create, edit, delete, import, and export custom templates.
 - **Provider presets**: OpenAI, DeepSeek, Alibaba, SiliconFlow, Groq, OpenRouter, Ollama, and Custom.
@@ -133,11 +134,13 @@ PromptLens has a simple privacy boundary:
 - API Key is stored locally in `chrome.storage.local`.
 - Images are sent only to the AI Base URL you configure.
 - The extension has no backend service and collects no telemetry.
-- Local history is off by default; when enabled, it stays in the browser and does not save image thumbnails.
+- Local history is off by default; when enabled, it stays in the browser and does not save image thumbnails. It may save generated prompt text, including professional prompt variants that describe visible people, brands, products, scenes, or commercial visual details inferred from the image.
 - Remote image read permission is optional and is not requested at install time.
 - Screenshot selection uses `activeTab` and only accesses the current tab after user action.
 
 When using a third-party model service, images and prompts are sent to that service. Review the provider's privacy policy, retention policy, and terms yourself.
+
+Professional prompt variants are model-generated text suggestions, not official parameters or guaranteed best practices for any third-party generation platform. When you paste prompts into another tool, that tool's privacy, billing, copyright, and content policies apply.
 
 See [SECURITY.md](SECURITY.md) for more details.
 
