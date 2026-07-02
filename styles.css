@@ -869,40 +869,127 @@ a:active {
 
 .history-list {
   display: grid;
-  gap: 14px;
+  gap: 16px;
   margin-top: 14px;
+}
+
+.history-item {
+  display: grid;
+  gap: 18px;
+}
+
+.history-item-header {
+  align-items: flex-start;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.history-actions {
+  flex-shrink: 0;
+}
+
+.history-body {
+  display: grid;
+  gap: 14px;
+}
+
+.history-field-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  box-shadow: none;
+}
+
+.history-field-header {
+  gap: 10px;
+}
+
+.history-field-header h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 760;
+  letter-spacing: -0.01em;
 }
 
 .history-item pre {
   margin: 0;
+  max-height: 220px;
+  overflow: auto;
   white-space: pre-wrap;
   word-break: break-word;
   font-family: var(--font-sans);
   font-size: 14px;
+  line-height: 1.7;
+}
+
+.history-field--primary pre {
+  max-height: 300px;
+  font-size: 15px;
+}
+
+.history-compact-row {
+  gap: 14px;
+}
+
+.history-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.history-empty-field {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.history-debug-card {
+  padding: 14px 16px;
+  box-shadow: none;
+}
+
+.history-debug-card pre {
+  max-height: 360px;
+  font-family: var(--font-mono);
+  font-size: 13px;
   line-height: 1.6;
 }
 
-.history-field-list {
-  display: grid;
-  gap: 12px;
+.history-url-card {
+  border-color: var(--border);
+  background: var(--bg-soft);
 }
 
-.history-field {
-  display: grid;
-  gap: 6px;
-}
-
-.history-field h3 {
+.history-url-text {
   margin: 0;
   color: var(--muted);
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
   font-size: 12px;
-  font-weight: 720;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  line-height: 1.6;
 }
 
-.history-field--code pre {
-  font-family: var(--font-mono);
+.history-url-actions {
+  flex-shrink: 0;
+}
+
+.history-url-details {
+  padding: 12px 16px;
+  box-shadow: none;
+}
+
+.history-url-details .history-url-card {
+  margin-top: 12px;
+}
+
+.history-delete {
+  color: var(--danger);
+}
+
+.history-delete:hover {
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .history-meta,

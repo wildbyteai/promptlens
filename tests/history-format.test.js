@@ -8,6 +8,8 @@ const item = {
   sourceDomain: 'example.com',
   inputType: 'selection',
   templateName: '详细分析',
+  imageUrl: 'https://cdn.example.com/assets/cat.jpg?token=abc',
+  pageUrl: 'https://example.com/gallery/cat',
   promptEn: 'A cinematic cat portrait',
   promptTags: ['cat', 'cinematic', 'soft light'],
   result: {
@@ -43,6 +45,8 @@ const item = {
 
 const fields = getHistoryDisplayFields(item);
 assert.deepEqual(fields.map(field => field.label), [
+  '来源图片 URL',
+  '来源页面 URL',
   'English Prompt',
   '中文提示词',
   'Tags',
@@ -51,21 +55,40 @@ assert.deepEqual(fields.map(field => field.label), [
   '专业用途 Prompt 候选',
   'Raw JSON'
 ]);
-assert.equal(fields[0].value, 'A cinematic cat portrait');
-assert.equal(fields[1].value, '一张电影感猫咪肖像');
-assert.equal(fields[2].value, 'cat, cinematic, soft light');
-assert.equal(fields[3].value, 'blurry, low quality');
-assert.equal(fields[4].value, JSON.stringify(item.result.json_prompt, null, 2));
-assert.match(fields[5].value, /## 专业用途 Prompt 候选/);
-assert.match(fields[5].value, /### 复刻版/);
-assert.match(fields[5].value, /Faithfully recreate the cinematic cat portrait/);
-assert.equal(fields[5].kind, 'variant-card');
-assert.equal(fields[6].value, item.rawText);
+assert.equal(fields[0].value, item.imageUrl);
+assert.equal(fields[0].kind, 'url');
+assert.equal(fields[0].collapsed, false);
+assert.equal(fields[0].emphasis, 'source');
+assert.equal(fields[1].value, item.pageUrl);
+assert.equal(fields[1].kind, 'url');
+assert.equal(fields[1].collapsed, true);
+assert.equal(fields[1].emphasis, 'source');
+assert.equal(fields[2].value, 'A cinematic cat portrait');
+assert.equal(fields[3].value, '一张电影感猫咪肖像');
+assert.equal(fields[4].value, 'cat, cinematic, soft light');
+assert.equal(fields[5].value, 'blurry, low quality');
+assert.equal(fields[6].value, JSON.stringify(item.result.json_prompt, null, 2));
+assert.equal(fields[6].collapsed, true);
+assert.equal(fields[6].emphasis, 'debug');
+assert.match(fields[7].value, /## 专业用途 Prompt 候选/);
+assert.match(fields[7].value, /### 复刻版/);
+assert.match(fields[7].value, /Faithfully recreate the cinematic cat portrait/);
+assert.equal(fields[7].kind, 'variant-card');
+assert.equal(fields[7].collapsed, false);
+assert.equal(fields[8].value, item.rawText);
+assert.equal(fields[8].collapsed, true);
+assert.equal(fields[8].emphasis, 'debug');
+assert.equal(fields[2].collapsed, false);
+assert.equal(fields[2].emphasis, 'primary');
+assert.equal(fields[3].collapsed, false);
+assert.equal(fields[4].kind, 'tags');
 
 const copyText = buildHistoryCopyText(item);
 assert.match(copyText, /Source: example\.com/);
 assert.match(copyText, /Input Type: selection/);
 assert.match(copyText, /Template: 详细分析/);
+assert.match(copyText, /来源图片 URL\nhttps:\/\/cdn\.example\.com\/assets\/cat\.jpg\?token=abc/);
+assert.match(copyText, /来源页面 URL\nhttps:\/\/example\.com\/gallery\/cat/);
 assert.match(copyText, /English Prompt\nA cinematic cat portrait/);
 assert.match(copyText, /中文提示词\n一张电影感猫咪肖像/);
 assert.match(copyText, /Tags\ncat, cinematic, soft light/);
@@ -79,8 +102,10 @@ const legacyItem = {
   promptTags: ['legacy']
 };
 const legacyFields = getHistoryDisplayFields(legacyItem);
-assert.equal(legacyFields[0].value, 'Legacy English prompt');
-assert.equal(legacyFields[2].value, 'legacy');
+assert.equal(legacyFields[0].value, '');
+assert.equal(legacyFields[1].value, '');
+assert.equal(legacyFields[2].value, 'Legacy English prompt');
+assert.equal(legacyFields[4].value, 'legacy');
 assert.equal(legacyFields.some(field => field.key === 'promptVariants'), false);
 
 console.log('history format tests passed');

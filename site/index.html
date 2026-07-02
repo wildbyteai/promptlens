@@ -163,6 +163,7 @@
           <li>Analysis runs only after user action.</li>
           <li>Images are sent directly to your configured API endpoint.</li>
           <li>Optional history is off by default.</li>
+          <li>When enabled, history stores source image/page URLs locally for recall.</li>
           <li>No image thumbnails are saved in history.</li>
         </ul>
       </div>
@@ -258,7 +259,7 @@
           </details>
           <details>
             <summary>Does PromptLens save image history?</summary>
-            <p>Local history is off by default. When enabled, it stores text results, source domain, template metadata, and structured output in IndexedDB. It does not save image thumbnails.</p>
+            <p>Local history is off by default. When enabled, it stores text results, source domain, source image URL, page URL, template metadata, and structured output in IndexedDB. It does not save image thumbnails. Source URLs may include signed query parameters or private path details, so keep history disabled or clear it if you do not want that local metadata retained.</p>
           </details>
           <details>
             <summary>Why does PromptLens request optional site access?</summary>

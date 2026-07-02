@@ -35,7 +35,7 @@ Its goal is to stay simple, transparent, and self-hosting-friendly: no login, no
 - **Custom templates**: copy built-ins, create, edit, delete, import, and export custom templates.
 - **Provider presets**: OpenAI, DeepSeek, Alibaba, SiliconFlow, Groq, OpenRouter, Ollama, and Custom.
 - **Keyboard selection shortcut**: `Alt+Shift+S` starts screenshot selection; users can change it at `chrome://extensions/shortcuts`.
-- **Optional local history**: off by default; stores text results, source domain, and template metadata only. No image thumbnails are saved.
+- **Optional local history**: off by default; stores text results, source domain, original image URL, page URL, and template metadata. No image thumbnails are saved.
 - **Result export**: copy individual fields, copy all, download JSON, and download Markdown.
 - **Local-first**: configuration stays in the browser; there is no remote account system.
 - **Frontend-only**: no npm dependencies, no build step, and no backend service.
@@ -134,7 +134,7 @@ PromptLens has a simple privacy boundary:
 - API Key is stored locally in `chrome.storage.local`.
 - Images are sent only to the AI Base URL you configure.
 - The extension has no backend service and collects no telemetry.
-- Local history is off by default; when enabled, it stays in the browser and does not save image thumbnails. It may save generated prompt text, including professional prompt variants that describe visible people, brands, products, scenes, or commercial visual details inferred from the image.
+- Local history is off by default; when enabled, it stays in the browser, saves source image/page URLs for history recall, and does not save image thumbnails. It may save generated prompt text, including professional prompt variants that describe visible people, brands, products, scenes, or commercial visual details inferred from the image.
 - Remote image read permission is optional and is not requested at install time.
 - Screenshot selection uses `activeTab` and only accesses the current tab after user action.
 

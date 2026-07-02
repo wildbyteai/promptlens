@@ -1,8 +1,10 @@
 .claude/
+.claude-review-*.md
 .env
 .env.*
 *.local
 node_modules/
 dist/
+docs/superpowers/
 .DS_Store
 *.log
