@@ -49,6 +49,7 @@ FILES=(
   "history.js"
   "options.html"
   "options.js"
+  "prompt-variants.js"
   "result.html"
   "result.js"
   "selection.css"
