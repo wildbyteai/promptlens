@@ -30,14 +30,18 @@
     const negativePrompt = normalizeString(item && item.negativePrompt) || normalizeString(result.negative_prompt);
     const jsonPrompt = stringifyJsonPrompt(item && item.jsonPrompt) || stringifyJsonPrompt(result.json_prompt);
     const rawText = normalizeString(item && item.rawText);
+    const imageUrl = normalizeString(item && item.imageUrl);
+    const pageUrl = normalizeString(item && item.pageUrl);
 
     return [
-      { key: 'promptEn', label: 'English Prompt', value: promptEn, kind: 'text' },
-      { key: 'promptZh', label: '中文提示词', value: promptZh, kind: 'text' },
-      { key: 'tags', label: 'Tags', value: tags.join(', '), kind: 'tags' },
-      { key: 'negativePrompt', label: 'Negative Prompt', value: negativePrompt, kind: 'text' },
-      { key: 'jsonPrompt', label: 'JSON Prompt', value: jsonPrompt, kind: 'code' },
-      { key: 'rawText', label: 'Raw JSON', value: rawText, kind: 'code' }
+      { key: 'imageUrl', label: '来源图片 URL', value: imageUrl, kind: 'url', collapsed: false, emphasis: 'source' },
+      { key: 'pageUrl', label: '来源页面 URL', value: pageUrl, kind: 'url', collapsed: true, emphasis: 'source' },
+      { key: 'promptEn', label: 'English Prompt', value: promptEn, kind: 'text', collapsed: false, emphasis: 'primary' },
+      { key: 'promptZh', label: '中文提示词', value: promptZh, kind: 'text', collapsed: false, emphasis: 'normal' },
+      { key: 'tags', label: 'Tags', value: tags.join(', '), kind: 'tags', collapsed: false, emphasis: 'normal' },
+      { key: 'negativePrompt', label: 'Negative Prompt', value: negativePrompt, kind: 'text', collapsed: false, emphasis: 'normal' },
+      { key: 'jsonPrompt', label: 'JSON Prompt', value: jsonPrompt, kind: 'code', collapsed: true, emphasis: 'debug' },
+      { key: 'rawText', label: 'Raw JSON', value: rawText, kind: 'code', collapsed: true, emphasis: 'debug' }
     ];
   }
 

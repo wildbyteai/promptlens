@@ -39,6 +39,8 @@
       id: item.id || makeId(),
       createdAt: item.createdAt || Date.now(),
       sourceDomain: item.sourceDomain || '',
+      imageUrl: item.imageUrl || '',
+      pageUrl: item.pageUrl || '',
       inputType: item.inputType || 'unknown',
       templateId: item.templateId || '',
       templateName: item.templateName || '',

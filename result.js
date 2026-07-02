@@ -773,11 +773,25 @@ async function loadRuntimeSettings() {
   jpegQuality = Math.min(0.95, Math.max(0.4, Number(stored.jpegQuality) || 0.85));
 }
 
+function safeHttpUrl(value) {
+  if (typeof value !== 'string' || !value.trim()) return '';
+  try {
+    const url = new URL(value.trim());
+    return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : '';
+  } catch {
+    return '';
+  }
+}
+
 async function maybeSaveHistory(input, result, template) {
   if (!window.PromptHistory || !await window.PromptHistory.isHistoryEnabled()) return;
-  const sourceDomain = window.PromptHistory.sourceDomainFromUrl(input.pageUrl || input.srcUrl || '');
+  const imageUrl = input.type === 'image_url' ? safeHttpUrl(input.srcUrl) : '';
+  const pageUrl = safeHttpUrl(input.pageUrl);
+  const sourceDomain = window.PromptHistory.sourceDomainFromUrl(pageUrl || imageUrl || input.pageUrl || input.srcUrl || '');
   await window.PromptHistory.addHistoryItem({
     sourceDomain,
+    imageUrl,
+    pageUrl,
     inputType: input.type,
     templateId: template.id,
     templateName: template.name,
