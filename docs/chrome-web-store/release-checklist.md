@@ -42,9 +42,9 @@ Use this checklist before publishing the GitHub Release artifact or submitting t
 
 ## Website
 
-- [ ] Confirm `site/index.html` download links point to `https://github.com/wildbyteai/promptlens/releases/tag/v0.3.1`.
-- [ ] Confirm `site/privacy/index.html` download links point to `https://github.com/wildbyteai/promptlens/releases/tag/v0.3.1`.
-- [ ] Confirm `site/support/index.html` download links point to `https://github.com/wildbyteai/promptlens/releases/tag/v0.3.1`.
+- [ ] Confirm `site/index.html` download links point to `https://github.com/wildbyteai/promptlens/releases`.
+- [ ] Confirm `site/privacy/index.html` download links point to `https://github.com/wildbyteai/promptlens/releases`.
+- [ ] Confirm `site/support/index.html` download links point to `https://github.com/wildbyteai/promptlens/releases`.
 
 ## Chrome Web Store material
 
