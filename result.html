@@ -55,7 +55,7 @@
 
       <section id="marketing-context-card" class="surface-card marketing-context-card" hidden>
         <div class="section-heading">
-          <span class="card-kicker">Business context</span>
+          <span class="card-kicker">业务背景</span>
           <h2>可选业务背景</h2>
           <p>补充行业、产品、渠道或目标用户，可以让视觉营销诊断更贴近真实业务。不填写也可以直接分析。</p>
         </div>
@@ -78,7 +78,7 @@
         <section class="result-column" aria-label="生成结果">
           <article class="template-summary result-card" aria-label="当前输出模板">
             <div>
-              <span class="card-kicker">Output template</span>
+              <span class="card-kicker">当前模板</span>
               <h2 id="template-name">详细分析</h2>
             </div>
             <p id="template-description">完整结构化输出，适合通用分析和二次编辑。</p>
@@ -86,7 +86,7 @@
 
           <div class="export-toolbar result-card" aria-label="结果导出">
             <div>
-              <span class="card-kicker">Export</span>
+              <span class="card-kicker">导出</span>
               <h2>复制与导出</h2>
             </div>
             <div class="button-row">
@@ -99,7 +99,7 @@
           <article id="marketing-diagnosis-card" class="result-card marketing-diagnosis-result" hidden>
             <div class="card-title-row">
               <div>
-                <span class="card-kicker">Marketing diagnosis</span>
+                <span class="card-kicker">营销诊断</span>
                 <h2>视觉营销诊断</h2>
               </div>
               <p class="variant-card-hint">面向中小企业老板和业务团队的商业视觉拆解。</p>
@@ -110,10 +110,10 @@
           <article class="result-card result-card-primary">
             <div class="card-title-row">
               <div>
-                <span class="card-kicker">Main output</span>
-                <h2>English Prompt</h2>
+                <span class="card-kicker">主要输出</span>
+                <h2>英文提示词</h2>
               </div>
-              <button class="primary-button copy-button-main" data-copy-target="prompt-en">Copy English Prompt</button>
+              <button class="primary-button copy-button-main" data-copy-target="prompt-en">复制英文提示词</button>
             </div>
             <pre id="prompt-en"></pre>
           </article>
@@ -121,7 +121,7 @@
           <article id="prompt-variants-card" class="result-card prompt-variants-card" hidden>
             <div class="card-title-row">
               <div>
-                <span class="card-kicker">Professional variants</span>
+                <span class="card-kicker">专业变体</span>
                 <h2>专业用途 Prompt 候选</h2>
               </div>
               <p class="variant-card-hint">三种方向只读展示，可直接复制到图像生成工具中试跑。</p>
@@ -140,7 +140,7 @@
           <div class="result-card-row">
             <article class="result-card">
               <div class="card-title-row">
-                <h2>Tags</h2>
+                <h2>标签</h2>
                 <button class="copy-button" data-copy-target="prompt-tags">复制</button>
               </div>
               <pre id="prompt-tags" class="tag-output"></pre>
@@ -148,7 +148,7 @@
 
             <article class="result-card">
               <div class="card-title-row">
-                <h2>Negative Prompt</h2>
+                <h2>反向提示词</h2>
                 <button class="copy-button" data-copy-target="negative-prompt">复制</button>
               </div>
               <pre id="negative-prompt"></pre>
@@ -157,7 +157,7 @@
 
           <article class="result-card code-card">
             <div class="card-title-row">
-              <h2>JSON Prompt</h2>
+              <h2>结构化提示词</h2>
               <button class="copy-button" data-copy-target="json-prompt">复制</button>
             </div>
             <pre id="json-prompt"></pre>
@@ -168,16 +168,16 @@
               <h2>用量与耗时</h2>
             </div>
             <dl class="usage-list">
-              <div><dt>Prompt tokens</dt><dd id="usage-prompt">-</dd></div>
-              <div><dt>Completion tokens</dt><dd id="usage-completion">-</dd></div>
-              <div><dt>Total tokens</dt><dd id="usage-total">-</dd></div>
-              <div><dt>Response time</dt><dd id="usage-time">-</dd></div>
+              <div><dt>输入 tokens</dt><dd id="usage-prompt">-</dd></div>
+              <div><dt>输出 tokens</dt><dd id="usage-completion">-</dd></div>
+              <div><dt>总 tokens</dt><dd id="usage-total">-</dd></div>
+              <div><dt>响应耗时</dt><dd id="usage-time">-</dd></div>
             </dl>
           </article>
 
           <details class="result-card code-card raw-card">
             <summary>
-              <span>Raw JSON</span>
+              <span>原始 JSON</span>
               <button class="copy-button" data-copy-target="raw-json">复制</button>
             </summary>
             <pre id="raw-json"></pre>

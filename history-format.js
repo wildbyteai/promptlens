@@ -44,18 +44,18 @@
     const fields = [
       { key: 'imageUrl', label: '来源图片 URL', value: imageUrl, kind: 'url', collapsed: false, emphasis: 'source' },
       { key: 'pageUrl', label: '来源页面 URL', value: pageUrl, kind: 'url', collapsed: true, emphasis: 'source' },
-      { key: 'promptEn', label: 'English Prompt', value: promptEn, kind: 'text', collapsed: false, emphasis: 'primary' },
+      { key: 'promptEn', label: '英文提示词', value: promptEn, kind: 'text', collapsed: false, emphasis: 'primary' },
       { key: 'promptZh', label: '中文提示词', value: promptZh, kind: 'text', collapsed: false, emphasis: 'normal' },
-      { key: 'tags', label: 'Tags', value: tags.join(', '), kind: 'tags', collapsed: false, emphasis: 'normal' },
-      { key: 'negativePrompt', label: 'Negative Prompt', value: negativePrompt, kind: 'text', collapsed: false, emphasis: 'normal' },
-      { key: 'jsonPrompt', label: 'JSON Prompt', value: jsonPrompt, kind: 'code', collapsed: true, emphasis: 'debug' }
+      { key: 'tags', label: '标签', value: tags.join(', '), kind: 'tags', collapsed: false, emphasis: 'normal' },
+      { key: 'negativePrompt', label: '反向提示词', value: negativePrompt, kind: 'text', collapsed: false, emphasis: 'normal' },
+      { key: 'jsonPrompt', label: '结构化提示词', value: jsonPrompt, kind: 'code', collapsed: true, emphasis: 'debug' }
     ];
 
     if (variantsMarkdown) {
       fields.push({ key: 'promptVariants', label: '专业用途 Prompt 候选', value: variantsMarkdown, kind: 'variant-card', collapsed: false, emphasis: 'normal' });
     }
 
-    fields.push({ key: 'rawText', label: 'Raw JSON', value: rawText, kind: 'code', collapsed: true, emphasis: 'debug' });
+    fields.push({ key: 'rawText', label: '原始 JSON', value: rawText, kind: 'code', collapsed: true, emphasis: 'debug' });
     return fields;
   }
 
@@ -65,9 +65,9 @@
     const inputType = normalizeString(item && item.inputType);
     const templateName = normalizeString(item && item.templateName);
 
-    if (sourceDomain) meta.push(`Source: ${sourceDomain}`);
-    if (inputType) meta.push(`Input Type: ${inputType}`);
-    if (templateName) meta.push(`Template: ${templateName}`);
+    if (sourceDomain) meta.push(`来源：${sourceDomain}`);
+    if (inputType) meta.push(`输入类型：${inputType}`);
+    if (templateName) meta.push(`模板：${templateName}`);
 
     const sections = getHistoryDisplayFields(item)
       .filter(field => field.value)

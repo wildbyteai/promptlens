@@ -261,13 +261,13 @@ function renderPromptVariants(result) {
     const copyPromptButton = document.createElement('button');
     copyPromptButton.type = 'button';
     copyPromptButton.className = 'copy-button';
-    copyPromptButton.textContent = 'Copy Prompt';
+    copyPromptButton.textContent = '复制提示词';
     copyPromptButton.addEventListener('click', () => copyTextWithFeedback(copyPromptButton, variant.prompt_en));
 
     const copyCardButton = document.createElement('button');
     copyCardButton.type = 'button';
     copyCardButton.className = 'copy-button';
-    copyCardButton.textContent = 'Copy Card';
+    copyCardButton.textContent = '复制卡片';
     copyCardButton.addEventListener('click', () => {
       copyTextWithFeedback(copyCardButton, window.PromptVariants.formatPromptVariantCard(variant));
     });
@@ -281,8 +281,8 @@ function renderPromptVariants(result) {
     meta.className = 'prompt-variant-meta';
 
     const metaRows = [
-      ['Tags', variant.tags.join(', ')],
-      ['Negative Prompt', variant.negative_prompt],
+      ['标签', variant.tags.join(', ')],
+      ['反向提示词', variant.negative_prompt],
       ['适用场景', variant.use_cases.join(', ')]
     ];
 
@@ -301,6 +301,15 @@ function renderPromptVariants(result) {
   return variants;
 }
 
+function getMarketingReadinessScore(result) {
+  const score = result &&
+    result.marketing_diagnosis &&
+    result.marketing_diagnosis.marketing_diagnosis &&
+    result.marketing_diagnosis.marketing_diagnosis.marketing_readiness_score;
+  const overall = Number(score && score.overall);
+  return Number.isFinite(overall) && overall >= 1 && overall <= 5 ? overall : null;
+}
+
 function renderMarketingDiagnosis(result, template) {
   const isMarketingTemplate = window.PromptTemplates.isMarketingDiagnosisTemplate(template);
   if (!isMarketingTemplate || !window.PromptMarketingDiagnosis.hasMarketingDiagnosis(result)) {
@@ -310,21 +319,42 @@ function renderMarketingDiagnosis(result, template) {
   }
 
   const sections = window.PromptMarketingDiagnosis.getMarketingDiagnosisSections(result);
+  const readinessScore = getMarketingReadinessScore(result);
   elements.marketingDiagnosisSections.replaceChildren();
 
-  sections.forEach(section => {
+  sections.forEach((section, index) => {
     const card = document.createElement('section');
     card.className = 'marketing-diagnosis-section';
-    card.append(
+    card.dataset.section = section.kicker;
+
+    const header = document.createElement('div');
+    header.className = 'marketing-diagnosis-section-head';
+    const titleBox = document.createElement('div');
+    titleBox.append(
       createTextElement('span', 'card-kicker', section.kicker),
       createTextElement('h3', '', section.title)
     );
+    header.appendChild(titleBox);
+
+    if (index === 0 && readinessScore) {
+      const scoreRing = createTextElement('div', 'marketing-diagnosis-score-ring', readinessScore.toFixed(1));
+      scoreRing.setAttribute('aria-label', `营销准备度评分 ${readinessScore.toFixed(1)} / 5`);
+      header.appendChild(scoreRing);
+    }
+
+    card.appendChild(header);
 
     const list = document.createElement('dl');
     section.items.forEach(item => {
       if (!item.value) return;
       const row = document.createElement('div');
-      row.append(createTextElement('dt', '', item.label), createTextElement('dd', '', item.value));
+      row.appendChild(createTextElement('dt', '', item.label));
+      const value = createTextElement(
+        'dd',
+        item.label === '快速判断' ? 'marketing-diagnosis-quick-judgement' : '',
+        item.value
+      );
+      row.appendChild(value);
       list.appendChild(row);
     });
     card.appendChild(list);
@@ -417,13 +447,13 @@ function buildMarkdownExport() {
   const variants = window.PromptVariants.normalizePromptVariants(result);
   const variantsMarkdown = window.PromptVariants.formatPromptVariantsMarkdown(variants);
   const sections = [
-    '# Image Prompt Analysis Result',
+    '# 图片提示词分析结果',
     '',
-    `- App: ${data.app}`,
-    `- Exported At: ${data.exportedAt}`,
-    `- Template: ${data.template ? data.template.name : 'Unknown'}`,
+    `- 应用：${data.app}`,
+    `- 导出时间：${data.exportedAt}`,
+    `- 模板：${data.template ? data.template.name : '未知'}`,
     '',
-    '## English Prompt',
+    '## 英文提示词',
     '',
     result.prompt_en || '',
     '',
@@ -431,15 +461,15 @@ function buildMarkdownExport() {
     '',
     result.prompt_zh || '',
     '',
-    '## Tags',
+    '## 标签',
     '',
     tags,
     '',
-    '## Negative Prompt',
+    '## 反向提示词',
     '',
     result.negative_prompt || '',
     '',
-    '## JSON Prompt',
+    '## 结构化提示词',
     '',
     '```json',
     JSON.stringify(result.json_prompt || {}, null, 2),
@@ -461,19 +491,19 @@ function buildCopyAllText() {
   const variants = window.PromptVariants.normalizePromptVariants(result);
   const variantsMarkdown = window.PromptVariants.formatPromptVariantsMarkdown(variants);
   const sections = [
-    'English Prompt',
+    '英文提示词',
     result.prompt_en || '',
     '',
     '中文提示词',
     result.prompt_zh || '',
     '',
-    'Tags',
+    '标签',
     tags,
     '',
-    'Negative Prompt',
+    '反向提示词',
     result.negative_prompt || '',
     '',
-    'JSON Prompt',
+    '结构化提示词',
     JSON.stringify(result.json_prompt || {}, null, 2)
   ];
   if (variantsMarkdown) {

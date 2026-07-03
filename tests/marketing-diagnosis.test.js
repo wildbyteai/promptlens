@@ -88,8 +88,8 @@ const markdown = buildMarketingDiagnosisMarkdown(result, {
   templateName: '视觉营销诊断'
 });
 assert.match(markdown, /# 我用 AI 拆了一张商业视觉图/);
-assert.match(markdown, /- App: PromptLens/);
-assert.match(markdown, /- Template: 视觉营销诊断/);
+assert.match(markdown, /- 应用：PromptLens/);
+assert.match(markdown, /- 模板：视觉营销诊断/);
 assert.match(markdown, /## 业务背景/);
 assert.match(markdown, /未提供业务背景；以下诊断仅基于图片可见内容生成。/);
 assert.match(markdown, /## 1\. 老板先看：这张图在卖什么/);

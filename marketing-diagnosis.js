@@ -108,7 +108,7 @@
     return [
       {
         title: '老板先看',
-        kicker: 'Business Snapshot',
+        kicker: '业务快照',
         items: [
           { label: '商业意图', value: normalized.business_snapshot.business_summary },
           { label: '目标客户', value: normalized.business_snapshot.target_customer },
@@ -119,7 +119,7 @@
       },
       {
         title: '营销诊断',
-        kicker: 'Marketing Diagnosis',
+        kicker: '营销诊断',
         items: [
           { label: '视觉策略', value: normalized.marketing_diagnosis.visual_strategy },
           { label: '信任信号', value: normalized.marketing_diagnosis.trust_signals },
@@ -130,7 +130,7 @@
       },
       {
         title: '下一步怎么做',
-        kicker: 'Next Actions',
+        kicker: '下一步行动',
         items: [
           { label: '改进建议', value: formatList(normalized.next_actions.improvement_suggestions) },
           { label: '低成本改编 brief', value: normalized.next_actions.ai_adaptation_brief },
@@ -210,9 +210,9 @@
     const sections = [
       '# 我用 AI 拆了一张商业视觉图',
       '',
-      `- App: ${normalizeString(meta.app) || 'PromptLens'}`,
-      `- Exported At: ${normalizeString(meta.exportedAt) || new Date().toISOString()}`,
-      `- Template: ${normalizeString(meta.templateName) || '视觉营销诊断'}`,
+      `- 应用：${normalizeString(meta.app) || 'PromptLens'}`,
+      `- 导出时间：${normalizeString(meta.exportedAt) || new Date().toISOString()}`,
+      `- 模板：${normalizeString(meta.templateName) || '视觉营销诊断'}`,
       '',
       '## 业务背景',
       '',
