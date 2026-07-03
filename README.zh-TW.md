@@ -201,7 +201,7 @@ node --check result.js
 
 ## 路線圖狀態
 
-目前分支已落地到 v0.3.1：內建 / 自訂模板、Provider 預設、快捷鍵、結果匯出、模型測試、Token usage、可選本機歷史記錄、基礎 i18n 和 Chrome Web Store 發布準備。
+目前分支已落地到 v0.4.0：視覺行銷診斷、Warm Studio 視覺升級、中文 UI 一致性優化、摘要式歷史卡片、內建 / 自訂模板、Provider 預設、快捷鍵、結果匯出、模型測試、Token usage、可選本機歷史記錄、基礎 i18n 和 Chrome Web Store 發布準備。
 
 後續仍保留為回饋驅動的方向：
 
