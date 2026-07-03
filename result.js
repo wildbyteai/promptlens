@@ -73,6 +73,8 @@ const elements = {
   promptEn: document.getElementById('prompt-en'),
   promptVariantsCard: document.getElementById('prompt-variants-card'),
   promptVariantsList: document.getElementById('prompt-variants-list'),
+  marketingDiagnosisCard: document.getElementById('marketing-diagnosis-card'),
+  marketingDiagnosisSections: document.getElementById('marketing-diagnosis-sections'),
   promptTags: document.getElementById('prompt-tags'),
   negativePrompt: document.getElementById('negative-prompt'),
   jsonPrompt: document.getElementById('json-prompt'),
@@ -86,7 +88,11 @@ const elements = {
   usagePrompt: document.getElementById('usage-prompt'),
   usageCompletion: document.getElementById('usage-completion'),
   usageTotal: document.getElementById('usage-total'),
-  usageTime: document.getElementById('usage-time')
+  usageTime: document.getElementById('usage-time'),
+  marketingContextCard: document.getElementById('marketing-context-card'),
+  marketingContextInput: document.getElementById('marketing-context-input'),
+  marketingContextStart: document.getElementById('marketing-context-start'),
+  marketingContextSkip: document.getElementById('marketing-context-skip')
 };
 
 /* ── Step SVG icons ───────────────────────────────────── */
@@ -111,6 +117,7 @@ function setLoading(text, activeStep) {
   loadingPanel.hidden = false;
   errorPanel.hidden = true;
   resultContent.hidden = true;
+  hideMarketingContextCard();
   loadingText.textContent = text;
   if (resultStatus) {
     resultStatus.textContent = text;
@@ -135,6 +142,7 @@ function showError(title, message) {
   loadingPanel.hidden = true;
   errorPanel.hidden = false;
   resultContent.hidden = true;
+  hideMarketingContextCard();
   if (resultStatus) {
     resultStatus.textContent = title;
     resultStatus.dataset.tone = 'error';
@@ -143,10 +151,26 @@ function showError(title, message) {
   errorMessage.textContent = message;
 }
 
+function showMarketingContextCard() {
+  loadingPanel.hidden = true;
+  errorPanel.hidden = true;
+  resultContent.hidden = true;
+  elements.marketingContextCard.hidden = false;
+  if (resultStatus) {
+    resultStatus.textContent = '可选填写业务背景。';
+    resultStatus.dataset.tone = 'neutral';
+  }
+}
+
+function hideMarketingContextCard() {
+  elements.marketingContextCard.hidden = true;
+}
+
 function showResult() {
   loadingPanel.hidden = true;
   errorPanel.hidden = true;
   resultContent.hidden = false;
+  hideMarketingContextCard();
   if (resultStatus) {
     resultStatus.textContent = '分析完成。';
     resultStatus.dataset.tone = 'success';
@@ -174,6 +198,7 @@ let currentRawText = '';
 let currentTemplate = null;
 let currentUsage = null;
 let currentResponseTimeMs = null;
+let currentBusinessContext = null;
 
 function renderUsage(usage, responseTimeMs) {
   if (!usage && !responseTimeMs) {
@@ -236,13 +261,13 @@ function renderPromptVariants(result) {
     const copyPromptButton = document.createElement('button');
     copyPromptButton.type = 'button';
     copyPromptButton.className = 'copy-button';
-    copyPromptButton.textContent = 'Copy Prompt';
+    copyPromptButton.textContent = '复制提示词';
     copyPromptButton.addEventListener('click', () => copyTextWithFeedback(copyPromptButton, variant.prompt_en));
 
     const copyCardButton = document.createElement('button');
     copyCardButton.type = 'button';
     copyCardButton.className = 'copy-button';
-    copyCardButton.textContent = 'Copy Card';
+    copyCardButton.textContent = '复制卡片';
     copyCardButton.addEventListener('click', () => {
       copyTextWithFeedback(copyCardButton, window.PromptVariants.formatPromptVariantCard(variant));
     });
@@ -256,8 +281,8 @@ function renderPromptVariants(result) {
     meta.className = 'prompt-variant-meta';
 
     const metaRows = [
-      ['Tags', variant.tags.join(', ')],
-      ['Negative Prompt', variant.negative_prompt],
+      ['标签', variant.tags.join(', ')],
+      ['反向提示词', variant.negative_prompt],
       ['适用场景', variant.use_cases.join(', ')]
     ];
 
@@ -276,6 +301,76 @@ function renderPromptVariants(result) {
   return variants;
 }
 
+function getMarketingReadinessScore(result) {
+  const score = result &&
+    result.marketing_diagnosis &&
+    result.marketing_diagnosis.marketing_diagnosis &&
+    result.marketing_diagnosis.marketing_diagnosis.marketing_readiness_score;
+  const overall = Number(score && score.overall);
+  return Number.isFinite(overall) && overall >= 1 && overall <= 5 ? overall : null;
+}
+
+function renderMarketingDiagnosis(result, template) {
+  const isMarketingTemplate = window.PromptTemplates.isMarketingDiagnosisTemplate(template);
+  if (!isMarketingTemplate || !window.PromptMarketingDiagnosis.hasMarketingDiagnosis(result)) {
+    elements.marketingDiagnosisCard.hidden = true;
+    elements.marketingDiagnosisSections.replaceChildren();
+    return;
+  }
+
+  const sections = window.PromptMarketingDiagnosis.getMarketingDiagnosisSections(result);
+  const readinessScore = getMarketingReadinessScore(result);
+  elements.marketingDiagnosisSections.replaceChildren();
+
+  sections.forEach((section, index) => {
+    const card = document.createElement('section');
+    card.className = 'marketing-diagnosis-section';
+    card.dataset.section = section.kicker;
+
+    const header = document.createElement('div');
+    header.className = 'marketing-diagnosis-section-head';
+    const titleBox = document.createElement('div');
+    titleBox.append(
+      createTextElement('span', 'card-kicker', section.kicker),
+      createTextElement('h3', '', section.title)
+    );
+    header.appendChild(titleBox);
+
+    if (index === 0 && readinessScore) {
+      const scoreRing = createTextElement('div', 'marketing-diagnosis-score-ring', readinessScore.toFixed(1));
+      scoreRing.setAttribute('aria-label', `营销准备度评分 ${readinessScore.toFixed(1)} / 5`);
+      header.appendChild(scoreRing);
+    }
+
+    card.appendChild(header);
+
+    const list = document.createElement('dl');
+    section.items.forEach(item => {
+      if (!item.value) return;
+      const row = document.createElement('div');
+      row.appendChild(createTextElement('dt', '', item.label));
+      const value = createTextElement(
+        'dd',
+        item.label === '快速判断' ? 'marketing-diagnosis-quick-judgement' : '',
+        item.value
+      );
+      row.appendChild(value);
+      list.appendChild(row);
+    });
+    card.appendChild(list);
+    elements.marketingDiagnosisSections.appendChild(card);
+  });
+
+  elements.marketingDiagnosisCard.hidden = false;
+}
+
+function getVisiblePromptText(value) {
+  if (currentTemplate && window.PromptTemplates.isMarketingDiagnosisTemplate(currentTemplate.id)) {
+    return window.PromptMarketingDiagnosis.normalizeSafeMarketingText(value);
+  }
+  return value || '';
+}
+
 function renderResult(result, rawText, template) {
   currentResult = result;
   currentRawText = rawText || JSON.stringify(result, null, 2);
@@ -286,8 +381,9 @@ function renderResult(result, rawText, template) {
     elements.templateDescription.textContent = currentTemplate.description;
   }
 
-  setText('prompt-zh', result.prompt_zh || '');
-  setText('prompt-en', result.prompt_en || '');
+  renderMarketingDiagnosis(result, currentTemplate);
+  setText('prompt-zh', getVisiblePromptText(result.prompt_zh || ''));
+  setText('prompt-en', getVisiblePromptText(result.prompt_en || ''));
   renderPromptVariants(result);
   setText('prompt-tags', Array.isArray(result.prompt_tags) ? result.prompt_tags.join(', ') : '');
   setText('negative-prompt', result.negative_prompt || '');
@@ -339,17 +435,25 @@ function buildExportData() {
 function buildMarkdownExport() {
   const data = buildExportData();
   const result = data.result;
+  if (data.template && window.PromptTemplates.isMarketingDiagnosisTemplate(data.template.id)) {
+    return window.PromptMarketingDiagnosis.buildMarketingDiagnosisMarkdown(result, {
+      app: data.app,
+      exportedAt: data.exportedAt,
+      templateName: data.template.name,
+      businessContext: currentBusinessContext || ''
+    });
+  }
   const tags = Array.isArray(result.prompt_tags) ? result.prompt_tags.join(', ') : '';
   const variants = window.PromptVariants.normalizePromptVariants(result);
   const variantsMarkdown = window.PromptVariants.formatPromptVariantsMarkdown(variants);
   const sections = [
-    '# Image Prompt Analysis Result',
+    '# 图片提示词分析结果',
     '',
-    `- App: ${data.app}`,
-    `- Exported At: ${data.exportedAt}`,
-    `- Template: ${data.template ? data.template.name : 'Unknown'}`,
+    `- 应用：${data.app}`,
+    `- 导出时间：${data.exportedAt}`,
+    `- 模板：${data.template ? data.template.name : '未知'}`,
     '',
-    '## English Prompt',
+    '## 英文提示词',
     '',
     result.prompt_en || '',
     '',
@@ -357,15 +461,15 @@ function buildMarkdownExport() {
     '',
     result.prompt_zh || '',
     '',
-    '## Tags',
+    '## 标签',
     '',
     tags,
     '',
-    '## Negative Prompt',
+    '## 反向提示词',
     '',
     result.negative_prompt || '',
     '',
-    '## JSON Prompt',
+    '## 结构化提示词',
     '',
     '```json',
     JSON.stringify(result.json_prompt || {}, null, 2),
@@ -380,23 +484,26 @@ function buildMarkdownExport() {
 
 function buildCopyAllText() {
   const result = buildExportData().result;
+  if (currentTemplate && window.PromptTemplates.isMarketingDiagnosisTemplate(currentTemplate.id)) {
+    return window.PromptMarketingDiagnosis.buildMarketingDiagnosisCopyText(result);
+  }
   const tags = Array.isArray(result.prompt_tags) ? result.prompt_tags.join(', ') : '';
   const variants = window.PromptVariants.normalizePromptVariants(result);
   const variantsMarkdown = window.PromptVariants.formatPromptVariantsMarkdown(variants);
   const sections = [
-    'English Prompt',
+    '英文提示词',
     result.prompt_en || '',
     '',
     '中文提示词',
     result.prompt_zh || '',
     '',
-    'Tags',
+    '标签',
     tags,
     '',
-    'Negative Prompt',
+    '反向提示词',
     result.negative_prompt || '',
     '',
-    'JSON Prompt',
+    '结构化提示词',
     JSON.stringify(result.json_prompt || {}, null, 2)
   ];
   if (variantsMarkdown) {
@@ -720,8 +827,8 @@ function buildChatCompletionsUrl(baseUrl) {
   return `${trimmed}/chat/completions`;
 }
 
-function buildReversePromptInstruction(template) {
-  return window.PromptTemplates.buildFinalPrompt(template);
+function buildReversePromptInstruction(template, businessContext = '') {
+  return window.PromptTemplates.buildFinalPrompt(template, { businessContext });
 }
 
 async function callVisionApi(preparedImage, template) {
@@ -740,7 +847,7 @@ async function callVisionApi(preparedImage, template) {
         content: [
           {
             type: 'text',
-            text: buildReversePromptInstruction(template)
+            text: buildReversePromptInstruction(template, currentBusinessContext)
           },
           {
             type: 'image_url',
@@ -854,6 +961,9 @@ function validateResultSchema(parsed) {
   if (!parsed.json_prompt || typeof parsed.json_prompt !== 'object') {
     throw new Error('模型返回缺少 json_prompt 对象字段。');
   }
+  if (currentTemplate && window.PromptTemplates.isMarketingDiagnosisTemplate(currentTemplate)) {
+    window.PromptMarketingDiagnosis.validateMarketingDiagnosisResult(parsed);
+  }
 }
 
 /* ── Main ─────────────────────────────────────────────── */
@@ -900,6 +1010,35 @@ async function maybeSaveHistory(input, result, template) {
   });
 }
 
+function waitForMarketingContext() {
+  if (currentBusinessContext !== null) {
+    return Promise.resolve(currentBusinessContext);
+  }
+  return new Promise(resolve => {
+    showMarketingContextCard();
+    elements.marketingContextInput.focus();
+
+    const cleanup = () => {
+      elements.marketingContextStart.removeEventListener('click', onStart);
+      elements.marketingContextSkip.removeEventListener('click', onSkip);
+    };
+    const onStart = () => {
+      cleanup();
+      const value = String(elements.marketingContextInput.value || '').trim().slice(0, 1200);
+      elements.marketingContextInput.value = '';
+      resolve(value);
+    };
+    const onSkip = () => {
+      cleanup();
+      elements.marketingContextInput.value = '';
+      resolve('');
+    };
+
+    elements.marketingContextStart.addEventListener('click', onStart);
+    elements.marketingContextSkip.addEventListener('click', onSkip);
+  });
+}
+
 async function analyzeInput(input) {
   const prepared = await prepareImage(input);
   elements.previewImage.src = prepared.dataUrl;
@@ -908,6 +1047,12 @@ async function analyzeInput(input) {
   currentTemplate = template;
   elements.templateName.textContent = template.name;
   elements.templateDescription.textContent = template.description;
+
+  if (window.PromptTemplates.isMarketingDiagnosisTemplate(template)) {
+    currentBusinessContext = await waitForMarketingContext();
+  } else {
+    currentBusinessContext = '';
+  }
 
   const { parsed, rawText, usage, responseTimeMs } = await callVisionApi(prepared, template);
   currentUsage = usage;
@@ -942,6 +1087,7 @@ retryBtn.addEventListener('click', () => {
     showError('无法重试', '没有可重试的输入。请回到网页右键图片或框选截图。');
     return;
   }
+  currentBusinessContext = null;
   analyzeInput({ ...currentInput }).catch(renderError);
 });
 

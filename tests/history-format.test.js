@@ -47,13 +47,13 @@ const fields = getHistoryDisplayFields(item);
 assert.deepEqual(fields.map(field => field.label), [
   '来源图片 URL',
   '来源页面 URL',
-  'English Prompt',
+  '英文提示词',
   '中文提示词',
-  'Tags',
-  'Negative Prompt',
-  'JSON Prompt',
+  '标签',
+  '反向提示词',
+  '结构化提示词',
   '专业用途 Prompt 候选',
-  'Raw JSON'
+  '原始 JSON'
 ]);
 assert.equal(fields[0].value, item.imageUrl);
 assert.equal(fields[0].kind, 'url');
@@ -84,16 +84,16 @@ assert.equal(fields[3].collapsed, false);
 assert.equal(fields[4].kind, 'tags');
 
 const copyText = buildHistoryCopyText(item);
-assert.match(copyText, /Source: example\.com/);
-assert.match(copyText, /Input Type: selection/);
-assert.match(copyText, /Template: 详细分析/);
+assert.match(copyText, /来源：example\.com/);
+assert.match(copyText, /输入类型：selection/);
+assert.match(copyText, /模板：详细分析/);
 assert.match(copyText, /来源图片 URL\nhttps:\/\/cdn\.example\.com\/assets\/cat\.jpg\?token=abc/);
 assert.match(copyText, /来源页面 URL\nhttps:\/\/example\.com\/gallery\/cat/);
-assert.match(copyText, /English Prompt\nA cinematic cat portrait/);
+assert.match(copyText, /英文提示词\nA cinematic cat portrait/);
 assert.match(copyText, /中文提示词\n一张电影感猫咪肖像/);
-assert.match(copyText, /Tags\ncat, cinematic, soft light/);
-assert.match(copyText, /Negative Prompt\nblurry, low quality/);
-assert.match(copyText, /JSON Prompt\n\{\n  "subject": "cat",\n  "lighting": "soft light"\n\}/);
+assert.match(copyText, /标签\ncat, cinematic, soft light/);
+assert.match(copyText, /反向提示词\nblurry, low quality/);
+assert.match(copyText, /结构化提示词\n\{\n  "subject": "cat",\n  "lighting": "soft light"\n\}/);
 assert.match(copyText, /专业用途 Prompt 候选/);
 assert.match(copyText, /Extend the cat portrait into a dreamy editorial concept/);
 

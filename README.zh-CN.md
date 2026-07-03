@@ -30,7 +30,8 @@ PromptLens 是一个轻量级 Chrome MV3 扩展，用于把网页图片或框选
 - **自定义模型服务**：自行配置 AI Base URL、API Key 和 Model。
 - **OpenAI-compatible Vision API**：请求格式兼容 `/chat/completions` 的视觉模型接口。
 - **结构化结果**：输出中文提示词、English Prompt、Tags、Negative Prompt、JSON Prompt 和 Raw JSON。
-- **内置输出模板**：提供详细分析、自然语言、标签加权、快速复制四种输出格式。
+- **内置输出模板**：提供详细分析、自然语言、标签加权、快速复制和视觉营销诊断等输出格式。
+- **视觉营销诊断**：面向商业视觉图的可选业务分析，输出老板摘要、营销诊断、低成本改编 brief 和可发布 Markdown 案例初稿。
 - **自定义模板**：支持复制内置模板、新建、编辑、删除、导入和导出自定义模板。
 - **Provider 预设**：提供 OpenAI、DeepSeek、Alibaba、SiliconFlow、Groq、OpenRouter、Ollama 和 Custom。
 - **快捷键框选**：支持 `Alt+Shift+S` 触发框选截图，可在 `chrome://extensions/shortcuts` 修改。
@@ -49,6 +50,7 @@ PromptLens 刻意不包含以下能力：
 - 云端历史记录
 - 自动填充第三方生成器网站
 - 团队协作或账号同步
+- 广告账户自动化、投放出价建议或转化效果保证
 
 ## 工作原理
 
@@ -199,7 +201,7 @@ node --check result.js
 
 ## 路线图状态
 
-当前分支已落地到 v0.3.1：内置 / 自定义模板、Provider 预设、快捷键、结果导出、模型测试、Token usage、可选本地历史记录、基础 i18n 和 Chrome Web Store 发布准备。
+当前分支已落地到 v0.4.0：视觉营销诊断、Warm Studio 视觉升级、中文 UI 一致性优化、摘要式历史卡片、内置 / 自定义模板、Provider 预设、快捷键、结果导出、模型测试、Token usage、可选本地历史记录、基础 i18n 和 Chrome Web Store 发布准备。
 
 后续仍保留为反馈驱动的方向：
 

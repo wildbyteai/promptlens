@@ -7,6 +7,43 @@ const clearHistoryButton = document.getElementById('clear-history-page');
 
 let allItems = [];
 
+function normalizeString(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function truncateText(value, maxLength = 140) {
+  const text = normalizeString(value).replace(/\s+/g, ' ');
+  if (!text) return '';
+  return text.length > maxLength ? `${text.slice(0, maxLength - 1)}…` : text;
+}
+
+function getHistoryPromptSummary(item) {
+  const result = item && item.result && typeof item.result === 'object' ? item.result : {};
+  return truncateText(
+    normalizeString(item && item.promptZh) ||
+    normalizeString(result.prompt_zh) ||
+    normalizeString(item && item.promptEn) ||
+    normalizeString(result.prompt_en) ||
+    '暂无提示词摘要'
+  );
+}
+
+function getHistoryVisibleTags(item, limit = 5) {
+  const result = item && item.result && typeof item.result === 'object' ? item.result : {};
+  const source = Array.isArray(item && item.promptTags) && item.promptTags.length ? item.promptTags : result.prompt_tags;
+  return Array.isArray(source) ? source.filter(tag => typeof tag === 'string' && tag.trim()).map(tag => tag.trim()).slice(0, limit) : [];
+}
+
+function getInputTypeLabel(inputType) {
+  const labels = {
+    image_url: '图片 URL',
+    screenshot_selection: '框选截图',
+    selection: '框选截图',
+    data_url: 'Data URL'
+  };
+  return labels[inputType] || inputType || '未知输入';
+}
+
 function setStatus(text, tone = 'neutral') {
   historyStatus.textContent = text;
   historyStatus.dataset.tone = tone;
@@ -48,6 +85,35 @@ function createCopyButton(label, getText, className = 'copy-button') {
   return button;
 }
 
+function createSummaryTags(tags) {
+  const tagList = document.createElement('div');
+  tagList.className = 'history-summary-tags';
+  tags.forEach(tag => {
+    const badge = document.createElement('span');
+    badge.className = 'badge';
+    badge.textContent = tag;
+    tagList.appendChild(badge);
+  });
+  return tagList;
+}
+
+function createHistorySummary(item) {
+  const summary = document.createElement('div');
+  summary.className = 'history-summary';
+
+  const text = document.createElement('p');
+  text.className = 'history-summary-text';
+  text.textContent = getHistoryPromptSummary(item);
+  summary.appendChild(text);
+
+  const tags = getHistoryVisibleTags(item);
+  if (tags.length) {
+    summary.appendChild(createSummaryTags(tags));
+  }
+
+  return summary;
+}
+
 function createFieldHeader(label, copyText) {
   const header = document.createElement('div');
   header.className = 'card-title-row history-field-header';
@@ -70,7 +136,7 @@ function createPromptField(field) {
 
   const kicker = document.createElement('span');
   kicker.className = 'card-kicker';
-  kicker.textContent = isPrimary ? 'Main output' : 'Prompt detail';
+  kicker.textContent = isPrimary ? '主要输出' : '提示词详情';
 
   const titleWrap = document.createElement('div');
   titleWrap.append(kicker, createFieldHeader(field.label, field.value));
@@ -240,12 +306,12 @@ function renderItems() {
     const titleBox = document.createElement('div');
     const kicker = document.createElement('span');
     kicker.className = 'card-kicker';
-    kicker.textContent = item.templateName || 'Unknown Template';
+    kicker.textContent = item.templateName || '未知模板';
     const title = document.createElement('h2');
     title.textContent = item.sourceDomain || '未知来源';
     const meta = document.createElement('p');
     meta.className = 'history-meta';
-    const inputType = item.inputType ? ` · ${item.inputType}` : '';
+    const inputType = item.inputType ? ` · ${getInputTypeLabel(item.inputType)}` : '';
     meta.textContent = `${new Date(item.createdAt).toLocaleString()}${inputType}`;
     titleBox.append(kicker, title, meta);
 
@@ -264,11 +330,21 @@ function renderItems() {
     actions.append(copyButton, deleteButton);
     header.append(titleBox, actions);
 
+    article.appendChild(header);
+    article.appendChild(createHistorySummary(item));
+
+    const details = document.createElement('details');
+    details.className = 'history-detail-toggle';
+    const detailSummary = document.createElement('summary');
+    detailSummary.textContent = '查看完整内容';
+    details.appendChild(detailSummary);
+
     const body = document.createElement('div');
     body.className = 'history-body';
     appendFieldCards(body, window.PromptHistoryFormat.getHistoryDisplayFields(item));
+    details.appendChild(body);
 
-    article.append(header, body);
+    article.appendChild(details);
     historyList.appendChild(article);
   });
 
@@ -290,3 +366,11 @@ clearHistoryButton.addEventListener('click', () => {
 });
 
 loadHistory().catch(error => setStatus(`读取失败：${error.message}`, 'error'));
+
+if (typeof module === 'object' && module.exports) {
+  module.exports = {
+    getHistoryPromptSummary,
+    getHistoryVisibleTags,
+    getInputTypeLabel
+  };
+}
