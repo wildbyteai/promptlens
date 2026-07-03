@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  从网页图片或框选截图中反向分析可复用的 AI 图片提示词。
+  图片反推提示词 Chrome 扩展：支持图片转提示词、AI 识图生成提示词和视觉营销诊断。
 </p>
 
 <p align="center">
@@ -19,7 +19,7 @@
   <img src="https://img.shields.io/badge/build-none-7c3aed" alt="无需构建" />
 </p>
 
-PromptLens 是一个轻量级 Chrome MV3 扩展，用于把网页图片或框选截图发送到你自己配置的 OpenAI-compatible Vision API，并生成可复制的图片反推提示词。
+PromptLens 是一个轻量级 Chrome MV3 图片反推提示词工具，也可以作为图片转提示词、AI 识图生成提示词和商业视觉诊断工作流使用。它会把网页图片或框选截图发送到你自己配置的 OpenAI-compatible Vision API，并生成可复制到 Midjourney、Stable Diffusion 或其他图像生成工具中的提示词。
 
 它的目标是提供一个简单、透明、可自托管思路的图片提示词反推工具：不登录、不付费、不内置后端、不绑定特定模型服务。
 

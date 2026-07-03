@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://bytewatcher.xyz/sitemap.xml

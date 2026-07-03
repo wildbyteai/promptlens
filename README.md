@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  Reverse-engineer image prompts from any web image or selected screenshot region.
+  Image-to-prompt Chrome extension for reverse image prompt generation, AI image prompt extraction, and visual marketing diagnosis.
 </p>
 
 <p align="center">
@@ -19,7 +19,7 @@
   <img src="https://img.shields.io/badge/build-none-7c3aed" alt="No build step" />
 </p>
 
-PromptLens is a lightweight Chrome MV3 extension that sends a web image or a selected screenshot region to your own OpenAI-compatible Vision API and generates reusable reverse image prompts.
+PromptLens is a lightweight image-to-prompt Chrome MV3 extension and reverse image prompt generator. It sends a web image or a selected screenshot region to your own OpenAI-compatible Vision API and generates reusable prompts for Midjourney, Stable Diffusion, commercial visual analysis, and visual marketing diagnosis.
 
 Its goal is to stay simple, transparent, and self-hosting-friendly: no login, no payment system, no built-in backend, and no lock-in to a specific model provider.
 
