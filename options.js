@@ -118,6 +118,75 @@ function syncProviderPresetFromUrl() {
   providerPresetSelect.value = matched ? matched.id : 'custom';
 }
 
+/* ── Provider recipe examples ─────────────────────────── */
+
+const PROVIDER_RECIPES = [
+  {
+    name: 'Custom OpenAI-compatible',
+    baseUrl: 'https://your-provider.example/v1',
+    model: '填写支持 vision 的模型名',
+    check: '确认服务支持 /chat/completions 与 image_url 输入。',
+    caution: '不要把陌生或不可信地址作为 Base URL。'
+  },
+  {
+    name: 'OpenAI',
+    baseUrl: 'https://api.openai.com/v1',
+    model: '选择支持视觉输入的模型',
+    check: '快速测试验证 Key；视觉测试验证图片输入。',
+    caution: '不同模型能力和价格不同，请以控制台为准。'
+  },
+  {
+    name: 'Ollama 本地',
+    baseUrl: 'http://localhost:11434/v1',
+    model: '本地已安装的 vision-capable 模型',
+    check: '确认 Ollama 正在运行，且模型支持图片输入。',
+    caution: '本地 HTTP 仅允许 localhost 或 127.0.0.1。'
+  },
+  {
+    name: 'OpenRouter / SiliconFlow',
+    baseUrl: '使用服务商提供的 OpenAI-compatible /v1 地址',
+    model: '选择明确支持 vision 的模型',
+    check: '404 多半是模型名或路由不正确；视觉失败时请换 vision 模型。',
+    caution: 'Provider 预设不代表所有模型都支持图片。'
+  },
+  {
+    name: 'DeepSeek 注意事项',
+    baseUrl: 'https://api.deepseek.com/v1',
+    model: '以官方文档和视觉测试为准',
+    check: '文本模型可能通过快速测试，但不一定支持 image_url。',
+    caution: '不要把 DeepSeek 预设理解为所有 DeepSeek 模型都支持图片。'
+  }
+];
+
+function renderProviderRecipes() {
+  const list = document.getElementById('provider-recipes-list');
+  if (!list) return;
+  list.replaceChildren();
+  PROVIDER_RECIPES.forEach(recipe => {
+    const card = document.createElement('article');
+    card.className = 'provider-recipe-card';
+    const title = document.createElement('h4');
+    title.textContent = recipe.name;
+    const dl = document.createElement('dl');
+    [
+      ['Base URL', recipe.baseUrl],
+      ['Model', recipe.model],
+      ['检查点', recipe.check],
+      ['注意', recipe.caution]
+    ].forEach(([label, value]) => {
+      const row = document.createElement('div');
+      const dt = document.createElement('dt');
+      const dd = document.createElement('dd');
+      dt.textContent = label;
+      dd.textContent = value;
+      row.append(dt, dd);
+      dl.appendChild(row);
+    });
+    card.append(title, dl);
+    list.appendChild(card);
+  });
+}
+
 /* ── Template helpers ─────────────────────────────────── */
 
 async function getSelectedTemplate() {
@@ -776,6 +845,7 @@ clearHistoryButton.addEventListener('click', () => {
 /* ── Init ──────────────────────────────────────────────── */
 
 populateProviderPresets();
+renderProviderRecipes();
 loadFirstSuccessCollapsedState().catch(() => {});
 
 loadConfig().catch(error => {
