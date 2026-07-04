@@ -44,7 +44,6 @@ const maxImageSideInput = document.getElementById('max-image-side');
 const jpegQualityInput = document.getElementById('jpeg-quality');
 const toggleApiKeyButton = document.getElementById('toggle-api-key');
 const resetFormButton = document.getElementById('reset-form');
-const testConnectionButton = null;
 const editConfigButton = document.getElementById('edit-config');
 const grantImageButton = document.getElementById('grant-image-permission');
 
@@ -68,6 +67,35 @@ const firstSuccessStepOutput = document.getElementById('first-success-step-outpu
 const FIRST_SUCCESS_COLLAPSED_KEY = 'firstSuccessChecklistCollapsed';
 const QUICK_TEST_STATUS_KEY = 'quickTestStatus';
 const VISION_TEST_STATUS_KEY = 'visionTestStatus';
+const PROVIDER_TEST_TIMEOUT_MS = 20000;
+
+/* ── Debounce helper ──────────────────────────────────────── */
+
+function debounce(fn, ms) {
+  let timer = null;
+  return function (...args) {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => fn.apply(this, args), ms);
+  };
+}
+
+const debouncedRefreshChecklistState = debounce(() => {
+  refreshChecklistState().catch(() => {});
+}, 250);
+
+/* ── Config fingerprint / match helpers ──────────────────── */
+
+function makeConfigFingerprint(config) {
+  const provider = String(config.providerPreset || config.provider || '').trim();
+  const baseUrl = String(config.apiBaseUrl || '').trim().replace(/\/+$/, '');
+  const model = String(config.apiModel || '').trim();
+  return `${provider}|${baseUrl}|${model}`;
+}
+
+function doesTestStateMatchConfig(state, config) {
+  if (!state || !state.fingerprint) return false;
+  return state.fingerprint === makeConfigFingerprint(config);
+}
 
 /* ── Status helpers ────────────────────────────────────── */
 
@@ -367,8 +395,10 @@ function setStepState(stepEl, state, label) {
 
 function deriveChecklistState(config, quickState, visionState) {
   const hasConfig = isCompleteConfig(config);
-  const quickPassed = Boolean(quickState && quickState.success);
-  const visionPassed = Boolean(visionState && visionState.success);
+  const quickMatches = doesTestStateMatchConfig(quickState, config);
+  const visionMatches = doesTestStateMatchConfig(visionState, config);
+  const quickPassed = quickMatches && Boolean(quickState && quickState.success);
+  const visionPassed = visionMatches && Boolean(visionState && visionState.success);
   return {
     config: hasConfig ? { state: 'done', label: '已填写' } : { state: 'active', label: '待配置' },
     test: visionPassed
@@ -395,8 +425,10 @@ async function refreshChecklistState() {
     [QUICK_TEST_STATUS_KEY]: null,
     [VISION_TEST_STATUS_KEY]: null
   });
+  const config = getCurrentFormConfig();
+  config.providerPreset = providerPresetSelect.value;
   renderChecklistState(deriveChecklistState(
-    getCurrentFormConfig(),
+    config,
     stored[QUICK_TEST_STATUS_KEY],
     stored[VISION_TEST_STATUS_KEY]
   ));
@@ -557,14 +589,16 @@ function showConfigErrorInfo(info) {
   configStatusBanner.appendChild(wrapper);
 }
 
-async function saveMinimalTestState(kind, result) {
+async function saveMinimalTestState(kind, result, configSnapshot) {
   const status = {
     success: Boolean(result.success),
     type: result.type || (result.success ? 'success' : 'unknown'),
     rawStatus: result.rawStatus || null,
     testedAt: new Date().toISOString(),
-    provider: providerPresetSelect.value,
-    model: modelInput.value.trim()
+    provider: configSnapshot.providerPreset || '',
+    model: configSnapshot.apiModel || '',
+    baseUrl: configSnapshot.apiBaseUrl || '',
+    fingerprint: makeConfigFingerprint(configSnapshot)
   };
   await chrome.storage.local.set({ [kind]: status });
   await refreshChecklistState();
@@ -573,6 +607,7 @@ async function saveMinimalTestState(kind, result) {
 async function testConnection() {
   hideBanner(configStatusBanner);
   const config = getCurrentFormConfig();
+  config.providerPreset = providerPresetSelect.value;
   if (!config.apiBaseUrl || !config.apiKey || !config.apiModel) {
     showConfigStatus('请先填写完整的 AI Base URL、API Key 和 Model。', 'warning');
     return false;
@@ -582,6 +617,9 @@ async function testConnection() {
     showConfigStatus(urlError, 'error');
     return false;
   }
+  const configSnapshot = { ...config };
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), PROVIDER_TEST_TIMEOUT_MS);
   quickTestButton.disabled = true;
   quickTestButton.textContent = '快速测试中...';
   try {
@@ -595,23 +633,25 @@ async function testConnection() {
         model: config.apiModel,
         messages: [{ role: 'user', content: 'hi' }],
         max_tokens: 5
-      })
+      }),
+      signal: controller.signal
     });
     if (response.ok) {
       showConfigStatus('快速测试成功：API Key、Base URL 和文本请求可用。', 'success');
-      await saveMinimalTestState(QUICK_TEST_STATUS_KEY, { success: true, type: 'success', rawStatus: response.status });
+      await saveMinimalTestState(QUICK_TEST_STATUS_KEY, { success: true, type: 'success', rawStatus: response.status }, configSnapshot);
       return true;
     }
     const info = classifyApiTestError({ response, mode: 'quick' });
     showConfigErrorInfo(info);
-    await saveMinimalTestState(QUICK_TEST_STATUS_KEY, { success: false, type: info.type, rawStatus: info.rawStatus });
+    await saveMinimalTestState(QUICK_TEST_STATUS_KEY, { success: false, type: info.type, rawStatus: info.rawStatus }, configSnapshot);
     return false;
   } catch (error) {
     const info = classifyApiTestError({ error, mode: 'quick' });
     showConfigErrorInfo(info);
-    await saveMinimalTestState(QUICK_TEST_STATUS_KEY, { success: false, type: info.type, rawStatus: info.rawStatus });
+    await saveMinimalTestState(QUICK_TEST_STATUS_KEY, { success: false, type: info.type, rawStatus: info.rawStatus }, configSnapshot);
     return false;
   } finally {
+    window.clearTimeout(timeoutId);
     quickTestButton.disabled = false;
     quickTestButton.textContent = '快速测试';
   }
@@ -625,13 +665,18 @@ async function runVisionTest() {
   if (!window.confirm('将发送一次极小测试图片到你的 API，可能产生少量费用。是否继续？')) return;
   hideBanner(configStatusBanner);
   const config = getCurrentFormConfig();
+  config.providerPreset = providerPresetSelect.value;
   if (!config.apiBaseUrl || !config.apiKey || !config.apiModel) {
     showConfigStatus('请先填写完整的 AI Base URL、API Key 和 Model。', 'warning');
     return;
   }
   const quickState = await chrome.storage.local.get({ [QUICK_TEST_STATUS_KEY]: null });
-  const quickPassed = Boolean(quickState[QUICK_TEST_STATUS_KEY] && quickState[QUICK_TEST_STATUS_KEY].success);
+  const quickStatus = quickState[QUICK_TEST_STATUS_KEY];
+  const quickPassed = doesTestStateMatchConfig(quickStatus, config) && Boolean(quickStatus && quickStatus.success);
   const tinyJpeg = '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAAgACADASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAX/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAH/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAEFAqf/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAEDAQE/ASP/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAECAQE/ASP/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAY/Ap//xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAE/IV//2gAMAwEAAgADAAAAEP/EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQMBAT8QH//EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQIBAT8QH//EABQQAQAAAAAAAAAAAAAAAAAAABD/2gAIAQEAAT8QH//Z';
+  const configSnapshot = { ...config };
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), PROVIDER_TEST_TIMEOUT_MS);
   visionTestButton.disabled = true;
   visionTestButton.textContent = '视觉测试中...';
   try {
@@ -651,21 +696,23 @@ async function runVisionTest() {
           ]
         }],
         max_tokens: 8
-      })
+      }),
+      signal: controller.signal
     });
     if (response.ok) {
       showConfigStatus('视觉测试成功：模型可接收图片输入。', 'success');
-      await saveMinimalTestState(VISION_TEST_STATUS_KEY, { success: true, type: 'success', rawStatus: response.status });
+      await saveMinimalTestState(VISION_TEST_STATUS_KEY, { success: true, type: 'success', rawStatus: response.status }, configSnapshot);
     } else {
       const info = classifyApiTestError({ response, mode: 'vision', quickPassed });
       showConfigErrorInfo(info);
-      await saveMinimalTestState(VISION_TEST_STATUS_KEY, { success: false, type: info.type, rawStatus: info.rawStatus });
+      await saveMinimalTestState(VISION_TEST_STATUS_KEY, { success: false, type: info.type, rawStatus: info.rawStatus }, configSnapshot);
     }
   } catch (error) {
     const info = classifyApiTestError({ error, mode: 'vision', quickPassed });
     showConfigErrorInfo(info);
-    await saveMinimalTestState(VISION_TEST_STATUS_KEY, { success: false, type: info.type, rawStatus: info.rawStatus });
+    await saveMinimalTestState(VISION_TEST_STATUS_KEY, { success: false, type: info.type, rawStatus: info.rawStatus }, configSnapshot);
   } finally {
+    window.clearTimeout(timeoutId);
     visionTestButton.disabled = false;
     visionTestButton.textContent = '视觉测试';
   }
@@ -696,6 +743,9 @@ providerPresetSelect.addEventListener('change', () => {
     baseUrlInput.value = selected.baseUrl;
     baseUrlInput.classList.remove('input-error');
   }
+  chrome.storage.local.remove([QUICK_TEST_STATUS_KEY, VISION_TEST_STATUS_KEY]).then(() => {
+    debouncedRefreshChecklistState();
+  }).catch(() => {});
 });
 
 baseUrlInput.addEventListener('input', syncProviderPresetFromUrl);
@@ -834,11 +884,13 @@ clearHistoryButton.addEventListener('click', () => {
   }).catch(error => showConfigStatus(`清空历史失败：${error.message}`, 'error'));
 });
 
-// 清除输入框错误样式
+// 清除输入框错误样式；配置字段变化时使测试状态失效
 [baseUrlInput, apiKeyInput, modelInput].forEach(input => {
   input.addEventListener('input', () => {
     input.classList.remove('input-error');
-    refreshChecklistState().catch(() => {});
+    chrome.storage.local.remove([QUICK_TEST_STATUS_KEY, VISION_TEST_STATUS_KEY]).then(() => {
+      debouncedRefreshChecklistState();
+    }).catch(() => {});
   });
 });
 

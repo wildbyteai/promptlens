@@ -1126,6 +1126,8 @@ retryBtn.addEventListener('click', () => {
   analyzeInput({ ...currentInput }).catch(renderError);
 });
 
-elements.marketingContextExample.addEventListener('click', fillMarketingContextExample);
+if (elements.marketingContextExample) {
+  elements.marketingContextExample.addEventListener('click', fillMarketingContextExample);
+}
 
 main().catch(renderError);
