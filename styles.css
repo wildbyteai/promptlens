@@ -1519,3 +1519,20 @@ a:active {
   margin: 8px 0 0;
   padding-left: 18px;
 }
+
+.next-step-card {
+  border-color: var(--accent-soft);
+}
+
+.next-step-card p {
+  margin: 0 0 10px;
+  color: var(--muted-text);
+  line-height: 1.6;
+}
+
+.next-step-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--body-text);
+  line-height: 1.6;
+}
