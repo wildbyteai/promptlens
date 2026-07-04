@@ -58,6 +58,17 @@ const permImageBadge = document.getElementById('perm-image-badge');
 const permStatusBanner = document.getElementById('perm-status-banner');
 const configStatusBanner = document.getElementById('config-status-banner');
 
+const firstSuccessToggle = document.getElementById('first-success-toggle');
+const firstSuccessBody = document.getElementById('first-success-body');
+const firstSuccessStepConfig = document.getElementById('first-success-step-config');
+const firstSuccessStepTest = document.getElementById('first-success-step-test');
+const firstSuccessStepAnalyze = document.getElementById('first-success-step-analyze');
+const firstSuccessStepOutput = document.getElementById('first-success-step-output');
+
+const FIRST_SUCCESS_COLLAPSED_KEY = 'firstSuccessChecklistCollapsed';
+const QUICK_TEST_STATUS_KEY = 'quickTestStatus';
+const VISION_TEST_STATUS_KEY = 'visionTestStatus';
+
 /* ── Status helpers ────────────────────────────────────── */
 
 const ICONS = {
@@ -263,6 +274,81 @@ function trimConfig(config) {
   };
 }
 
+/* ── First success checklist ──────────────────────────── */
+
+function getCurrentFormConfig() {
+  return trimConfig({
+    apiBaseUrl: baseUrlInput.value,
+    apiKey: apiKeyInput.value,
+    apiModel: modelInput.value,
+    activeTemplateId: templateSelect.value
+  });
+}
+
+function isCompleteConfig(config) {
+  return Boolean(config.apiBaseUrl && config.apiKey && config.apiModel);
+}
+
+function setStepState(stepEl, state, label) {
+  if (!stepEl) return;
+  stepEl.dataset.state = state;
+  const stateEl = stepEl.querySelector('.step-state');
+  if (stateEl) stateEl.textContent = label;
+}
+
+function deriveChecklistState(config, quickState, visionState) {
+  const hasConfig = isCompleteConfig(config);
+  const quickPassed = Boolean(quickState && quickState.success);
+  const visionPassed = Boolean(visionState && visionState.success);
+  return {
+    config: hasConfig ? { state: 'done', label: '已填写' } : { state: 'active', label: '待配置' },
+    test: visionPassed
+      ? { state: 'done', label: '视觉已通过' }
+      : quickPassed
+        ? { state: 'active', label: '待视觉测试' }
+        : hasConfig
+          ? { state: 'active', label: '待测试' }
+          : { state: 'pending', label: '未开始' },
+    analyze: visionPassed ? { state: 'active', label: '可开始' } : { state: 'pending', label: '准备中' },
+    output: visionPassed ? { state: 'active', label: '分析后完成' } : { state: 'pending', label: '准备中' }
+  };
+}
+
+function renderChecklistState(state) {
+  setStepState(firstSuccessStepConfig, state.config.state, state.config.label);
+  setStepState(firstSuccessStepTest, state.test.state, state.test.label);
+  setStepState(firstSuccessStepAnalyze, state.analyze.state, state.analyze.label);
+  setStepState(firstSuccessStepOutput, state.output.state, state.output.label);
+}
+
+async function refreshChecklistState() {
+  const stored = await chrome.storage.local.get({
+    [QUICK_TEST_STATUS_KEY]: null,
+    [VISION_TEST_STATUS_KEY]: null
+  });
+  renderChecklistState(deriveChecklistState(
+    getCurrentFormConfig(),
+    stored[QUICK_TEST_STATUS_KEY],
+    stored[VISION_TEST_STATUS_KEY]
+  ));
+}
+
+async function loadFirstSuccessCollapsedState() {
+  const stored = await chrome.storage.local.get({ [FIRST_SUCCESS_COLLAPSED_KEY]: false });
+  const collapsed = Boolean(stored[FIRST_SUCCESS_COLLAPSED_KEY]);
+  firstSuccessBody.hidden = collapsed;
+  firstSuccessToggle.setAttribute('aria-expanded', String(!collapsed));
+  firstSuccessToggle.textContent = collapsed ? '展开' : '收起';
+}
+
+async function toggleFirstSuccessCollapsed() {
+  const collapsed = !firstSuccessBody.hidden;
+  firstSuccessBody.hidden = collapsed;
+  firstSuccessToggle.setAttribute('aria-expanded', String(!collapsed));
+  firstSuccessToggle.textContent = collapsed ? '展开' : '收起';
+  await chrome.storage.local.set({ [FIRST_SUCCESS_COLLAPSED_KEY]: collapsed });
+}
+
 /* ── Load / Save ───────────────────────────────────────── */
 
 async function loadConfig() {
@@ -281,6 +367,7 @@ async function loadConfig() {
   jpegQualityInput.value = Number(stored.jpegQuality) || 0.85;
   syncProviderPresetFromUrl();
   await populateTemplateSelect(config.activeTemplateId);
+  await refreshChecklistState();
 
   if (config.apiBaseUrl && config.apiKey && config.apiModel) {
     await showSummary(config);
@@ -341,6 +428,7 @@ async function saveConfig() {
     jpegQuality
   });
   showConfigStatus('设置已保存。', 'success');
+  await refreshChecklistState();
   await showSummary(config);
 }
 
@@ -466,6 +554,10 @@ function buildChatCompletionsUrl(baseUrl) {
 
 /* ── Event listeners ───────────────────────────────────── */
 
+firstSuccessToggle.addEventListener('click', () => {
+  toggleFirstSuccessCollapsed().catch(error => showConfigStatus(`引导区状态保存失败：${error.message}`, 'error'));
+});
+
 form.addEventListener('submit', event => {
   event.preventDefault();
   saveConfig().catch(error => {
@@ -569,9 +661,10 @@ resetFormButton.addEventListener('click', () => {
   updateTemplateHint().catch(() => {});
   baseUrlInput.classList.remove('input-error');
   hideBanner(configStatusBanner);
-  chrome.storage.local.remove(['apiBaseUrl', 'apiKey', 'apiModel', 'activeTemplateId']).then(() => {
+  chrome.storage.local.remove(['apiBaseUrl', 'apiKey', 'apiModel', 'activeTemplateId', QUICK_TEST_STATUS_KEY, VISION_TEST_STATUS_KEY]).then(() => {
     showConfigStatus('设置已清空。', 'info');
     hideSummary();
+    refreshChecklistState().catch(() => {});
   }).catch(error => {
     showConfigStatus(`清空失败：${error.message}`, 'error');
   });
@@ -628,12 +721,14 @@ clearHistoryButton.addEventListener('click', () => {
 [baseUrlInput, apiKeyInput, modelInput].forEach(input => {
   input.addEventListener('input', () => {
     input.classList.remove('input-error');
+    refreshChecklistState().catch(() => {});
   });
 });
 
 /* ── Init ──────────────────────────────────────────────── */
 
 populateProviderPresets();
+loadFirstSuccessCollapsedState().catch(() => {});
 
 loadConfig().catch(error => {
   showConfigStatus(`加载设置失败：${error.message}`, 'error');
