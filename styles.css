@@ -1526,13 +1526,13 @@ a:active {
 
 .next-step-card p {
   margin: 0 0 10px;
-  color: var(--muted-text);
+  color: var(--muted);
   line-height: 1.6;
 }
 
 .next-step-list {
   margin: 0;
   padding-left: 18px;
-  color: var(--body-text);
+  color: var(--text);
   line-height: 1.6;
 }
