@@ -91,6 +91,7 @@ const elements = {
   usageTime: document.getElementById('usage-time'),
   marketingContextCard: document.getElementById('marketing-context-card'),
   marketingContextInput: document.getElementById('marketing-context-input'),
+  marketingContextExample: document.getElementById('marketing-context-example'),
   marketingContextStart: document.getElementById('marketing-context-start'),
   marketingContextSkip: document.getElementById('marketing-context-skip'),
   nextStepTitle: document.getElementById('next-step-title'),
@@ -1036,6 +1037,14 @@ async function maybeSaveHistory(input, result, template) {
   });
 }
 
+const MARKETING_CONTEXT_EXAMPLE = '这是一张独立站商品主图，目标是提高首屏点击和加购意愿，预算有限，希望优先给出低成本改图建议。';
+
+function fillMarketingContextExample() {
+  if (!elements.marketingContextInput) return;
+  elements.marketingContextInput.value = MARKETING_CONTEXT_EXAMPLE;
+  elements.marketingContextInput.focus();
+}
+
 function waitForMarketingContext() {
   if (currentBusinessContext !== null) {
     return Promise.resolve(currentBusinessContext);
@@ -1116,5 +1125,7 @@ retryBtn.addEventListener('click', () => {
   currentBusinessContext = null;
   analyzeInput({ ...currentInput }).catch(renderError);
 });
+
+elements.marketingContextExample.addEventListener('click', fillMarketingContextExample);
 
 main().catch(renderError);

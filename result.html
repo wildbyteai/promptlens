@@ -60,9 +60,10 @@
           <p>补充行业、产品、渠道或目标用户，可以让视觉营销诊断更贴近真实业务。不填写也可以直接分析。</p>
         </div>
         <label class="field-label" for="marketing-context-input">业务背景（可选）</label>
-        <textarea id="marketing-context-input" rows="4" maxlength="1200" placeholder="例如：这是一个本地美容院的小红书封面，目标是吸引 25-40 岁女性预约体验。"></textarea>
-        <p class="field-hint">仅用于本次请求，会发送给你配置的 AI 服务商；PromptLens 不会将其默认写入历史记录。</p>
+        <textarea id="marketing-context-input" rows="4" maxlength="1200" placeholder="例如：这是一张独立站商品主图，目标是提高首屏点击和加购意愿，预算有限，希望优先给出低成本改图建议。"></textarea>
+        <p class="field-hint">仅用于本次请求，会发送给你配置的 AI 服务商；PromptLens 没有自有后端，也不会默认上传到其他地方。</p>
         <div class="button-row">
+          <button id="marketing-context-example" type="button" class="secondary-button compact-button">填入示例背景</button>
           <button id="marketing-context-start" type="button" class="primary-button compact-button">开始诊断</button>
           <button id="marketing-context-skip" type="button" class="secondary-button compact-button">不填写，直接分析</button>
         </div>
