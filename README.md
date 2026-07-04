@@ -119,6 +119,18 @@ If the page reports missing image read permission, grant permission in options o
 
 Press Esc or click Cancel to exit selection mode.
 
+## First Success path
+
+PromptLens v0.5 focuses on helping a new user complete the first successful analysis:
+
+1. Open the options page.
+2. Configure your own OpenAI-compatible Vision API: Provider/Base URL, API Key, and a model that supports image input.
+3. Save settings, then run Quick Test and Vision Test.
+4. Analyze a page image with the context menu, or use area capture when site permissions or remote image loading get in the way.
+5. Copy a prompt/tags/variants result, or export a Markdown brief from the visual marketing diagnosis template.
+
+PromptLens does not provide a model service, backend, proxy, telemetry, account system, or cloud sharing. Test and analysis requests are sent from your browser to the Base URL you configure.
+
 ## Screenshots
 
 | Context menu | Options |
