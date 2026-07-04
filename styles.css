@@ -1375,3 +1375,134 @@ a:active {
 .history-detail-toggle .history-body {
   padding: 14px;
 }
+
+.first-success-card {
+  display: grid;
+  gap: 16px;
+}
+
+.first-success-heading {
+  align-items: flex-start;
+}
+
+.first-success-body {
+  display: grid;
+  gap: 14px;
+}
+
+.first-success-promise,
+.first-success-note {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.first-success-note {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-muted);
+}
+
+.first-success-steps {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.first-success-step {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: start;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+.first-success-step p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.step-index,
+.step-state {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.step-index {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.step-state {
+  padding: 0 10px;
+  color: var(--muted);
+  background: var(--surface-muted);
+  white-space: nowrap;
+}
+
+.first-success-step[data-state="done"] .step-state {
+  color: var(--success);
+  background: var(--success-bg);
+}
+
+.first-success-step[data-state="active"] .step-state,
+.first-success-step[data-state="warning"] .step-state {
+  color: var(--warning);
+  background: var(--warning-bg);
+}
+
+.provider-recipes summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.provider-recipes-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.provider-recipe-card {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+.provider-recipe-card h4 {
+  margin: 0 0 8px;
+}
+
+.provider-recipe-card dl {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.provider-recipe-card div {
+  display: grid;
+  gap: 2px;
+}
+
+.provider-recipe-card dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.provider-recipe-card dd {
+  margin: 0;
+  word-break: break-word;
+}
