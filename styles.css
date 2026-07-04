@@ -1506,3 +1506,16 @@ a:active {
   margin: 0;
   word-break: break-word;
 }
+
+.status-banner--detailed {
+  align-items: flex-start;
+}
+
+.status-banner--detailed p {
+  margin: 4px 0;
+}
+
+.status-banner--detailed ol {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}

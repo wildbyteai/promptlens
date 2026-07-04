@@ -44,7 +44,7 @@ const maxImageSideInput = document.getElementById('max-image-side');
 const jpegQualityInput = document.getElementById('jpeg-quality');
 const toggleApiKeyButton = document.getElementById('toggle-api-key');
 const resetFormButton = document.getElementById('reset-form');
-const testConnectionButton = document.getElementById('test-connection');
+const testConnectionButton = null;
 const editConfigButton = document.getElementById('edit-config');
 const grantImageButton = document.getElementById('grant-image-permission');
 
@@ -434,33 +434,89 @@ async function saveConfig() {
 
 /* ── Connection test ───────────────────────────────────── */
 
+function createTestErrorInfo(type, title, cause, nextSteps, safetyNote, rawStatus) {
+  return { type, title, cause, nextSteps, safetyNote: safetyNote || '', rawStatus: rawStatus || null };
+}
+
+function classifyApiTestError({ response, error, mode, quickPassed }) {
+  if (error && error.name === 'AbortError') {
+    return createTestErrorInfo('timeout', '请求超时', '模型服务响应时间过长，或网络连接不稳定。', ['稍后重试。', '检查模型服务状态。', '视觉测试时可尝试更快的 vision-capable model。'], '超时请求可能已经到达你的模型服务，请留意服务商计费规则。');
+  }
+  if (error) {
+    return createTestErrorInfo('network', '网络不可达', '浏览器无法访问你填写的 Base URL，或本地模型服务没有启动。', ['检查 Base URL 是否正确。', '如果使用 Ollama，请确认本地服务正在运行。', '如果是远程服务，请确认网络和浏览器权限。'], '请求会发送到你配置的 Base URL；请只使用可信服务。');
+  }
+  if (!response) {
+    return createTestErrorInfo('unknown', '测试失败', '没有收到可识别的响应。', ['重新运行测试。', '检查 Provider 文档中的 Base URL 和模型名。'], '不要把 API Key 或完整错误响应贴到公开 issue。');
+  }
+  if (response.status === 401 || response.status === 403) {
+    return createTestErrorInfo('auth', '鉴权失败', 'API Key、账号权限或模型权限不正确。', ['检查 API Key 是否复制完整。', '确认账号有权访问当前模型。', '确认 Base URL 属于你信任的服务。'], 'API Key 只保存在本地浏览器，但会随测试请求发送到你配置的 Base URL。', response.status);
+  }
+  if (response.status === 404) {
+    return createTestErrorInfo('not_found', '接口或模型不存在', 'Base URL、/chat/completions 路径或 Model 名称可能不正确。', ['检查 Base URL 是否应以 /v1 结尾。', '确认模型名称与服务商控制台一致。', '如果你已填写完整 /chat/completions，请确认路径没有重复。'], '', response.status);
+  }
+  if (response.status === 429) {
+    return createTestErrorInfo('rate_limit', '额度或限速', '服务商返回额度不足、限速或请求过快。', ['检查账号余额或额度。', '稍后重试。', '换用可用模型或服务商。'], '测试请求可能产生少量费用。', response.status);
+  }
+  if (mode === 'vision' && quickPassed) {
+    return createTestErrorInfo('vision_unsupported', '模型可能不支持图片输入', '文本测试可用，但视觉测试失败，当前模型可能不接受 image_url 输入。', ['换用支持视觉输入的模型。', '查看服务商文档确认 vision 能力。', '确认请求格式为 OpenAI-compatible vision。'], '视觉测试会发送一张极小测试图到你配置的模型服务。', response.status);
+  }
+  return createTestErrorInfo('unknown', `HTTP ${response.status}`, '模型服务返回了未分类的错误。', ['检查 Base URL、Model 和服务商状态。', '查看服务商控制台中的错误说明。'], '不要公开粘贴包含 Key、图片或业务背景的原始响应。', response.status);
+}
+
+function showConfigErrorInfo(info) {
+  configStatusBanner.hidden = false;
+  configStatusBanner.className = 'status-banner status-banner--error status-banner--detailed';
+  configStatusBanner.innerHTML = ICONS.error;
+  const wrapper = document.createElement('div');
+  const title = document.createElement('strong');
+  title.textContent = info.title;
+  const cause = document.createElement('p');
+  cause.textContent = info.cause;
+  const list = document.createElement('ol');
+  info.nextSteps.forEach(step => {
+    const item = document.createElement('li');
+    item.textContent = step;
+    list.appendChild(item);
+  });
+  wrapper.append(title, cause, list);
+  if (info.safetyNote) {
+    const safety = document.createElement('p');
+    safety.className = 'field-hint';
+    safety.textContent = info.safetyNote;
+    wrapper.appendChild(safety);
+  }
+  configStatusBanner.appendChild(wrapper);
+}
+
+async function saveMinimalTestState(kind, result) {
+  const status = {
+    success: Boolean(result.success),
+    type: result.type || (result.success ? 'success' : 'unknown'),
+    rawStatus: result.rawStatus || null,
+    testedAt: new Date().toISOString(),
+    provider: providerPresetSelect.value,
+    model: modelInput.value.trim()
+  };
+  await chrome.storage.local.set({ [kind]: status });
+  await refreshChecklistState();
+}
+
 async function testConnection() {
   hideBanner(configStatusBanner);
-
-  const config = trimConfig({
-    apiBaseUrl: baseUrlInput.value,
-    apiKey: apiKeyInput.value,
-    apiModel: modelInput.value,
-    activeTemplateId: templateSelect.value
-  });
-
+  const config = getCurrentFormConfig();
   if (!config.apiBaseUrl || !config.apiKey || !config.apiModel) {
     showConfigStatus('请先填写完整的 AI Base URL、API Key 和 Model。', 'warning');
-    return;
+    return false;
   }
-
   const urlError = validateApiBaseUrl(config.apiBaseUrl);
   if (urlError) {
     showConfigStatus(urlError, 'error');
-    return;
+    return false;
   }
-
-  testConnectionButton.disabled = true;
-  testConnectionButton.textContent = '测试中...';
-
+  quickTestButton.disabled = true;
+  quickTestButton.textContent = '快速测试中...';
   try {
-    const url = buildChatCompletionsUrl(config.apiBaseUrl);
-    const response = await fetch(url, {
+    const response = await fetch(buildChatCompletionsUrl(config.apiBaseUrl), {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${config.apiKey}`,
@@ -472,23 +528,23 @@ async function testConnection() {
         max_tokens: 5
       })
     });
-
     if (response.ok) {
-      showConfigStatus('连接成功！API 响应正常。', 'success');
-    } else if (response.status === 401 || response.status === 403) {
-      showConfigStatus('连接失败：API Key 或权限不正确。', 'error');
-    } else {
-      showConfigStatus(`连接失败：HTTP ${response.status}。请检查 Base URL、模型名称或服务状态。`, 'error');
+      showConfigStatus('快速测试成功：API Key、Base URL 和文本请求可用。', 'success');
+      await saveMinimalTestState(QUICK_TEST_STATUS_KEY, { success: true, type: 'success', rawStatus: response.status });
+      return true;
     }
+    const info = classifyApiTestError({ response, mode: 'quick' });
+    showConfigErrorInfo(info);
+    await saveMinimalTestState(QUICK_TEST_STATUS_KEY, { success: false, type: info.type, rawStatus: info.rawStatus });
+    return false;
   } catch (error) {
-    if (error.message && error.message.includes('Failed to fetch')) {
-      showConfigStatus('连接失败：无法访问该 URL。请检查地址是否正确。', 'error');
-    } else {
-      showConfigStatus(`连接失败：${error.message}`, 'error');
-    }
+    const info = classifyApiTestError({ error, mode: 'quick' });
+    showConfigErrorInfo(info);
+    await saveMinimalTestState(QUICK_TEST_STATUS_KEY, { success: false, type: info.type, rawStatus: info.rawStatus });
+    return false;
   } finally {
-    testConnectionButton.disabled = false;
-    testConnectionButton.textContent = '测试连接';
+    quickTestButton.disabled = false;
+    quickTestButton.textContent = '快速测试';
   }
 }
 
@@ -499,16 +555,13 @@ async function runQuickTest() {
 async function runVisionTest() {
   if (!window.confirm('将发送一次极小测试图片到你的 API，可能产生少量费用。是否继续？')) return;
   hideBanner(configStatusBanner);
-  const config = trimConfig({
-    apiBaseUrl: baseUrlInput.value,
-    apiKey: apiKeyInput.value,
-    apiModel: modelInput.value,
-    activeTemplateId: templateSelect.value
-  });
+  const config = getCurrentFormConfig();
   if (!config.apiBaseUrl || !config.apiKey || !config.apiModel) {
     showConfigStatus('请先填写完整的 AI Base URL、API Key 和 Model。', 'warning');
     return;
   }
+  const quickState = await chrome.storage.local.get({ [QUICK_TEST_STATUS_KEY]: null });
+  const quickPassed = Boolean(quickState[QUICK_TEST_STATUS_KEY] && quickState[QUICK_TEST_STATUS_KEY].success);
   const tinyJpeg = '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAAgACADASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAX/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAH/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAEFAqf/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAEDAQE/ASP/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAECAQE/ASP/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAY/Ap//xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAE/IV//2gAMAwEAAgADAAAAEP/EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQMBAT8QH//EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQIBAT8QH//EABQQAQAAAAAAAAAAAAAAAAAAABD/2gAIAQEAAT8QH//Z';
   visionTestButton.disabled = true;
   visionTestButton.textContent = '视觉测试中...';
@@ -533,13 +586,16 @@ async function runVisionTest() {
     });
     if (response.ok) {
       showConfigStatus('视觉测试成功：模型可接收图片输入。', 'success');
-    } else if (response.status === 401 || response.status === 403) {
-      showConfigStatus('视觉测试失败：API Key 或模型权限不正确。', 'error');
+      await saveMinimalTestState(VISION_TEST_STATUS_KEY, { success: true, type: 'success', rawStatus: response.status });
     } else {
-      showConfigStatus(`视觉测试失败：HTTP ${response.status}。请检查模型是否支持图片输入。`, 'error');
+      const info = classifyApiTestError({ response, mode: 'vision', quickPassed });
+      showConfigErrorInfo(info);
+      await saveMinimalTestState(VISION_TEST_STATUS_KEY, { success: false, type: info.type, rawStatus: info.rawStatus });
     }
   } catch (error) {
-    showConfigStatus(`视觉测试失败：${error.message}`, 'error');
+    const info = classifyApiTestError({ error, mode: 'vision', quickPassed });
+    showConfigErrorInfo(info);
+    await saveMinimalTestState(VISION_TEST_STATUS_KEY, { success: false, type: info.type, rawStatus: info.rawStatus });
   } finally {
     visionTestButton.disabled = false;
     visionTestButton.textContent = '视觉测试';
@@ -669,14 +725,6 @@ resetFormButton.addEventListener('click', () => {
     showConfigStatus(`清空失败：${error.message}`, 'error');
   });
 });
-
-if (testConnectionButton) {
-  testConnectionButton.addEventListener('click', () => {
-    testConnection().catch(error => {
-      showConfigStatus(`测试失败：${error.message}`, 'error');
-    });
-  });
-}
 
 editConfigButton.addEventListener('click', () => {
   hideSummary();
