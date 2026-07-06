@@ -124,11 +124,11 @@ PromptLens v0.5 优先帮助新用户完成第一次成功分析：
 
 1. 打开设置页。
 2. 配置你自己的 OpenAI-compatible Vision API：Provider/Base URL、API Key，以及支持图片输入的模型。
-3. 保存设置，然后运行快速测试和视觉测试。
+3. 保存设置。
 4. 通过右键网页图片开始分析；如果站点权限或远程图片读取受限，使用框选截图。
 5. 复制 Prompt、Tags 或专业变体，或在视觉营销诊断模板中导出 Markdown Brief。
 
-PromptLens 不提供模型服务、后端、代理、遥测、账号系统或云分享。测试和分析请求会从你的浏览器发送到你配置的 Base URL。
+PromptLens 不提供模型服务、后端、代理、遥测、账号系统或云分享。分析请求会从你的浏览器发送到你配置的 Base URL。
 
 ## 截图
 
@@ -213,7 +213,7 @@ node --check result.js
 
 ## 路线图状态
 
-当前分支已落地到 v0.5.0：首次成功引导、绑定当前配置的模型测试、更清晰的 Provider 设置说明、结果页下一步提示、营销业务背景示例、视觉营销诊断、Warm Studio 视觉升级、摘要式历史卡片、内置 / 自定义模板、Provider 预设、快捷键、结果导出、Token usage、可选本地历史记录、基础 i18n 和 Chrome Web Store 发布准备。
+当前分支已落地到 v0.5.0：首次成功引导、更清晰的 Provider 设置说明、结果页下一步提示、营销业务背景示例、视觉营销诊断、Warm Studio 视觉升级、摘要式历史卡片、内置 / 自定义模板、Provider 预设、快捷键、结果导出、Token usage、可选本地历史记录、基础 i18n 和 Chrome Web Store 发布准备。
 
 后续仍保留为反馈驱动的方向：
 

@@ -36,8 +36,6 @@ const exportTemplatesButton = document.getElementById('export-templates');
 const importTemplatesButton = document.getElementById('import-templates');
 const templateImportFile = document.getElementById('template-import-file');
 const saveTemplateButton = document.getElementById('save-template');
-const quickTestButton = document.getElementById('quick-test');
-const visionTestButton = document.getElementById('vision-test');
 const historyEnabledInput = document.getElementById('history-enabled');
 const clearHistoryButton = document.getElementById('clear-history');
 const maxImageSideInput = document.getElementById('max-image-side');
@@ -60,14 +58,10 @@ const configStatusBanner = document.getElementById('config-status-banner');
 const firstSuccessToggle = document.getElementById('first-success-toggle');
 const firstSuccessBody = document.getElementById('first-success-body');
 const firstSuccessStepConfig = document.getElementById('first-success-step-config');
-const firstSuccessStepTest = document.getElementById('first-success-step-test');
 const firstSuccessStepAnalyze = document.getElementById('first-success-step-analyze');
 const firstSuccessStepOutput = document.getElementById('first-success-step-output');
 
 const FIRST_SUCCESS_COLLAPSED_KEY = 'firstSuccessChecklistCollapsed';
-const QUICK_TEST_STATUS_KEY = 'quickTestStatus';
-const VISION_TEST_STATUS_KEY = 'visionTestStatus';
-const PROVIDER_TEST_TIMEOUT_MS = 20000;
 
 /* ── Debounce helper ──────────────────────────────────────── */
 
@@ -82,20 +76,6 @@ function debounce(fn, ms) {
 const debouncedRefreshChecklistState = debounce(() => {
   refreshChecklistState().catch(() => {});
 }, 250);
-
-/* ── Config fingerprint / match helpers ──────────────────── */
-
-function makeConfigFingerprint(config) {
-  const provider = String(config.providerPreset || config.provider || '').trim();
-  const baseUrl = String(config.apiBaseUrl || '').trim().replace(/\/+$/, '');
-  const model = String(config.apiModel || '').trim();
-  return `${provider}|${baseUrl}|${model}`;
-}
-
-function doesTestStateMatchConfig(state, config) {
-  if (!state || !state.fingerprint) return false;
-  return state.fingerprint === makeConfigFingerprint(config);
-}
 
 /* ── Status helpers ────────────────────────────────────── */
 
@@ -160,7 +140,7 @@ const PROVIDER_RECIPES = [
     name: 'OpenAI',
     baseUrl: 'https://api.openai.com/v1',
     model: '选择支持视觉输入的模型',
-    check: '快速测试验证 Key；视觉测试验证图片输入。',
+    check: '保存后直接用右键图片或框选截图验证实际分析。',
     caution: '不同模型能力和价格不同，请以控制台为准。'
   },
   {
@@ -174,14 +154,14 @@ const PROVIDER_RECIPES = [
     name: 'OpenRouter / SiliconFlow',
     baseUrl: '使用服务商提供的 OpenAI-compatible /v1 地址',
     model: '选择明确支持 vision 的模型',
-    check: '404 多半是模型名或路由不正确；视觉失败时请换 vision 模型。',
+    check: '如果分析失败，优先检查模型名、路由和服务商错误日志。',
     caution: 'Provider 预设不代表所有模型都支持图片。'
   },
   {
     name: 'DeepSeek 注意事项',
     baseUrl: 'https://api.deepseek.com/v1',
-    model: '以官方文档和视觉测试为准',
-    check: '文本模型可能通过快速测试，但不一定支持 image_url。',
+    model: '以官方文档和实际分析结果为准',
+    check: 'DeepSeek 文本接口可达不代表所有模型都能分析图片。',
     caution: '不要把 DeepSeek 预设理解为所有 DeepSeek 模型都支持图片。'
   }
 ];
@@ -393,45 +373,25 @@ function setStepState(stepEl, state, label) {
   if (stateEl) stateEl.textContent = label;
 }
 
-function deriveChecklistState(config, quickState, visionState) {
+function deriveChecklistState(config) {
   const hasConfig = isCompleteConfig(config);
-  const quickMatches = doesTestStateMatchConfig(quickState, config);
-  const visionMatches = doesTestStateMatchConfig(visionState, config);
-  const quickPassed = quickMatches && Boolean(quickState && quickState.success);
-  const visionPassed = visionMatches && Boolean(visionState && visionState.success);
   return {
     config: hasConfig ? { state: 'done', label: '已填写' } : { state: 'active', label: '待配置' },
-    test: visionPassed
-      ? { state: 'done', label: '视觉已通过' }
-      : quickPassed
-        ? { state: 'active', label: '待视觉测试' }
-        : hasConfig
-          ? { state: 'active', label: '待测试' }
-          : { state: 'pending', label: '未开始' },
-    analyze: visionPassed ? { state: 'active', label: '可开始' } : { state: 'pending', label: '准备中' },
-    output: visionPassed ? { state: 'active', label: '分析后完成' } : { state: 'pending', label: '准备中' }
+    analyze: hasConfig ? { state: 'active', label: '可开始' } : { state: 'pending', label: '准备中' },
+    output: hasConfig ? { state: 'active', label: '分析后完成' } : { state: 'pending', label: '准备中' }
   };
 }
 
 function renderChecklistState(state) {
   setStepState(firstSuccessStepConfig, state.config.state, state.config.label);
-  setStepState(firstSuccessStepTest, state.test.state, state.test.label);
   setStepState(firstSuccessStepAnalyze, state.analyze.state, state.analyze.label);
   setStepState(firstSuccessStepOutput, state.output.state, state.output.label);
 }
 
 async function refreshChecklistState() {
-  const stored = await chrome.storage.local.get({
-    [QUICK_TEST_STATUS_KEY]: null,
-    [VISION_TEST_STATUS_KEY]: null
-  });
   const config = getCurrentFormConfig();
   config.providerPreset = providerPresetSelect.value;
-  renderChecklistState(deriveChecklistState(
-    config,
-    stored[QUICK_TEST_STATUS_KEY],
-    stored[VISION_TEST_STATUS_KEY]
-  ));
+  renderChecklistState(deriveChecklistState(config));
 }
 
 async function loadFirstSuccessCollapsedState() {
@@ -533,197 +493,6 @@ async function saveConfig() {
   await showSummary(config);
 }
 
-/* ── Connection test ───────────────────────────────────── */
-
-function createTestErrorInfo(type, title, cause, nextSteps, safetyNote, rawStatus) {
-  return { type, title, cause, nextSteps, safetyNote: safetyNote || '', rawStatus: rawStatus || null };
-}
-
-function classifyApiTestError({ response, error, mode, quickPassed }) {
-  if (error && error.name === 'AbortError') {
-    return createTestErrorInfo('timeout', '请求超时', '模型服务响应时间过长，或网络连接不稳定。', ['稍后重试。', '检查模型服务状态。', '视觉测试时可尝试更快的 vision-capable model。'], '超时请求可能已经到达你的模型服务，请留意服务商计费规则。');
-  }
-  if (error) {
-    return createTestErrorInfo('network', '网络不可达', '浏览器无法访问你填写的 Base URL，或本地模型服务没有启动。', ['检查 Base URL 是否正确。', '如果使用 Ollama，请确认本地服务正在运行。', '如果是远程服务，请确认网络和浏览器权限。'], '请求会发送到你配置的 Base URL；请只使用可信服务。');
-  }
-  if (!response) {
-    return createTestErrorInfo('unknown', '测试失败', '没有收到可识别的响应。', ['重新运行测试。', '检查 Provider 文档中的 Base URL 和模型名。'], '不要把 API Key 或完整错误响应贴到公开 issue。');
-  }
-  if (response.status === 401 || response.status === 403) {
-    return createTestErrorInfo('auth', '鉴权失败', 'API Key、账号权限或模型权限不正确。', ['检查 API Key 是否复制完整。', '确认账号有权访问当前模型。', '确认 Base URL 属于你信任的服务。'], 'API Key 只保存在本地浏览器，但会随测试请求发送到你配置的 Base URL。', response.status);
-  }
-  if (response.status === 404) {
-    return createTestErrorInfo('not_found', '接口或模型不存在', 'Base URL、/chat/completions 路径或 Model 名称可能不正确。', ['检查 Base URL 是否应以 /v1 结尾。', '确认模型名称与服务商控制台一致。', '如果你已填写完整 /chat/completions，请确认路径没有重复。'], '', response.status);
-  }
-  if (response.status === 429) {
-    return createTestErrorInfo('rate_limit', '额度或限速', '服务商返回额度不足、限速或请求过快。', ['检查账号余额或额度。', '稍后重试。', '换用可用模型或服务商。'], '测试请求可能产生少量费用。', response.status);
-  }
-  if (mode === 'vision' && quickPassed) {
-    return createTestErrorInfo('vision_unsupported', '模型可能不支持图片输入', '文本测试可用，但视觉测试失败，当前模型可能不接受 image_url 输入。', ['换用支持视觉输入的模型。', '查看服务商文档确认 vision 能力。', '确认请求格式为 OpenAI-compatible vision。'], '视觉测试会发送一张极小测试图到你配置的模型服务。', response.status);
-  }
-  return createTestErrorInfo('unknown', `HTTP ${response.status}`, '模型服务返回了未分类的错误。', ['检查 Base URL、Model 和服务商状态。', '查看服务商控制台中的错误说明。'], '不要公开粘贴包含 Key、图片或业务背景的原始响应。', response.status);
-}
-
-function showConfigErrorInfo(info) {
-  configStatusBanner.hidden = false;
-  configStatusBanner.className = 'status-banner status-banner--error status-banner--detailed';
-  configStatusBanner.innerHTML = ICONS.error;
-  const wrapper = document.createElement('div');
-  const title = document.createElement('strong');
-  title.textContent = info.title;
-  const cause = document.createElement('p');
-  cause.textContent = info.cause;
-  const list = document.createElement('ol');
-  info.nextSteps.forEach(step => {
-    const item = document.createElement('li');
-    item.textContent = step;
-    list.appendChild(item);
-  });
-  wrapper.append(title, cause, list);
-  if (info.safetyNote) {
-    const safety = document.createElement('p');
-    safety.className = 'field-hint';
-    safety.textContent = info.safetyNote;
-    wrapper.appendChild(safety);
-  }
-  configStatusBanner.appendChild(wrapper);
-}
-
-async function saveMinimalTestState(kind, result, configSnapshot) {
-  const status = {
-    success: Boolean(result.success),
-    type: result.type || (result.success ? 'success' : 'unknown'),
-    rawStatus: result.rawStatus || null,
-    testedAt: new Date().toISOString(),
-    provider: configSnapshot.providerPreset || '',
-    model: configSnapshot.apiModel || '',
-    baseUrl: configSnapshot.apiBaseUrl || '',
-    fingerprint: makeConfigFingerprint(configSnapshot)
-  };
-  await chrome.storage.local.set({ [kind]: status });
-  await refreshChecklistState();
-}
-
-async function testConnection() {
-  hideBanner(configStatusBanner);
-  const config = getCurrentFormConfig();
-  config.providerPreset = providerPresetSelect.value;
-  if (!config.apiBaseUrl || !config.apiKey || !config.apiModel) {
-    showConfigStatus('请先填写完整的 AI Base URL、API Key 和 Model。', 'warning');
-    return false;
-  }
-  const urlError = validateApiBaseUrl(config.apiBaseUrl);
-  if (urlError) {
-    showConfigStatus(urlError, 'error');
-    return false;
-  }
-  const configSnapshot = { ...config };
-  const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), PROVIDER_TEST_TIMEOUT_MS);
-  quickTestButton.disabled = true;
-  quickTestButton.textContent = '快速测试中...';
-  try {
-    const response = await fetch(buildChatCompletionsUrl(config.apiBaseUrl), {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${config.apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: config.apiModel,
-        messages: [{ role: 'user', content: 'hi' }],
-        max_tokens: 5
-      }),
-      signal: controller.signal
-    });
-    if (response.ok) {
-      showConfigStatus('快速测试成功：API Key、Base URL 和文本请求可用。', 'success');
-      await saveMinimalTestState(QUICK_TEST_STATUS_KEY, { success: true, type: 'success', rawStatus: response.status }, configSnapshot);
-      return true;
-    }
-    const info = classifyApiTestError({ response, mode: 'quick' });
-    showConfigErrorInfo(info);
-    await saveMinimalTestState(QUICK_TEST_STATUS_KEY, { success: false, type: info.type, rawStatus: info.rawStatus }, configSnapshot);
-    return false;
-  } catch (error) {
-    const info = classifyApiTestError({ error, mode: 'quick' });
-    showConfigErrorInfo(info);
-    await saveMinimalTestState(QUICK_TEST_STATUS_KEY, { success: false, type: info.type, rawStatus: info.rawStatus }, configSnapshot);
-    return false;
-  } finally {
-    window.clearTimeout(timeoutId);
-    quickTestButton.disabled = false;
-    quickTestButton.textContent = '快速测试';
-  }
-}
-
-async function runQuickTest() {
-  await testConnection();
-}
-
-async function runVisionTest() {
-  if (!window.confirm('将发送一次极小测试图片到你的 API，可能产生少量费用。是否继续？')) return;
-  hideBanner(configStatusBanner);
-  const config = getCurrentFormConfig();
-  config.providerPreset = providerPresetSelect.value;
-  if (!config.apiBaseUrl || !config.apiKey || !config.apiModel) {
-    showConfigStatus('请先填写完整的 AI Base URL、API Key 和 Model。', 'warning');
-    return;
-  }
-  const quickState = await chrome.storage.local.get({ [QUICK_TEST_STATUS_KEY]: null });
-  const quickStatus = quickState[QUICK_TEST_STATUS_KEY];
-  const quickPassed = doesTestStateMatchConfig(quickStatus, config) && Boolean(quickStatus && quickStatus.success);
-  const tinyJpeg = '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAAgACADASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAX/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAH/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAEFAqf/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAEDAQE/ASP/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAECAQE/ASP/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAY/Ap//xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAE/IV//2gAMAwEAAgADAAAAEP/EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQMBAT8QH//EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQIBAT8QH//EABQQAQAAAAAAAAAAAAAAAAAAABD/2gAIAQEAAT8QH//Z';
-  const configSnapshot = { ...config };
-  const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), PROVIDER_TEST_TIMEOUT_MS);
-  visionTestButton.disabled = true;
-  visionTestButton.textContent = '视觉测试中...';
-  try {
-    const response = await fetch(buildChatCompletionsUrl(config.apiBaseUrl), {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${config.apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: config.apiModel,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'text', text: 'Reply with OK if you can see this test image.' },
-            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${tinyJpeg}` } }
-          ]
-        }],
-        max_tokens: 8
-      }),
-      signal: controller.signal
-    });
-    if (response.ok) {
-      showConfigStatus('视觉测试成功：模型可接收图片输入。', 'success');
-      await saveMinimalTestState(VISION_TEST_STATUS_KEY, { success: true, type: 'success', rawStatus: response.status }, configSnapshot);
-    } else {
-      const info = classifyApiTestError({ response, mode: 'vision', quickPassed });
-      showConfigErrorInfo(info);
-      await saveMinimalTestState(VISION_TEST_STATUS_KEY, { success: false, type: info.type, rawStatus: info.rawStatus }, configSnapshot);
-    }
-  } catch (error) {
-    const info = classifyApiTestError({ error, mode: 'vision', quickPassed });
-    showConfigErrorInfo(info);
-    await saveMinimalTestState(VISION_TEST_STATUS_KEY, { success: false, type: info.type, rawStatus: info.rawStatus }, configSnapshot);
-  } finally {
-    window.clearTimeout(timeoutId);
-    visionTestButton.disabled = false;
-    visionTestButton.textContent = '视觉测试';
-  }
-}
-
-function buildChatCompletionsUrl(baseUrl) {
-  const trimmed = baseUrl.trim().replace(/\/+$/, '');
-  if (/\/chat\/completions$/i.test(trimmed)) return trimmed;
-  return `${trimmed}/chat/completions`;
-}
-
 /* ── Event listeners ───────────────────────────────────── */
 
 firstSuccessToggle.addEventListener('click', () => {
@@ -743,9 +512,7 @@ providerPresetSelect.addEventListener('change', () => {
     baseUrlInput.value = selected.baseUrl;
     baseUrlInput.classList.remove('input-error');
   }
-  chrome.storage.local.remove([QUICK_TEST_STATUS_KEY, VISION_TEST_STATUS_KEY]).then(() => {
-    debouncedRefreshChecklistState();
-  }).catch(() => {});
+  debouncedRefreshChecklistState();
 });
 
 baseUrlInput.addEventListener('input', syncProviderPresetFromUrl);
@@ -836,7 +603,7 @@ resetFormButton.addEventListener('click', () => {
   updateTemplateHint().catch(() => {});
   baseUrlInput.classList.remove('input-error');
   hideBanner(configStatusBanner);
-  chrome.storage.local.remove(['apiBaseUrl', 'apiKey', 'apiModel', 'activeTemplateId', QUICK_TEST_STATUS_KEY, VISION_TEST_STATUS_KEY]).then(() => {
+  chrome.storage.local.remove(['apiBaseUrl', 'apiKey', 'apiModel', 'activeTemplateId']).then(() => {
     showConfigStatus('设置已清空。', 'info');
     hideSummary();
     refreshChecklistState().catch(() => {});
@@ -864,13 +631,6 @@ grantImageButton.addEventListener('click', async () => {
   }
 });
 
-quickTestButton.addEventListener('click', () => {
-  runQuickTest().catch(error => showConfigStatus(`快速测试失败：${error.message}`, 'error'));
-});
-
-visionTestButton.addEventListener('click', () => {
-  runVisionTest().catch(error => showConfigStatus(`视觉测试失败：${error.message}`, 'error'));
-});
 
 historyEnabledInput.addEventListener('change', () => {
   window.PromptHistory.setHistoryEnabled(historyEnabledInput.checked).then(() => {
@@ -884,13 +644,11 @@ clearHistoryButton.addEventListener('click', () => {
   }).catch(error => showConfigStatus(`清空历史失败：${error.message}`, 'error'));
 });
 
-// 清除输入框错误样式；配置字段变化时使测试状态失效
+// 清除输入框错误样式；配置字段变化时刷新首次成功引导
 [baseUrlInput, apiKeyInput, modelInput].forEach(input => {
   input.addEventListener('input', () => {
     input.classList.remove('input-error');
-    chrome.storage.local.remove([QUICK_TEST_STATUS_KEY, VISION_TEST_STATUS_KEY]).then(() => {
-      debouncedRefreshChecklistState();
-    }).catch(() => {});
+    debouncedRefreshChecklistState();
   });
 });
 

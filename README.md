@@ -125,11 +125,11 @@ PromptLens v0.5 focuses on helping a new user complete the first successful anal
 
 1. Open the options page.
 2. Configure your own OpenAI-compatible Vision API: Provider/Base URL, API Key, and a model that supports image input.
-3. Save settings, then run Quick Test and Vision Test.
+3. Save settings.
 4. Analyze a page image with the context menu, or use area capture when site permissions or remote image loading get in the way.
 5. Copy a prompt/tags/variants result, or export a Markdown brief from the visual marketing diagnosis template.
 
-PromptLens does not provide a model service, backend, proxy, telemetry, account system, or cloud sharing. Test and analysis requests are sent from your browser to the Base URL you configure.
+PromptLens does not provide a model service, backend, proxy, telemetry, account system, or cloud sharing. Analysis requests are sent from your browser to the Base URL you configure.
 
 ## Screenshots
 
@@ -216,7 +216,7 @@ Development principles:
 
 ## Roadmap status
 
-The current branch has implemented v0.5.0: First Success onboarding, configuration-aware model tests, clearer provider setup guidance, contextual result next steps, marketing context examples, visual marketing diagnosis, Warm Studio UI refresh, summarized history cards, built-in / custom templates, provider presets, keyboard shortcut, result export, token usage, optional local history, basic i18n, and Chrome Web Store preparation.
+The current branch has implemented v0.5.0: First Success onboarding, clearer provider setup guidance, contextual result next steps, marketing context examples, visual marketing diagnosis, Warm Studio UI refresh, summarized history cards, built-in / custom templates, provider presets, keyboard shortcut, result export, token usage, optional local history, basic i18n, and Chrome Web Store preparation.
 
 Future feedback-driven directions:
 
