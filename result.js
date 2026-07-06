@@ -91,8 +91,12 @@ const elements = {
   usageTime: document.getElementById('usage-time'),
   marketingContextCard: document.getElementById('marketing-context-card'),
   marketingContextInput: document.getElementById('marketing-context-input'),
+  marketingContextExample: document.getElementById('marketing-context-example'),
   marketingContextStart: document.getElementById('marketing-context-start'),
-  marketingContextSkip: document.getElementById('marketing-context-skip')
+  marketingContextSkip: document.getElementById('marketing-context-skip'),
+  nextStepTitle: document.getElementById('next-step-title'),
+  nextStepDescription: document.getElementById('next-step-description'),
+  nextStepList: document.getElementById('next-step-list')
 };
 
 /* ── Step SVG icons ───────────────────────────────────── */
@@ -379,6 +383,7 @@ function renderResult(result, rawText, template) {
   if (currentTemplate) {
     elements.templateName.textContent = currentTemplate.name;
     elements.templateDescription.textContent = currentTemplate.description;
+    renderNextStepHint(currentTemplate);
   }
 
   renderMarketingDiagnosis(result, currentTemplate);
@@ -396,6 +401,28 @@ function renderResult(result, rawText, template) {
 function renderError(error) {
   const message = error instanceof Error ? error.message : String(error);
   showError('分析失败', message);
+}
+
+function renderNextStepHint(template) {
+  if (!elements.nextStepTitle || !elements.nextStepDescription || !elements.nextStepList) return;
+  const isMarketing = template && window.PromptTemplates.isMarketingDiagnosisTemplate(template.id);
+  const content = isMarketing ? {
+    title: '把诊断变成团队 Brief',
+    description: '这份结果适合发给老板、设计师、投放同事或客户，用来决定下一轮低成本改图方向。',
+    steps: ['下载 Markdown Brief 作为沟通材料。', '复制低成本改图建议进入下一轮素材调整。', '如果业务背景不完整，返回上一页重新分析并补充更多上下文。']
+  } : {
+    title: '把图片变成可复用 Prompt',
+    description: '这份结果适合复制到 Midjourney、即梦、可灵、Stable Diffusion、Flux 或其他图像生成工具继续试跑。',
+    steps: ['优先复制英文 Prompt。', '复制 Tags 做风格参考。', '使用 Recreate 或 Creative variants 做复刻和扩写。']
+  };
+  elements.nextStepTitle.textContent = content.title;
+  elements.nextStepDescription.textContent = content.description;
+  elements.nextStepList.replaceChildren();
+  content.steps.forEach(step => {
+    const item = document.createElement('li');
+    item.textContent = step;
+    elements.nextStepList.appendChild(item);
+  });
 }
 
 /* ── Copy buttons ─────────────────────────────────────── */
@@ -1010,6 +1037,14 @@ async function maybeSaveHistory(input, result, template) {
   });
 }
 
+const MARKETING_CONTEXT_EXAMPLE = '这是一张独立站商品主图，目标是提高首屏点击和加购意愿，预算有限，希望优先给出低成本改图建议。';
+
+function fillMarketingContextExample() {
+  if (!elements.marketingContextInput) return;
+  elements.marketingContextInput.value = MARKETING_CONTEXT_EXAMPLE;
+  elements.marketingContextInput.focus();
+}
+
 function waitForMarketingContext() {
   if (currentBusinessContext !== null) {
     return Promise.resolve(currentBusinessContext);
@@ -1090,5 +1125,9 @@ retryBtn.addEventListener('click', () => {
   currentBusinessContext = null;
   analyzeInput({ ...currentInput }).catch(renderError);
 });
+
+if (elements.marketingContextExample) {
+  elements.marketingContextExample.addEventListener('click', fillMarketingContextExample);
+}
 
 main().catch(renderError);
