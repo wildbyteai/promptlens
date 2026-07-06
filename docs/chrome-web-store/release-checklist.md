@@ -1,10 +1,10 @@
-# PromptLens v0.3.1 Release Checklist
+# PromptLens v0.5.0 Release Checklist
 
 Use this checklist before publishing the GitHub Release artifact or submitting to Chrome Web Store.
 
 ## Version and manifest
 
-- [ ] `manifest.json` version is `0.3.1`.
+- [ ] `manifest.json` version is `0.5.0`.
 - [ ] `manifest.json` uses Manifest V3.
 - [ ] Required permissions are still limited to `contextMenus`, `storage`, `activeTab`, and `scripting`.
 - [ ] `commands` registers the screenshot shortcut description.
@@ -13,8 +13,8 @@ Use this checklist before publishing the GitHub Release artifact or submitting t
 ## Packaging
 
 - [ ] Run `bash scripts/package-extension.sh`.
-- [ ] Confirm `dist/promptlens-v0.3.1.zip` exists.
-- [ ] Run `unzip -Z1 dist/promptlens-v0.3.1.zip | sort`.
+- [ ] Confirm `dist/promptlens-v0.5.0.zip` exists.
+- [ ] Run `unzip -Z1 dist/promptlens-v0.5.0.zip | sort`.
 - [ ] Confirm the zip contains `manifest.json`, root extension scripts/pages, `_locales/**`, and `icons/**`.
 - [ ] Confirm the zip does not contain `.git/`, `docs/`, `site/`, `dist/`, README files, screenshot source files, or `skills-lock.json`.
 
@@ -34,10 +34,10 @@ Use this checklist before publishing the GitHub Release artifact or submitting t
 
 ## GitHub Release
 
-- [ ] Confirm `v0.3.1` tag does not already exist locally or remotely before creating it.
-- [ ] Create annotated tag `v0.3.1`.
-- [ ] Create GitHub Release `v0.3.1`.
-- [ ] Upload `dist/promptlens-v0.3.1.zip` as the Release artifact.
+- [ ] Confirm `v0.5.0` tag does not already exist locally or remotely before creating it.
+- [ ] Create annotated tag `v0.5.0`.
+- [ ] Create GitHub Release `v0.5.0`.
+- [ ] Upload `dist/promptlens-v0.5.0.zip` as the Release artifact.
 - [ ] Confirm the Release page shows the uploaded zip.
 
 ## Website

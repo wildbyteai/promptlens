@@ -32,7 +32,7 @@ for (const page of pages) {
 const index = read('site/index.html');
 assert.match(index, /"@type": "SoftwareApplication"/);
 assert.match(index, /"downloadUrl": "https:\/\/github\.com\/wildbyteai\/promptlens\/releases"/);
-assert.match(index, /"softwareVersion": "0\.4\.0"/);
+assert.match(index, /"softwareVersion": "0\.5\.0"/);
 
 const robots = read('site/robots.txt');
 assert.match(robots, /User-agent: \*/);

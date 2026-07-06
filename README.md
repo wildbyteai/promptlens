@@ -216,7 +216,7 @@ Development principles:
 
 ## Roadmap status
 
-The current branch has implemented v0.4.0: visual marketing diagnosis, Warm Studio UI refresh, Chinese UI consistency improvements, summarized history cards, built-in / custom templates, provider presets, keyboard shortcut, result export, model tests, token usage, optional local history, basic i18n, and Chrome Web Store preparation.
+The current branch has implemented v0.5.0: First Success onboarding, configuration-aware model tests, clearer provider setup guidance, contextual result next steps, marketing context examples, visual marketing diagnosis, Warm Studio UI refresh, summarized history cards, built-in / custom templates, provider presets, keyboard shortcut, result export, token usage, optional local history, basic i18n, and Chrome Web Store preparation.
 
 Future feedback-driven directions:
 

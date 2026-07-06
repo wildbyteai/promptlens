@@ -213,7 +213,7 @@ node --check result.js
 
 ## 路线图状态
 
-当前分支已落地到 v0.4.0：视觉营销诊断、Warm Studio 视觉升级、中文 UI 一致性优化、摘要式历史卡片、内置 / 自定义模板、Provider 预设、快捷键、结果导出、模型测试、Token usage、可选本地历史记录、基础 i18n 和 Chrome Web Store 发布准备。
+当前分支已落地到 v0.5.0：首次成功引导、绑定当前配置的模型测试、更清晰的 Provider 设置说明、结果页下一步提示、营销业务背景示例、视觉营销诊断、Warm Studio 视觉升级、摘要式历史卡片、内置 / 自定义模板、Provider 预设、快捷键、结果导出、Token usage、可选本地历史记录、基础 i18n 和 Chrome Web Store 发布准备。
 
 后续仍保留为反馈驱动的方向：
 
