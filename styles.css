@@ -307,8 +307,10 @@ p {
   gap: 14px;
 }
 
-.settings-form + .settings-block {
-  margin-top: 16px;
+.settings-form + .settings-block,
+.settings-block + .settings-block,
+.provider-recipes + .settings-block {
+  margin-top: 14px;
 }
 
 .field-row {
@@ -1607,18 +1609,26 @@ a:active {
 /* ── ChatGPT Assist panel ─────────────────────────────── */
 
 .chatgpt-assist-card {
+  display: grid;
+  gap: 14px;
   border-color: rgba(37, 99, 235, 0.22);
 }
 
 .assist-steps {
-  margin: 16px 0;
+  margin: 0;
   padding-left: 22px;
   color: var(--text);
   line-height: 1.65;
 }
 
 .assist-actions {
-  margin: 18px 0;
+  margin: 0;
+}
+
+.chatgpt-experiment-note,
+.chatgpt-assist-card .status-banner,
+.chatgpt-instruction-field {
+  margin-top: 0;
 }
 
 .chatgpt-instruction-field textarea {

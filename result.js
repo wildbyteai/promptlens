@@ -886,14 +886,20 @@ function isMarketingTemplate(template) {
 
 function buildChatGptAssistInstruction(template, businessContext = '') {
   const context = String(businessContext || '').trim();
+  const sharedEvidenceRules = [
+    '如果当前对话中没有实际附加图片，请先提醒我上传图片，不要凭空分析。',
+    '请严格基于图片可见内容回答；不要识别真实人物身份，不要推断年龄、种族、健康、政治、宗教、财务状况等敏感属性。',
+    '如果图片中有文字，只描述清晰可读的文字；模糊、被遮挡或无法确认的文字请标为“不确定”，不要猜测。'
+  ];
   if (isMarketingTemplate(template)) {
     return [
       '请分析我上传的这张商业视觉图。请严格基于图片可见内容，并结合我提供的业务背景。',
+      ...sharedEvidenceRules,
       '',
       '业务背景：',
       context || '未提供，请只基于图片可见内容判断。',
       '',
-      '请输出以下结构：',
+      '请用清晰的 Markdown 二级标题输出以上 7 个部分：',
       '1. 老板能看懂的摘要',
       '2. 画面内容与风格描述',
       '3. 视觉营销诊断',
@@ -902,26 +908,35 @@ function buildChatGptAssistInstruction(template, businessContext = '') {
       '6. 可交给设计师 / 投放同事的 Markdown Brief',
       '7. 可直接复用的英文生成 Prompt',
       '',
+      '涉及目标人群、卖点、转化风险、商业意图时，请使用“可能”“看起来”“从画面推测”等谨慎措辞，并说明依据来自哪些可见元素。不要把推测写成事实。',
       '如果业务背景为空，请只基于图片判断，不要编造品牌、价格、销量或投放数据。'
     ].join('\n');
   }
 
   const lines = [
     '请分析我上传的这张图片。请严格基于图片可见内容，不要编造不可见信息。',
+    ...sharedEvidenceRules,
     '',
-    '请输出以下结构：',
+    '请输出以下 Markdown 结构：',
     '1. 中文提示词',
     '2. English Prompt',
-    '3. Tags',
+    '3. Tags：6-10 个英文标签，覆盖主体、风格、光线、构图、情绪和视觉技法',
     '4. Negative Prompt',
-    '5. 可直接复制到图像生成工具的最终 Prompt',
-    '6. 3 个不同风格变体',
+    '5. 可直接复制到图像生成工具的最终英文 Prompt，不包含平台专属参数',
+    '6. 3 个不同风格变体：每个包含英文 Prompt、适用场景、Negative Prompt',
     '',
-    '如果存在不确定内容，请明确写出"不确定"。'
+    '如果存在不确定内容，请明确写出“不确定”。'
   ];
 
   if (template && template.instruction) {
-    lines.push('', '所选输出模板要求：', String(template.instruction).trim(), '', '请在满足上述结构的同时，保留这个模板要求的输出风格；严格基于图片可见内容回答，不要编造图片中不存在的信息。');
+    lines.push(
+      '',
+      '所选输出模板要求：',
+      String(template.instruction).trim(),
+      '',
+      '上面的模板要求来自 PromptLens 的结构化 API 模板。请不要输出 JSON，也不要输出 prompt_en、prompt_zh、prompt_tags、negative_prompt、json_prompt 或 prompt_variants 等字段名；请把这些要求映射到上面的 Markdown 小节中。',
+      '请在满足上述结构的同时，保留这个模板要求的输出风格；严格基于图片可见内容回答，不要编造图片中不存在的信息。'
+    );
   }
 
   return lines.join('\n');
