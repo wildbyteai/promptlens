@@ -1251,12 +1251,41 @@ async function analyzeInput(input) {
 const PROMPTLENS_CHATGPT_PAYLOAD_SAVE = 'PROMPTLENS_CHATGPT_PAYLOAD_SAVE';
 const PROMPTLENS_CHATGPT_STATUS = 'PROMPTLENS_CHATGPT_STATUS';
 
+function buildChatGptTransferPayload() {
+  if (!currentAssistImage || !currentAssistImage.base64 || !currentAssistInstruction) {
+    throw new Error('图片或指令还没有准备好，请重新分析。');
+  }
+  return {
+    imageBase64: currentAssistImage.base64,
+    mimeType: 'image/jpeg',
+    filename: `promptlens-chatgpt-image-${makeTimestamp()}.jpg`,
+    instruction: currentAssistInstruction
+  };
+}
+
 async function requestChatGptPermission() {
-  return chrome.permissions.request({ origins: ['https://chatgpt.com/*'] });
+  const origins = ['https://chatgpt.com/*'];
+  const hasPermission = await chrome.permissions.contains({ origins });
+  if (hasPermission) return true;
+  showAssistStatus('需要授权访问 chatgpt.com，才能尝试把图片和指令填入 ChatGPT。PromptLens 不会读取回复，也不会自动发送。', 'info');
+  return chrome.permissions.request({ origins });
 }
 
 async function sendToChatGpt() {
-  showAssistStatus('自动发送功能正在准备中。请先使用下载图片和复制指令手动完成。', 'warning');
+  const granted = await requestChatGptPermission();
+  if (!granted) {
+    showAssistStatus('未授权访问 chatgpt.com。请使用下载图片和复制指令手动完成。', 'warning');
+    return;
+  }
+
+  const response = await chrome.runtime.sendMessage({
+    type: 'PROMPTLENS_CHATGPT_PAYLOAD_SAVE',
+    payload: buildChatGptTransferPayload()
+  });
+  if (!response || !response.ok) {
+    throw new Error(response && response.error || '无法打开 ChatGPT。');
+  }
+  showAssistStatus('已打开 ChatGPT，并尝试填入图片和指令。请在 ChatGPT 页面确认后手动发送。', 'info');
 }
 
 /* ── ChatGPT Assist event listeners ──────────────────── */
