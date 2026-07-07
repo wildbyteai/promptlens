@@ -74,7 +74,7 @@
           <div>
             <span class="card-kicker">ChatGPT Plus Assist</span>
             <h2 id="chatgpt-assist-title">用 ChatGPT Plus 分析这张图</h2>
-            <p>PromptLens 已在本地准备好图片和分析指令。请在 ChatGPT 网页端上传图片并粘贴指令。</p>
+            <p>PromptLens 已在本地准备好图片和分析指令。你可以手动上传，也可以授权 PromptLens 尝试填入 ChatGPT 页面。</p>
           </div>
         </div>
         <ol class="assist-steps">
@@ -84,10 +84,15 @@
           <li>在 ChatGPT 中发送并保留结果。</li>
         </ol>
         <div class="button-row assist-actions">
+          <button id="chatgpt-send" type="button" class="primary-button compact-button">尝试发送到 ChatGPT</button>
           <button id="chatgpt-download-image" type="button" class="secondary-button compact-button">下载图片</button>
           <button id="chatgpt-copy-instruction" type="button" class="secondary-button compact-button">复制指令</button>
           <button id="chatgpt-open" type="button" class="secondary-button compact-button">打开 ChatGPT</button>
-          <button id="chatgpt-copy-open" type="button" class="primary-button compact-button">复制指令并打开 ChatGPT</button>
+          <button id="chatgpt-copy-open" type="button" class="secondary-button compact-button">复制指令并打开 ChatGPT</button>
+        </div>
+        <div class="first-success-note chatgpt-experiment-note">
+          <strong>实验功能：</strong>
+          <span>「尝试发送到 ChatGPT」会请求访问 chatgpt.com，用于尝试把图片和指令填入 ChatGPT 输入框。不会读取或保存 ChatGPT 网页端回复，也不会自动发送。ChatGPT 页面变化时可能失败，失败后可继续手动下载图片和复制指令。</span>
         </div>
         <div id="chatgpt-assist-status" class="status-banner" hidden></div>
         <label class="field-row chatgpt-instruction-field">

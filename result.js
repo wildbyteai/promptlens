@@ -98,6 +98,7 @@ const elements = {
   nextStepDescription: document.getElementById('next-step-description'),
   nextStepList: document.getElementById('next-step-list'),
   chatgptAssistCard: document.getElementById('chatgpt-assist-card'),
+  chatgptSend: document.getElementById('chatgpt-send'),
   chatgptDownloadImage: document.getElementById('chatgpt-download-image'),
   chatgptCopyInstruction: document.getElementById('chatgpt-copy-instruction'),
   chatgptOpen: document.getElementById('chatgpt-open'),
@@ -1244,7 +1245,29 @@ async function analyzeInput(input) {
   renderResult(parsed, rawText, template);
 }
 
+/* ── ChatGPT Auto Send helpers ──────────────────────── */
+
+// ChatGPT 自动发送消息类型（与 background.js 一致）
+const PROMPTLENS_CHATGPT_PAYLOAD_SAVE = 'PROMPTLENS_CHATGPT_PAYLOAD_SAVE';
+const PROMPTLENS_CHATGPT_STATUS = 'PROMPTLENS_CHATGPT_STATUS';
+
+async function requestChatGptPermission() {
+  return chrome.permissions.request({ origins: ['https://chatgpt.com/*'] });
+}
+
+async function sendToChatGpt() {
+  showAssistStatus('自动发送功能正在准备中。请先使用下载图片和复制指令手动完成。', 'warning');
+}
+
 /* ── ChatGPT Assist event listeners ──────────────────── */
+
+if (elements.chatgptSend) {
+  elements.chatgptSend.addEventListener('click', () => {
+    sendToChatGpt().catch(error => {
+      showAssistStatus(`自动发送失败：${error.message}`, 'error');
+    });
+  });
+}
 
 if (elements.chatgptDownloadImage) {
   elements.chatgptDownloadImage.addEventListener('click', () => {
