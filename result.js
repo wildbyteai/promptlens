@@ -1271,6 +1271,23 @@ async function requestChatGptPermission() {
   return chrome.permissions.request({ origins });
 }
 
+function getChatGptStatusMessage(status) {
+  const messages = {
+    permission_denied: { tone: 'warning', message: '未授权访问 chatgpt.com。请使用下载图片和复制指令手动完成。' },
+    payload_missing: { tone: 'warning', message: '自动发送数据已过期。图片和指令仍在本页可用，请手动上传到 ChatGPT。' },
+    tab_open_failed: { tone: 'error', message: '无法打开 ChatGPT。请手动访问 https://chatgpt.com/。' },
+    script_injection_failed: { tone: 'warning', message: '无法连接 ChatGPT 页面。请下载图片、复制指令后手动上传。' },
+    input_not_found: { tone: 'warning', message: '已打开 ChatGPT，但没有找到输入框。请手动复制指令。' },
+    instruction_failed: { tone: 'warning', message: '已打开 ChatGPT，但指令填入失败。请手动复制指令。' },
+    image_input_not_found: { tone: 'warning', message: '已填入指令，但没有找到图片上传入口。请下载图片后手动上传。' },
+    image_attach_failed: { tone: 'warning', message: '已填入指令，但图片自动附加失败。请下载图片后手动上传。' },
+    partial_success_instruction_only: { tone: 'warning', message: '已填入指令，但图片自动附加失败。请下载图片后手动上传。' },
+    success_instruction_only: { tone: 'info', message: '已打开 ChatGPT 并填入指令。请确认图片是否已附加，然后手动发送。' },
+    success_instruction_and_image: { tone: 'success', message: '已尝试附加图片并填入指令。请在 ChatGPT 中确认后手动发送。' }
+  };
+  return messages[status] || { tone: 'warning', message: '自动发送失败。请下载图片、复制指令后手动上传到 ChatGPT。' };
+}
+
 async function sendToChatGpt() {
   const granted = await requestChatGptPermission();
   if (!granted) {
@@ -1285,7 +1302,7 @@ async function sendToChatGpt() {
   if (!response || !response.ok) {
     throw new Error(response && response.error || '无法打开 ChatGPT。');
   }
-  showAssistStatus('已打开 ChatGPT，并尝试填入图片和指令。请在 ChatGPT 页面确认后手动发送。', 'info');
+  showAssistStatus('已打开 ChatGPT，并尝试填入图片和指令。请在 ChatGPT 页面确认后手动发送；如果没有出现图片，请回到本页下载图片手动上传。', 'info');
 }
 
 /* ── ChatGPT Assist event listeners ──────────────────── */

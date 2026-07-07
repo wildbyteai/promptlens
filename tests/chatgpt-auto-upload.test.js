@@ -83,4 +83,24 @@ for (const source of [privacy, security]) {
   assert.match(source, /不自动发送|does not automatically send/i);
 }
 
+// Task 5: result.js status mapping for fallback behavior
+for (const status of [
+  'permission_denied',
+  'payload_missing',
+  'tab_open_failed',
+  'script_injection_failed',
+  'input_not_found',
+  'instruction_failed',
+  'image_input_not_found',
+  'image_attach_failed',
+  'partial_success_instruction_only',
+  'success_instruction_only',
+  'success_instruction_and_image'
+]) {
+  assert.match(resultJs, new RegExp(status), `result.js missing user-facing mapping for ${status}`);
+}
+
+assert.match(resultJs, /不自动发送/);
+assert.match(resultJs, /手动上传/);
+
 console.log('chatgpt auto-upload static tests passed');
