@@ -79,7 +79,7 @@ summary:focus-visible {
 }
 
 .options-shell {
-  width: min(620px, calc(100% - 32px));
+  width: min(680px, calc(100% - 32px));
 }
 
 .brand-header,
@@ -166,11 +166,11 @@ p {
 }
 
 .surface-card {
-  padding: 22px;
+  padding: 20px;
 }
 
 .surface-card + .surface-card {
-  margin-top: 14px;
+  margin-top: 12px;
 }
 
 .surface-card h2,
@@ -257,14 +257,14 @@ p {
 }
 
 .section-heading {
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .config-summary {
   display: grid;
-  gap: 12px;
-  padding: 14px;
-  margin-bottom: 16px;
+  gap: 10px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
   border-radius: 14px;
   background: var(--surface-muted);
   border: 1px solid var(--border);
@@ -304,16 +304,16 @@ p {
 
 .settings-form {
   display: grid;
-  gap: 16px;
+  gap: 14px;
 }
 
 .settings-form + .settings-block {
-  margin-top: 22px;
+  margin-top: 16px;
 }
 
 .field-row {
   display: grid;
-  gap: 7px;
+  gap: 6px;
 }
 
 .field-label {
@@ -324,7 +324,7 @@ p {
 
 .field-hint {
   font-size: 12px;
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
 code {
@@ -407,8 +407,8 @@ textarea:focus {
 
 .settings-block {
   display: grid;
-  gap: 14px;
-  padding: 16px;
+  gap: 12px;
+  padding: 14px;
   border: 1px solid var(--border);
   border-radius: 16px;
   background: rgba(247, 246, 242, 0.72);
@@ -430,8 +430,8 @@ textarea:focus {
 
 .template-manager {
   display: grid;
-  gap: 14px;
-  padding: 16px;
+  gap: 12px;
+  padding: 14px;
   border: 1px solid var(--border);
   border-radius: 16px;
   background: rgba(247, 246, 242, 0.72);
@@ -1077,9 +1077,32 @@ a:active {
   .brand-header,
   .result-header,
   .permission-row,
-  .card-title-row {
+  .card-title-row,
+  .section-heading {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .surface-card {
+    padding: 16px;
+  }
+
+  .first-success-step {
+    grid-template-columns: auto 1fr;
+  }
+
+  .first-success-step .step-state {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .analysis-mode-option {
+    padding: 11px;
+  }
+
+  .settings-block,
+  .template-manager {
+    padding: 12px;
   }
 
   .password-row,
@@ -1378,7 +1401,7 @@ a:active {
 
 .first-success-card {
   display: grid;
-  gap: 16px;
+  gap: 14px;
 }
 
 .first-success-heading {
@@ -1387,7 +1410,7 @@ a:active {
 
 .first-success-body {
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .first-success-promise,
@@ -1398,7 +1421,7 @@ a:active {
 }
 
 .first-success-note {
-  padding: 12px 14px;
+  padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 14px;
   background: var(--surface-muted);
@@ -1406,7 +1429,7 @@ a:active {
 
 .first-success-steps {
   display: grid;
-  gap: 10px;
+  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -1415,9 +1438,9 @@ a:active {
 .first-success-step {
   display: grid;
   grid-template-columns: auto 1fr auto;
-  gap: 12px;
+  gap: 10px;
   align-items: start;
-  padding: 14px;
+  padding: 12px;
   border: 1px solid var(--border);
   border-radius: 16px;
   background: var(--surface);
@@ -1545,16 +1568,16 @@ a:active {
 
 .analysis-mode-options {
   display: grid;
-  gap: 12px;
-  margin-top: 16px;
+  gap: 10px;
+  margin-top: 12px;
 }
 
 .analysis-mode-option {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 12px;
+  gap: 10px;
   align-items: start;
-  padding: 14px;
+  padding: 12px;
   border: 1px solid var(--border);
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.58);

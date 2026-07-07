@@ -968,9 +968,11 @@ function renderChatGptAssistPanel(preparedImage, instruction) {
   currentAssistImage = preparedImage;
   currentAssistInstruction = instruction;
 
+  loadingPanel.hidden = true;
+  errorPanel.hidden = true;
+  if (resultContent) resultContent.hidden = true;
   if (elements.chatgptAssistCard) elements.chatgptAssistCard.hidden = false;
   if (elements.chatgptInstructionOutput) elements.chatgptInstructionOutput.value = instruction;
-  if (resultContent) resultContent.hidden = true;
   hideMarketingContextCard();
   showAssistStatus('图片和指令已准备好。请下载图片、复制指令，并在 ChatGPT 中完成分析。', 'success');
 }

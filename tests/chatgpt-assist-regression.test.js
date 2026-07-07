@@ -33,6 +33,12 @@ assert.doesNotMatch(
 
 assert.match(
   resultJs,
+  /function renderChatGptAssistPanel[\s\S]*loadingPanel\.hidden = true;[\s\S]*elements\.chatgptAssistCard\.hidden = false;/,
+  'ChatGPT Assist 面板显示时必须关闭 loading panel'
+);
+
+assert.match(
+  resultJs,
   /return true;[\s\S]*catch \{[\s\S]*return false;/,
   'copyTextWithFeedback 必须把复制成功或失败返回给调用方'
 );
