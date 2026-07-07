@@ -1536,3 +1536,81 @@ a:active {
   color: var(--text);
   line-height: 1.6;
 }
+
+/* ── Analysis mode settings ───────────────────────────── */
+
+.analysis-mode-card {
+  border-color: rgba(217, 119, 6, 0.22);
+}
+
+.analysis-mode-options {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.analysis-mode-option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.58);
+  cursor: pointer;
+}
+
+.analysis-mode-option:has(input:checked) {
+  border-color: rgba(217, 119, 6, 0.5);
+  background: rgba(255, 247, 237, 0.82);
+}
+
+.analysis-mode-option input {
+  margin-top: 3px;
+}
+
+.analysis-mode-option strong,
+.analysis-mode-option small {
+  display: block;
+}
+
+.analysis-mode-option small {
+  margin-top: 4px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ── ChatGPT Assist panel ─────────────────────────────── */
+
+.chatgpt-assist-card {
+  border-color: rgba(37, 99, 235, 0.22);
+}
+
+.assist-steps {
+  margin: 16px 0;
+  padding-left: 22px;
+  color: var(--text);
+  line-height: 1.65;
+}
+
+.assist-actions {
+  margin: 18px 0;
+}
+
+.chatgpt-instruction-field textarea {
+  min-height: 260px;
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  line-height: 1.55;
+}
+
+@media (max-width: 640px) {
+  .assist-actions {
+    align-items: stretch;
+  }
+
+  .assist-actions .compact-button {
+    width: 100%;
+  }
+}
