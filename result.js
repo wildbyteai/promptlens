@@ -240,12 +240,17 @@ async function copyTextWithFeedback(button, text) {
   try {
     await navigator.clipboard.writeText(text || '');
     button.textContent = '已复制';
+    window.setTimeout(() => {
+      button.textContent = oldText;
+    }, 1200);
+    return true;
   } catch {
     button.textContent = '复制失败';
+    window.setTimeout(() => {
+      button.textContent = oldText;
+    }, 1200);
+    return false;
   }
-  window.setTimeout(() => {
-    button.textContent = oldText;
-  }, 1200);
 }
 
 function renderPromptVariants(result) {
@@ -875,11 +880,7 @@ function buildChatCompletionsUrl(baseUrl) {
 /* ── ChatGPT Assist instruction builder ──────────────── */
 
 function isMarketingTemplate(template) {
-  return template && template.id === 'visual_marketing';
-}
-
-function isCustomTemplate(template) {
-  return template && !template.builtIn;
+  return window.PromptTemplates.isMarketingDiagnosisTemplate(template);
 }
 
 function buildChatGptAssistInstruction(template, businessContext = '') {
@@ -918,8 +919,8 @@ function buildChatGptAssistInstruction(template, businessContext = '') {
     '如果存在不确定内容，请明确写出"不确定"。'
   ];
 
-  if (isCustomTemplate(template) && template.instruction) {
-    lines.push('', '以下是用户自定义分析要求：', String(template.instruction).trim(), '', '请严格基于图片可见内容回答，不要编造图片中不存在的信息。');
+  if (template && template.instruction) {
+    lines.push('', '所选输出模板要求：', String(template.instruction).trim(), '', '请在满足上述结构的同时，保留这个模板要求的输出风格；严格基于图片可见内容回答，不要编造图片中不存在的信息。');
   }
 
   return lines.join('\n');
@@ -1224,7 +1225,6 @@ async function analyzeInput(input) {
     }
     const instruction = buildChatGptAssistInstruction(template, businessContext);
     renderChatGptAssistPanel(prepared, instruction);
-    setLoading('图片和指令已准备好，请在 ChatGPT 中完成分析。', stepApi);
     return;
   }
 
@@ -1263,8 +1263,10 @@ if (elements.chatgptDownloadImage) {
 
 if (elements.chatgptCopyInstruction) {
   elements.chatgptCopyInstruction.addEventListener('click', () => {
-    copyTextWithFeedback(elements.chatgptCopyInstruction, currentAssistInstruction).catch(() => {
-      showAssistStatus('浏览器阻止了自动复制。请手动选中下方指令复制。', 'warning');
+    copyTextWithFeedback(elements.chatgptCopyInstruction, currentAssistInstruction).then(copied => {
+      if (!copied) {
+        showAssistStatus('浏览器阻止了自动复制。请手动选中下方指令复制。', 'warning');
+      }
     });
   });
 }

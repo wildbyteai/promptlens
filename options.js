@@ -388,6 +388,16 @@ function renderAnalysisMode(mode) {
       ? '当前使用 ChatGPT Plus 辅助模式，API 字段不是必填；切回 API 自动分析时再填写。'
       : 'PromptLens 会使用这些 API 字段自动调用你配置的模型服务。';
   }
+  baseUrlInput.required = normalized === 'api';
+  apiKeyInput.required = normalized === 'api';
+  modelInput.required = normalized === 'api';
+}
+
+async function persistAnalysisModeFromSelection() {
+  const analysisMode = getAnalysisMode();
+  renderAnalysisMode(analysisMode);
+  await chrome.storage.local.set({ analysisMode: getAnalysisMode() });
+  await refreshChecklistState();
 }
 
 /* ── First success checklist ──────────────────────────── */
@@ -656,7 +666,7 @@ resetFormButton.addEventListener('click', () => {
   updateTemplateHint().catch(() => {});
   baseUrlInput.classList.remove('input-error');
   hideBanner(configStatusBanner);
-  chrome.storage.local.remove(['apiBaseUrl', 'apiKey', 'apiModel', 'activeTemplateId']).then(() => {
+  chrome.storage.local.remove(['apiBaseUrl', 'apiKey', 'apiModel', 'activeTemplateId', 'analysisMode']).then(() => {
     showConfigStatus('设置已清空。', 'info');
     hideSummary();
     refreshChecklistState().catch(() => {});
@@ -709,8 +719,7 @@ clearHistoryButton.addEventListener('click', () => {
 [analysisModeApiInput, analysisModeChatGptInput].forEach(input => {
   if (!input) return;
   input.addEventListener('change', () => {
-    renderAnalysisMode(getAnalysisMode());
-    refreshChecklistState().catch(() => {});
+    persistAnalysisModeFromSelection().catch(error => showConfigStatus(`分析方式保存失败：${error.message}`, 'error'));
   });
 });
 
