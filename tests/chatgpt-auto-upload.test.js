@@ -100,7 +100,7 @@ for (const status of [
   assert.match(resultJs, new RegExp(status), `result.js missing user-facing mapping for ${status}`);
 }
 
-assert.match(resultJs, /不自动发送/);
+assert.match(resultJs, /不[会]?自动发送/);
 assert.match(resultJs, /手动上传/);
 
 console.log('chatgpt auto-upload static tests passed');

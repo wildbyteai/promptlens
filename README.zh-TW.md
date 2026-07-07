@@ -154,6 +154,8 @@ PromptLens 的隱私邊界很簡單：
 - 遠端圖片讀取權限是可選權限，不會在安裝時請求。
 - 框選截圖使用 `activeTab` 權限，僅在使用者觸發時存取目前分頁。
 
+實驗性 ChatGPT 交接：點擊 **嘗試傳送到 ChatGPT** 時，PromptLens 可能請求可選的 `https://chatgpt.com/*` 權限。該權限只用於嘗試把本機準備好的 JPEG 和分析指令填入 ChatGPT 頁面。PromptLens 不會自動送出訊息，不會讀取 ChatGPT 回覆；如果 ChatGPT 頁面變動或圖片無法自動附加，會回退到手動下載圖片和複製指令。
+
 請注意：當你使用第三方模型服務時，圖片和提示詞會傳送給該服務。請自行確認服務商的隱私政策、資料保留策略和模型使用條款。
 
 更多安全說明見 [SECURITY.md](SECURITY.md)。

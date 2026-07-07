@@ -155,6 +155,8 @@ PromptLens has a simple privacy boundary:
 - Remote image read permission is optional and is not requested at install time.
 - Screenshot selection uses `activeTab` and only accesses the current tab after user action.
 
+Experimental ChatGPT handoff: when you click **Try sending to ChatGPT**, PromptLens may request optional access to `https://chatgpt.com/*`. This is used only to try to attach the prepared local JPEG and fill the instruction into the ChatGPT page. PromptLens does not automatically send the message, does not read ChatGPT replies, and falls back to manual download/copy if the ChatGPT page changes or the upload cannot be automated.
+
 When using a third-party model service, images and prompts are sent to that service. Review the provider's privacy policy, retention policy, and terms yourself.
 
 Professional prompt variants are model-generated text suggestions, not official parameters or guaranteed best practices for any third-party generation platform. When you paste prompts into another tool, that tool's privacy, billing, copyright, and content policies apply.

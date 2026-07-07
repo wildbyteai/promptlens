@@ -47,6 +47,10 @@ PromptLens itself does not collect or sell:
 
 In ChatGPT Plus Assist mode, PromptLens prepares a local JPEG image and a ChatGPT-ready instruction in the browser. PromptLens does not call an API, does not automatically upload images to ChatGPT, does not read ChatGPT web replies, and does not save ChatGPT reply history. The assist mode does not add `chatgpt.com` permissions or `downloads` permission. After the user manually uploads the image to ChatGPT, the data is subject to OpenAI's privacy policy and the user's account settings.
 
+### Optional ChatGPT page access
+
+PromptLens may request optional access to `https://chatgpt.com/*` only when the user clicks the experimental ChatGPT handoff button. This access is used to try to attach the locally prepared JPEG and fill the analysis instruction into the ChatGPT page. PromptLens does not automatically send the message, does not read ChatGPT replies or conversation history, and does not store ChatGPT page content.
+
 ## Permissions and user control
 
 Remote image read access is optional. If the user does not grant broad remote image permission, screenshot selection remains available for visible page regions.

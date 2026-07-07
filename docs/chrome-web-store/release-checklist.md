@@ -21,6 +21,9 @@ Use this checklist before publishing the GitHub Release artifact or submitting t
 ## Manual extension smoke test
 
 - [ ] Load the unpacked repository root in `chrome://extensions` with Developer mode enabled.
+- [ ] ChatGPT handoff requests `chatgpt.com` permission only after clicking the experimental button.
+- [ ] ChatGPT handoff does not auto-send and does not read replies.
+- [ ] ChatGPT handoff failure keeps manual download/copy fallback available.
 - [ ] Confirm Chrome reports no manifest error.
 - [ ] Open the options page and save AI Base URL, API Key, Model, and default template.
 - [ ] Run model test and confirm success/failure UI does not expose unnecessary remote error detail.
