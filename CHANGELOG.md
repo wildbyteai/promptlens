@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.6.0 - 2026-07-07
+
+### Features
+- Add ChatGPT Plus Assist mode for users who have ChatGPT Plus / Pro but do not use an API key.
+- Add local assist actions to download the prepared image, copy a ChatGPT-ready instruction, and open ChatGPT.
+- Keep assist mode local-only: no chatgpt.com permission, no automatic upload, no automatic send, and no ChatGPT reply reading.
+
+### Documentation
+- Explain API Automatic Analysis versus ChatGPT Plus Assist mode.
+- Document assist-mode privacy boundaries and manual ChatGPT web usage.
+
 ## 0.5.1 - 2026-07-06
 
 ### Fixes

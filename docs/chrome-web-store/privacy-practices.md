@@ -1,6 +1,6 @@
 # Chrome Web Store Privacy Practices Notes
 
-This document supports Chrome Web Store privacy-practices form preparation for PromptLens v0.5.1. It is not legal advice.
+This document supports Chrome Web Store privacy-practices form preparation for PromptLens v0.6.0. It is not legal advice.
 
 ## Product privacy boundary
 
@@ -42,6 +42,10 @@ PromptLens itself does not collect or sell:
 - Authentication credentials for websites visited by the user.
 - Web browsing history as a telemetry stream.
 - User activity analytics.
+
+## ChatGPT Plus Assist mode
+
+In ChatGPT Plus Assist mode, PromptLens prepares a local JPEG image and a ChatGPT-ready instruction in the browser. PromptLens does not call an API, does not automatically upload images to ChatGPT, does not read ChatGPT web replies, and does not save ChatGPT reply history. The assist mode does not add `chatgpt.com` permissions or `downloads` permission. After the user manually uploads the image to ChatGPT, the data is subject to OpenAI's privacy policy and the user's account settings.
 
 ## Permissions and user control
 

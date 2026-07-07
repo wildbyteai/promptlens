@@ -6,12 +6,12 @@
 
 - [商店文案草稿](store-listing.md)
 - [隐私实践表单辅助说明](privacy-practices.md)
-- [v0.5.1 发布检查清单](release-checklist.md)
+- [v0.6.0 发布检查清单](release-checklist.md)
 
 ## 基础信息
 
 - 扩展名称：PromptLens
-- 当前版本：0.5.1
+- 当前版本：0.6.0
 - 类型：Chrome MV3 扩展
 - 数据处理：无后端、无遥测，图片只发送到用户配置的 AI API。
 
@@ -56,6 +56,8 @@
 7. 自定义模板新建、复制、编辑、删除、导入、导出可用。
 8. 历史记录默认关闭；开启后记录最多 200 条。
 9. 清空历史记录可用。
+10. ChatGPT Plus 辅助模式不填写 API Key 也可保存。
+11. ChatGPT Plus 辅助模式结果页可下载图片、复制指令、打开 ChatGPT。
 
 ## 暂不承诺
 

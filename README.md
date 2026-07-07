@@ -34,6 +34,7 @@ Its goal is to stay simple, transparent, and self-hosting-friendly: no login, no
 - **Visual marketing diagnosis**: optional business-focused analysis for commercial visuals, with owner-friendly summary, marketing diagnosis, low-cost adaptation brief, and Markdown case export.
 - **Built-in output templates**: Detailed Analysis, Natural Language, Weighted Tags, and Quick Copy.
 - **Custom templates**: copy built-ins, create, edit, delete, import, and export custom templates.
+- **ChatGPT Plus Assist mode**: for users with ChatGPT Plus / Pro but no API key; PromptLens prepares the image and instruction, then you upload them to ChatGPT manually.
 - **Provider presets**: OpenAI, DeepSeek, Alibaba, SiliconFlow, Groq, OpenRouter, Ollama, and Custom.
 - **Keyboard selection shortcut**: `Alt+Shift+S` starts screenshot selection; users can change it at `chrome://extensions/shortcuts`.
 - **Optional local history**: off by default; stores text results, source domain, original image URL, page URL, and template metadata. No image thumbnails are saved.
@@ -60,6 +61,8 @@ PromptLens intentionally does not include:
 3. The image is validated, cropped, compressed, and normalized to JPEG locally.
 4. The result page calls the user-configured OpenAI-compatible Vision API with the selected template.
 5. The model returns JSON; the result page renders it and provides copy / JSON / Markdown export.
+
+PromptLens has two analysis paths: API Automatic Analysis calls your configured OpenAI-compatible Vision API and renders structured results; ChatGPT Plus Assist mode does not call an API and instead prepares a local JPEG plus a ChatGPT-ready instruction for manual use on chatgpt.com.
 
 PromptLens does not provide a built-in model service. You need your own API service that supports vision input.
 
