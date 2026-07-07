@@ -103,4 +103,26 @@ for (const status of [
 assert.match(resultJs, /不[会]?自动发送/);
 assert.match(resultJs, /手动上传/);
 
+// Task 6: result.js must consume chatgpt-status:* from session storage after sendToChatGpt
+assert.match(
+  resultJs,
+  /chatgpt-status:/,
+  'result.js must define or reference the chatgpt-status: storage key prefix for polling bridge results'
+);
+assert.match(
+  resultJs,
+  /chrome\.storage\.session\.get/,
+  'result.js must read chatgpt-status:* from chrome.storage.session to consume bridge results'
+);
+assert.match(
+  resultJs,
+  /getChatGptStatusMessage\(/,
+  'result.js must call getChatGptStatusMessage to map bridge status to user-facing message'
+);
+assert.match(
+  resultJs,
+  /showAssistStatus\([^)]*getChatGptStatusMessage|getChatGptStatusMessage[\s\S]{0,120}showAssistStatus/,
+  'result.js must pipe getChatGptStatusMessage result into showAssistStatus'
+);
+
 console.log('chatgpt auto-upload static tests passed');

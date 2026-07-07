@@ -1250,6 +1250,9 @@ async function analyzeInput(input) {
 // ChatGPT 自动发送消息类型（与 background.js 一致）
 const PROMPTLENS_CHATGPT_PAYLOAD_SAVE = 'PROMPTLENS_CHATGPT_PAYLOAD_SAVE';
 const PROMPTLENS_CHATGPT_STATUS = 'PROMPTLENS_CHATGPT_STATUS';
+const CHATGPT_STATUS_KEY_PREFIX = 'chatgpt-status:';
+const CHATGPT_STATUS_POLL_INTERVAL_MS = 1000;
+const CHATGPT_STATUS_POLL_MAX_ATTEMPTS = 15;
 
 function buildChatGptTransferPayload() {
   if (!currentAssistImage || !currentAssistImage.base64 || !currentAssistInstruction) {
@@ -1288,6 +1291,20 @@ function getChatGptStatusMessage(status) {
   return messages[status] || { tone: 'warning', message: '自动发送失败。请下载图片、复制指令后手动上传到 ChatGPT。' };
 }
 
+async function pollChatGptStatus(jobId) {
+  const statusKey = CHATGPT_STATUS_KEY_PREFIX + jobId;
+  for (let attempt = 0; attempt < CHATGPT_STATUS_POLL_MAX_ATTEMPTS; attempt++) {
+    await new Promise(resolve => setTimeout(resolve, CHATGPT_STATUS_POLL_INTERVAL_MS));
+    const stored = await chrome.storage.session.get({ [statusKey]: null });
+    const entry = stored[statusKey];
+    if (entry && entry.status) {
+      const msg = getChatGptStatusMessage(entry.status);
+      showAssistStatus(msg.message, msg.tone);
+      return;
+    }
+  }
+}
+
 async function sendToChatGpt() {
   const granted = await requestChatGptPermission();
   if (!granted) {
@@ -1303,6 +1320,7 @@ async function sendToChatGpt() {
     throw new Error(response && response.error || '无法打开 ChatGPT。');
   }
   showAssistStatus('已打开 ChatGPT，并尝试填入图片和指令。请在 ChatGPT 页面确认后手动发送；如果没有出现图片，请回到本页下载图片手动上传。', 'info');
+  pollChatGptStatus(response.jobId);
 }
 
 /* ── ChatGPT Assist event listeners ──────────────────── */
