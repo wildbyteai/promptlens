@@ -59,6 +59,8 @@
     'Configure your own provider': '配置你自己的服务商',
     'Set your OpenAI-compatible Base URL, API key, model, and image preferences.': '设置 OpenAI-compatible Base URL、API Key、模型和图片偏好。',
     'Copy structured prompt results': '复制结构化提示词结果',
+    'ChatGPT Plus Assist handoff': 'ChatGPT Plus 辅助交接',
+    'Open ChatGPT, wait for the page to settle, attach the prepared image, and fill the instruction for manual review.': '打开 ChatGPT，等待页面稳定，附加处理后的图片并填入指令，供用户手动确认。',
     'Copy fields individually, export JSON, or download Markdown from the result page.': '在结果页单独复制字段、导出 JSON 或下载 Markdown。',
     'Copy fields individually, export JSON, or download Markdown from the result page. Marketing diagnosis exports can become publishable case drafts.': '在结果页单独复制字段、导出 JSON 或下载 Markdown。视觉营销诊断导出可作为可发布案例初稿。',
     'Privacy-aware': '重视隐私',

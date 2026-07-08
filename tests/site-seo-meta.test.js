@@ -46,6 +46,8 @@ for (const page of pages) {
 const i18n = read('site/assets/i18n.js');
 assert.match(i18n, /PromptLens — Reverse image prompts and visual marketing diagnosis/);
 assert.match(i18n, /PromptLens — 图片反推提示词与视觉营销诊断/);
+assert.match(i18n, /ChatGPT Plus Assist handoff/);
+assert.match(index, /promptlens-chatgpt-assist\.jpg/);
 
 const readmeEn = read('README.md');
 const readmeZhCn = read('README.zh-CN.md');

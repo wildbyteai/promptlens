@@ -139,9 +139,9 @@ PromptLens 不提供模型服务、后端、代理、遥测、账号系统或云
 | --- | --- |
 | <img src="./docs/assets/promptlens-context-menu.png" alt="PromptLens 右键菜单" /> | <img src="./docs/assets/promptlens-options.png" alt="PromptLens 设置页" /> |
 
-| 分析结果 |
-| --- |
-| <img src="./docs/assets/promptlens-result.png" alt="PromptLens 分析结果页" /> |
+| 分析结果 | ChatGPT Plus 辅助 |
+| --- | --- |
+| <img src="./docs/assets/promptlens-result.png" alt="PromptLens 分析结果页" /> | <img src="./docs/assets/promptlens-chatgpt-assist.jpg" alt="PromptLens ChatGPT Plus 辅助交接" /> |
 
 ## 隐私与安全
 

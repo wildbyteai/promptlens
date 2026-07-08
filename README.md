@@ -140,9 +140,9 @@ PromptLens does not provide a model service, backend, proxy, telemetry, account 
 | --- | --- |
 | <img src="./docs/assets/promptlens-context-menu.png" alt="PromptLens context menu" /> | <img src="./docs/assets/promptlens-options.png" alt="PromptLens options page" /> |
 
-| Result |
-| --- |
-| <img src="./docs/assets/promptlens-result.png" alt="PromptLens result page" /> |
+| Result | ChatGPT Plus Assist |
+| --- | --- |
+| <img src="./docs/assets/promptlens-result.png" alt="PromptLens result page" /> | <img src="./docs/assets/promptlens-chatgpt-assist.jpg" alt="PromptLens ChatGPT Plus Assist handoff" /> |
 
 ## Privacy and security
 
