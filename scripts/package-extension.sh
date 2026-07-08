@@ -42,6 +42,7 @@ ZIP_PATH="${DIST_DIR}/promptlens-v${VERSION}.zip"
 FILES=(
   "manifest.json"
   "background.js"
+  "chatgpt-bridge.js"
   "content.js"
   "history-store.js"
   "history-format.js"

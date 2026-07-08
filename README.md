@@ -34,6 +34,7 @@ Its goal is to stay simple, transparent, and self-hosting-friendly: no login, no
 - **Visual marketing diagnosis**: optional business-focused analysis for commercial visuals, with owner-friendly summary, marketing diagnosis, low-cost adaptation brief, and Markdown case export.
 - **Built-in output templates**: Detailed Analysis, Natural Language, Weighted Tags, and Quick Copy.
 - **Custom templates**: copy built-ins, create, edit, delete, import, and export custom templates.
+- **ChatGPT Plus Assist mode**: for users with ChatGPT Plus / Pro but no API key; PromptLens prepares the image and instruction, then can open ChatGPT, wait for the page to settle, and attempt to attach the image and fill the instruction for you to review and send manually.
 - **Provider presets**: OpenAI, DeepSeek, Alibaba, SiliconFlow, Groq, OpenRouter, Ollama, and Custom.
 - **Keyboard selection shortcut**: `Alt+Shift+S` starts screenshot selection; users can change it at `chrome://extensions/shortcuts`.
 - **Optional local history**: off by default; stores text results, source domain, original image URL, page URL, and template metadata. No image thumbnails are saved.
@@ -60,6 +61,8 @@ PromptLens intentionally does not include:
 3. The image is validated, cropped, compressed, and normalized to JPEG locally.
 4. The result page calls the user-configured OpenAI-compatible Vision API with the selected template.
 5. The model returns JSON; the result page renders it and provides copy / JSON / Markdown export.
+
+PromptLens has two analysis paths: API Automatic Analysis calls your configured OpenAI-compatible Vision API and renders structured results; ChatGPT Plus Assist mode does not call an API and instead prepares a local JPEG plus a ChatGPT-ready instruction for use on chatgpt.com. The experimental ChatGPT handoff can open ChatGPT, wait for the ChatGPT page to settle, then attempt to attach the image and fill the instruction without automatically sending the message.
 
 PromptLens does not provide a built-in model service. You need your own API service that supports vision input.
 
@@ -121,7 +124,7 @@ Press Esc or click Cancel to exit selection mode.
 
 ## First Success path
 
-PromptLens v0.5 focuses on helping a new user complete the first successful analysis:
+PromptLens v0.6 focuses on helping users complete either an API-based analysis or a no-API-key ChatGPT Plus Assist flow:
 
 1. Open the options page.
 2. Configure your own OpenAI-compatible Vision API: Provider/Base URL, API Key, and a model that supports image input.
@@ -151,6 +154,8 @@ PromptLens has a simple privacy boundary:
 - Local history is off by default; when enabled, it stays in the browser, saves source image/page URLs for history recall, and does not save image thumbnails. It may save generated prompt text, including professional prompt variants that describe visible people, brands, products, scenes, or commercial visual details inferred from the image.
 - Remote image read permission is optional and is not requested at install time.
 - Screenshot selection uses `activeTab` and only accesses the current tab after user action.
+
+Experimental ChatGPT handoff: when you click **Try sending to ChatGPT**, PromptLens may request optional access to `https://chatgpt.com/*`. This is used only to open ChatGPT, wait for the page to settle, and attempt to attach the prepared local JPEG and fill the instruction into the ChatGPT page. PromptLens does not automatically send the message, does not read ChatGPT replies, and keeps manual download/copy fallback available if the page cannot accept the image or instruction.
 
 When using a third-party model service, images and prompts are sent to that service. Review the provider's privacy policy, retention policy, and terms yourself.
 
@@ -216,7 +221,7 @@ Development principles:
 
 ## Roadmap status
 
-The current branch has implemented v0.5.0: First Success onboarding, clearer provider setup guidance, contextual result next steps, marketing context examples, visual marketing diagnosis, Warm Studio UI refresh, summarized history cards, built-in / custom templates, provider presets, keyboard shortcut, result export, token usage, optional local history, basic i18n, and Chrome Web Store preparation.
+The current branch has implemented v0.6.0: First Success onboarding, clearer provider setup guidance, contextual result next steps, marketing context examples, visual marketing diagnosis, Warm Studio UI refresh, summarized history cards, built-in / custom templates, provider presets, keyboard shortcut, result export, token usage, optional local history, basic i18n, Chrome Web Store preparation, ChatGPT Plus Assist mode for no-API-key workflows, and experimental ChatGPT handoff that can open ChatGPT, wait for the page to settle, and attempt to attach the prepared image and fill the instruction after optional user permission.
 
 Future feedback-driven directions:
 

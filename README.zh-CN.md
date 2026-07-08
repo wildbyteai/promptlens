@@ -33,6 +33,7 @@ PromptLens 是一个轻量级 Chrome MV3 图片反推提示词工具，也可以
 - **内置输出模板**：提供详细分析、自然语言、标签加权、快速复制和视觉营销诊断等输出格式。
 - **视觉营销诊断**：面向商业视觉图的可选业务分析，输出老板摘要、营销诊断、低成本改编 brief 和可发布 Markdown 案例初稿。
 - **自定义模板**：支持复制内置模板、新建、编辑、删除、导入和导出自定义模板。
+- **ChatGPT Plus 辅助模式**：适合有 ChatGPT Plus / Pro 但没有 API Key 的用户；PromptLens 准备图片和指令，并可打开 ChatGPT、等待页面稳定后尝试附加图片并填入指令，供你确认后手动发送。
 - **Provider 预设**：提供 OpenAI、DeepSeek、Alibaba、SiliconFlow、Groq、OpenRouter、Ollama 和 Custom。
 - **快捷键框选**：支持 `Alt+Shift+S` 触发框选截图，可在 `chrome://extensions/shortcuts` 修改。
 - **可选历史记录**：默认关闭；开启后保存文本结果、来源域名、原始图片 URL、页面 URL 和模板信息，不保存图片缩略图。
@@ -59,6 +60,8 @@ PromptLens 刻意不包含以下能力：
 3. 图片会在本地被校验、裁剪、压缩，并统一转换为 JPEG。
 4. 结果页按选定模板调用用户配置的 OpenAI-compatible Vision API。
 5. 模型返回 JSON 后，结果页展示并提供复制、JSON 下载和 Markdown 下载。
+
+PromptLens 提供两种分析路径：API 自动分析会调用你配置的 OpenAI-compatible Vision API 并展示结构化结果；ChatGPT Plus 辅助模式不调用 API，而是在本地生成 JPEG 图片和 ChatGPT 指令，供你在 chatgpt.com 使用。实验性 ChatGPT 交接可打开 ChatGPT，等待 ChatGPT 页面稳定后尝试附加图片并填入指令，但不会自动发送消息。
 
 PromptLens 不提供内置模型服务。你需要自行准备支持视觉输入的 API 服务。
 
@@ -120,7 +123,7 @@ PromptLens 不提供内置模型服务。你需要自行准备支持视觉输入
 
 ## 首次成功路径
 
-PromptLens v0.5 优先帮助新用户完成第一次成功分析：
+PromptLens v0.6 优先帮助用户完成 API 自动分析，或在没有 API Key 时完成 ChatGPT Plus 辅助流程：
 
 1. 打开设置页。
 2. 配置你自己的 OpenAI-compatible Vision API：Provider/Base URL、API Key，以及支持图片输入的模型。
@@ -150,6 +153,8 @@ PromptLens 的隐私边界很简单：
 - 历史记录默认关闭；开启后只保存在浏览器本地，会保存来源图片/页面 URL 以便回溯，且不保存图片缩略图。
 - 远程图片读取权限是可选权限，不会在安装时请求。
 - 框选截图使用 `activeTab` 权限，仅在用户触发时访问当前标签页。
+
+实验性 ChatGPT 交接：点击 **尝试发送到 ChatGPT** 时，PromptLens 可能请求可选的 `https://chatgpt.com/*` 权限。该权限只用于打开 ChatGPT、等待页面稳定，并尝试把本地准备好的 JPEG 和分析指令填入 ChatGPT 页面。PromptLens 不会自动发送消息，不会读取 ChatGPT 回复；如果页面无法接收图片或指令，仍可回退到手动下载图片和复制指令。
 
 请注意：当你使用第三方模型服务时，图片和提示词会发送给该服务。请自行确认服务商的隐私政策、数据保留策略和模型使用条款。
 
@@ -213,7 +218,7 @@ node --check result.js
 
 ## 路线图状态
 
-当前分支已落地到 v0.5.0：首次成功引导、更清晰的 Provider 设置说明、结果页下一步提示、营销业务背景示例、视觉营销诊断、Warm Studio 视觉升级、摘要式历史卡片、内置 / 自定义模板、Provider 预设、快捷键、结果导出、Token usage、可选本地历史记录、基础 i18n 和 Chrome Web Store 发布准备。
+当前分支已落地到 v0.6.0：首次成功引导、更清晰的 Provider 设置说明、结果页下一步提示、营销业务背景示例、视觉营销诊断、Warm Studio 视觉升级、摘要式历史卡片、内置 / 自定义模板、Provider 预设、快捷键、结果导出、Token usage、可选本地历史记录、基础 i18n、Chrome Web Store 发布准备、面向无 API Key 工作流的 ChatGPT Plus 辅助模式，以及在用户按需授权后可打开 ChatGPT、等待页面稳定并尝试附加图片和填入指令的实验性 ChatGPT 交接。
 
 后续仍保留为反馈驱动的方向：
 

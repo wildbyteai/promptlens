@@ -5,6 +5,9 @@ const DB_NAME = 'promptlens';
 const DB_VERSION = 2;
 const STORE_NAME = 'pending-payloads';
 const MAX_DECODED_IMAGE_BYTES = 20 * 1024 * 1024; // 20MB
+const CHATGPT_PAYLOAD_PREFIX = 'chatgpt-transfer:';
+const CHATGPT_STATUS_PREFIX = 'chatgpt-status:';
+const CHATGPT_PAYLOAD_TTL_MS = 15 * 60 * 1000;
 
 /* ── IndexedDB helpers ────────────────────────────────── */
 
@@ -33,6 +36,56 @@ async function idbPut(key, value) {
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
+}
+
+function chatGptPayloadKey(jobId) {
+  return `${CHATGPT_PAYLOAD_PREFIX}${jobId}`;
+}
+
+function chatGptStatusKey(jobId) {
+  return `${CHATGPT_STATUS_PREFIX}${jobId}`;
+}
+
+function isFreshChatGptPayload(payload, now = Date.now()) {
+  return payload && Number(payload.createdAt) && now - Number(payload.createdAt) <= CHATGPT_PAYLOAD_TTL_MS;
+}
+
+async function saveChatGptPayload(payload) {
+  const jobId = payload && payload.jobId ? String(payload.jobId) : generateJobId();
+  const record = {
+    jobId,
+    imageBase64: String(payload && payload.imageBase64 || ''),
+    mimeType: String(payload && payload.mimeType || 'image/jpeg'),
+    filename: String(payload && payload.filename || 'promptlens-chatgpt-image.jpg'),
+    instruction: String(payload && payload.instruction || ''),
+    createdAt: Date.now()
+  };
+  if (!record.imageBase64 || !record.instruction) {
+    throw new Error('ChatGPT payload 缺少图片或指令。');
+  }
+  await chrome.storage.session.set({ [chatGptPayloadKey(jobId)]: record });
+  return jobId;
+}
+
+async function getChatGptPayload(jobId) {
+  const key = chatGptPayloadKey(jobId);
+  const stored = await chrome.storage.session.get({ [key]: null });
+  const payload = stored[key];
+  if (!isFreshChatGptPayload(payload)) return null;
+  return payload;
+}
+
+async function clearChatGptPayload(jobId) {
+  await chrome.storage.session.remove(chatGptPayloadKey(jobId));
+}
+
+async function cleanupExpiredChatGptPayloads() {
+  const stored = await chrome.storage.session.get(null);
+  const now = Date.now();
+  const expiredKeys = Object.keys(stored).filter(key => {
+    return key.startsWith(CHATGPT_PAYLOAD_PREFIX) && !isFreshChatGptPayload(stored[key], now);
+  });
+  if (expiredKeys.length) await chrome.storage.session.remove(expiredKeys);
 }
 
 /* ── Helpers ──────────────────────────────────────────── */
@@ -131,10 +184,51 @@ chrome.commands.onCommand.addListener(command => {
 
 /* ── SELECTION_COMPLETE handler (top-level for SW lifecycle) ── */
 
-chrome.runtime.onMessage.addListener((message, sender) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message && message.type === 'SELECTION_COMPLETE') {
     handleSelectionComplete(message, sender).catch(error => openErrorResult(error.message));
+    return undefined;
   }
+
+  if (message && message.type === 'PROMPTLENS_CHATGPT_PAYLOAD_SAVE') {
+    (async () => {
+      await cleanupExpiredChatGptPayloads();
+      const jobId = await saveChatGptPayload(message.payload || {});
+      await openChatGptTransfer(jobId);
+      sendResponse({ ok: true, jobId });
+    })().catch(error => sendResponse({ ok: false, error: error.message }));
+    return true;
+  }
+
+  if (message && message.type === 'PROMPTLENS_CHATGPT_PAYLOAD_GET') {
+    (async () => {
+      const payload = await getChatGptPayload(message.jobId);
+      sendResponse(payload ? { ok: true, payload } : { ok: false, status: 'payload_missing' });
+    })().catch(error => sendResponse({ ok: false, error: error.message }));
+    return true;
+  }
+
+  if (message && message.type === 'PROMPTLENS_CHATGPT_STATUS') {
+    (async () => {
+      const jobId = String(message.jobId || 'unknown');
+      const status = String(message.status || 'unknown');
+      await chrome.storage.session.set({
+        [chatGptStatusKey(jobId)]: {
+          jobId,
+          status,
+          message: String(message.message || ''),
+          createdAt: Date.now()
+        }
+      });
+      if (status === 'success_instruction_and_image') {
+        await clearChatGptPayload(jobId);
+      }
+      sendResponse({ ok: true });
+    })().catch(error => sendResponse({ ok: false, error: error.message }));
+    return true;
+  }
+
+  return undefined;
 });
 
 /* ── Business logic ───────────────────────────────────── */
@@ -269,4 +363,37 @@ async function openErrorResult(message) {
     message: message || '操作失败。'
   });
   await openResultPage();
+}
+
+/* ── ChatGPT Transfer helpers ─────────────────────────── */
+
+async function injectChatGptBridge(tabId) {
+  await chrome.scripting.executeScript({
+    target: { tabId },
+    files: ['chatgpt-bridge.js']
+  });
+}
+
+async function openChatGptTransfer(jobId) {
+  const tab = await chrome.tabs.create({ url: `https://chatgpt.com/?promptlensJob=${encodeURIComponent(jobId)}` });
+  if (!tab || typeof tab.id !== 'number') {
+    throw new Error('无法打开 ChatGPT 标签页。');
+  }
+
+  const listener = (tabId, changeInfo) => {
+    if (tabId !== tab.id || changeInfo.status !== 'complete') return;
+    chrome.tabs.onUpdated.removeListener(listener);
+    injectChatGptBridge(tab.id).catch(async error => {
+      await chrome.storage.session.set({
+        [chatGptStatusKey(jobId)]: {
+          jobId,
+          status: 'script_injection_failed',
+          message: error.message,
+          createdAt: Date.now()
+        }
+      });
+    });
+  };
+  chrome.tabs.onUpdated.addListener(listener);
+  return tab.id;
 }

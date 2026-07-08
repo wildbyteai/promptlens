@@ -41,6 +41,8 @@
     'Turn commercial visuals into owner-friendly summaries, marketing diagnosis, low-cost adaptation briefs, and Markdown case drafts.': '把商业视觉图转成老板看得懂的摘要、营销诊断、低成本改编 brief 和 Markdown 案例初稿。',
     'Interface languages': '界面语言',
     'Choose Chinese or English UI copy for options, history, and result workflows.': '设置、历史记录和结果流程可选择中文或英文界面文案。',
+    'ChatGPT Plus Assist': 'ChatGPT Plus 辅助',
+    'No API key? PromptLens can open ChatGPT, wait for the page to settle, then attempt to attach the prepared local JPEG and fill the instruction for you to review and send manually.': '没有 API Key？PromptLens 可打开 ChatGPT，等待页面稳定后尝试附加本地准备好的 JPEG 图片并填入指令，供你确认后手动发送。',
     'Three user-triggered steps.': '三个由用户触发的步骤。',
     'Select an image': '选择图片',
     'Right-click a web image or select a visible screenshot region with Alt+Shift+S on Windows/Linux or Option+Shift+S on macOS.': '右键网页图片，或使用 Windows/Linux 的 Alt+Shift+S、macOS 的 Option+Shift+S 选择可见截图区域。',

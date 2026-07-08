@@ -2,7 +2,8 @@ const DEFAULT_CONFIG = {
   apiBaseUrl: '',
   apiKey: '',
   apiModel: '',
-  activeTemplateId: window.PromptTemplates.DEFAULT_TEMPLATE_ID
+  activeTemplateId: window.PromptTemplates.DEFAULT_TEMPLATE_ID,
+  analysisMode: 'api'
 };
 
 const PROVIDER_PRESETS = [
@@ -44,6 +45,11 @@ const toggleApiKeyButton = document.getElementById('toggle-api-key');
 const resetFormButton = document.getElementById('reset-form');
 const editConfigButton = document.getElementById('edit-config');
 const grantImageButton = document.getElementById('grant-image-permission');
+
+const analysisModeApiInput = document.getElementById('analysis-mode-api');
+const analysisModeChatGptInput = document.getElementById('analysis-mode-chatgpt');
+const analysisModeNote = document.getElementById('analysis-mode-note');
+const apiConfigModeHint = document.getElementById('api-config-mode-hint');
 
 const configSummary = document.getElementById('config-summary');
 const summaryUrl = document.getElementById('summary-url');
@@ -266,6 +272,16 @@ function downloadText(filename, text, mimeType) {
 /* ── Config summary ────────────────────────────────────── */
 
 async function showSummary(config) {
+  const mode = normalizeAnalysisMode(config.analysisMode);
+  if (mode === 'chatgpt_assist') {
+    summaryUrl.textContent = 'ChatGPT Plus 辅助模式';
+    summaryModel.textContent = '不需要 API Key';
+    const template = await window.PromptTemplates.getTemplateById(config.activeTemplateId);
+    summaryTemplate.textContent = template.name;
+    configSummary.hidden = false;
+    form.hidden = true;
+    return;
+  }
   if (!config.apiBaseUrl || !config.apiModel) {
     configSummary.hidden = true;
     form.hidden = false;
@@ -347,8 +363,41 @@ function trimConfig(config) {
     apiBaseUrl: String(config.apiBaseUrl || '').trim(),
     apiKey: String(config.apiKey || '').trim(),
     apiModel: String(config.apiModel || '').trim(),
-    activeTemplateId: String(config.activeTemplateId || window.PromptTemplates.DEFAULT_TEMPLATE_ID).trim()
+    activeTemplateId: String(config.activeTemplateId || window.PromptTemplates.DEFAULT_TEMPLATE_ID).trim(),
+    analysisMode: normalizeAnalysisMode(config.analysisMode)
   };
+}
+
+/* ── Analysis mode helpers ───────────────────────────── */
+
+function normalizeAnalysisMode(value) {
+  return value === 'chatgpt_assist' ? 'chatgpt_assist' : 'api';
+}
+
+function getAnalysisMode() {
+  return analysisModeChatGptInput && analysisModeChatGptInput.checked ? 'chatgpt_assist' : 'api';
+}
+
+function renderAnalysisMode(mode) {
+  const normalized = normalizeAnalysisMode(mode);
+  if (analysisModeApiInput) analysisModeApiInput.checked = normalized === 'api';
+  if (analysisModeChatGptInput) analysisModeChatGptInput.checked = normalized === 'chatgpt_assist';
+  if (analysisModeNote) analysisModeNote.hidden = normalized !== 'chatgpt_assist';
+  if (apiConfigModeHint) {
+    apiConfigModeHint.textContent = normalized === 'chatgpt_assist'
+      ? '当前使用 ChatGPT Plus 辅助模式，API 字段不是必填；切回 API 自动分析时再填写。'
+      : 'PromptLens 会使用这些 API 字段自动调用你配置的模型服务。';
+  }
+  baseUrlInput.required = normalized === 'api';
+  apiKeyInput.required = normalized === 'api';
+  modelInput.required = normalized === 'api';
+}
+
+async function persistAnalysisModeFromSelection() {
+  const analysisMode = getAnalysisMode();
+  renderAnalysisMode(analysisMode);
+  await chrome.storage.local.set({ analysisMode: getAnalysisMode() });
+  await refreshChecklistState();
 }
 
 /* ── First success checklist ──────────────────────────── */
@@ -358,11 +407,13 @@ function getCurrentFormConfig() {
     apiBaseUrl: baseUrlInput.value,
     apiKey: apiKeyInput.value,
     apiModel: modelInput.value,
-    activeTemplateId: templateSelect.value
+    activeTemplateId: templateSelect.value,
+    analysisMode: getAnalysisMode()
   });
 }
 
 function isCompleteConfig(config) {
+  if (normalizeAnalysisMode(config.analysisMode) === 'chatgpt_assist') return true;
   return Boolean(config.apiBaseUrl && config.apiKey && config.apiModel);
 }
 
@@ -374,7 +425,15 @@ function setStepState(stepEl, state, label) {
 }
 
 function deriveChecklistState(config) {
+  const mode = normalizeAnalysisMode(config.analysisMode);
   const hasConfig = isCompleteConfig(config);
+  if (mode === 'chatgpt_assist') {
+    return {
+      config: { state: 'done', label: '已选择' },
+      analyze: { state: 'active', label: '可开始' },
+      output: { state: 'pending', label: '在 ChatGPT 中完成' }
+    };
+  }
   return {
     config: hasConfig ? { state: 'done', label: '已填写' } : { state: 'active', label: '待配置' },
     analyze: hasConfig ? { state: 'active', label: '可开始' } : { state: 'pending', label: '准备中' },
@@ -427,10 +486,11 @@ async function loadConfig() {
   maxImageSideInput.value = Number(stored.maxImageSide) || 2048;
   jpegQualityInput.value = Number(stored.jpegQuality) || 0.85;
   syncProviderPresetFromUrl();
+  renderAnalysisMode(config.analysisMode);
   await populateTemplateSelect(config.activeTemplateId);
   await refreshChecklistState();
 
-  if (config.apiBaseUrl && config.apiKey && config.apiModel) {
+  if ((config.apiBaseUrl && config.apiKey && config.apiModel) || normalizeAnalysisMode(config.analysisMode) === 'chatgpt_assist') {
     await showSummary(config);
   }
 }
@@ -442,44 +502,47 @@ async function saveConfig() {
     apiBaseUrl: baseUrlInput.value,
     apiKey: apiKeyInput.value,
     apiModel: modelInput.value,
-    activeTemplateId: templateSelect.value
+    activeTemplateId: templateSelect.value,
+    analysisMode: getAnalysisMode()
   });
   const maxImageSide = Math.min(4096, Math.max(512, Number(maxImageSideInput.value) || 2048));
   const jpegQuality = Math.min(0.95, Math.max(0.4, Number(jpegQualityInput.value) || 0.85));
 
-  if (!config.apiBaseUrl) {
-    showConfigStatus('请填写 AI Base URL。', 'error');
-    baseUrlInput.focus();
-    baseUrlInput.classList.add('input-error');
-    return;
-  }
-  baseUrlInput.classList.remove('input-error');
+  if (config.analysisMode === 'api') {
+    if (!config.apiBaseUrl) {
+      showConfigStatus('请填写 AI Base URL。', 'error');
+      baseUrlInput.focus();
+      baseUrlInput.classList.add('input-error');
+      return;
+    }
+    baseUrlInput.classList.remove('input-error');
 
-  const urlError = validateApiBaseUrl(config.apiBaseUrl);
-  if (urlError) {
-    showConfigStatus(urlError, 'error');
-    baseUrlInput.focus();
-    baseUrlInput.classList.add('input-error');
-    return;
-  }
-  baseUrlInput.classList.remove('input-error');
+    const urlError = validateApiBaseUrl(config.apiBaseUrl);
+    if (urlError) {
+      showConfigStatus(urlError, 'error');
+      baseUrlInput.focus();
+      baseUrlInput.classList.add('input-error');
+      return;
+    }
+    baseUrlInput.classList.remove('input-error');
 
-  if (!config.apiKey) {
-    showConfigStatus('请填写 API Key。', 'error');
-    apiKeyInput.focus();
-    return;
-  }
+    if (!config.apiKey) {
+      showConfigStatus('请填写 API Key。', 'error');
+      apiKeyInput.focus();
+      return;
+    }
 
-  if (!config.apiModel) {
-    showConfigStatus('请填写 Model。', 'error');
-    modelInput.focus();
-    return;
-  }
+    if (!config.apiModel) {
+      showConfigStatus('请填写 Model。', 'error');
+      modelInput.focus();
+      return;
+    }
 
-  const granted = await requestApiOriginPermission(config.apiBaseUrl);
-  if (!granted) {
-    showConfigStatus('需要授权 API 地址的网络权限才能发送请求。', 'error');
-    return;
+    const granted = await requestApiOriginPermission(config.apiBaseUrl);
+    if (!granted) {
+      showConfigStatus('需要授权 API 地址的网络权限才能发送请求。', 'error');
+      return;
+    }
   }
 
   await chrome.storage.local.set({
@@ -603,7 +666,7 @@ resetFormButton.addEventListener('click', () => {
   updateTemplateHint().catch(() => {});
   baseUrlInput.classList.remove('input-error');
   hideBanner(configStatusBanner);
-  chrome.storage.local.remove(['apiBaseUrl', 'apiKey', 'apiModel', 'activeTemplateId']).then(() => {
+  chrome.storage.local.remove(['apiBaseUrl', 'apiKey', 'apiModel', 'activeTemplateId', 'analysisMode']).then(() => {
     showConfigStatus('设置已清空。', 'info');
     hideSummary();
     refreshChecklistState().catch(() => {});
@@ -649,6 +712,14 @@ clearHistoryButton.addEventListener('click', () => {
   input.addEventListener('input', () => {
     input.classList.remove('input-error');
     debouncedRefreshChecklistState();
+  });
+});
+
+// 分析方式切换监听
+[analysisModeApiInput, analysisModeChatGptInput].forEach(input => {
+  if (!input) return;
+  input.addEventListener('change', () => {
+    persistAnalysisModeFromSelection().catch(error => showConfigStatus(`分析方式保存失败：${error.message}`, 'error'));
   });
 });
 

@@ -26,13 +26,13 @@
           <button id="first-success-toggle" type="button" class="text-button" aria-expanded="true" aria-controls="first-success-body">收起</button>
         </div>
         <div id="first-success-body" class="first-success-body">
-          <p class="first-success-promise">只要你的 Vision API 能用于实际分析，完成下面 3 步后，你就可以分析第一张图并复制结果。</p>
+          <p class="first-success-promise">选择 API 自动分析或 ChatGPT Plus 辅助模式后，你就可以分析第一张图并带走结果。</p>
           <ol class="first-success-steps" aria-label="首次成功分析步骤">
             <li id="first-success-step-config" class="first-success-step" data-state="pending">
               <span class="step-index">1</span>
               <div>
-                <strong>配置模型服务</strong>
-                <p>选择 Provider 或 Custom，填写 Base URL、API Key 和用于图片分析的 Model。</p>
+                <strong>选择分析方式</strong>
+                <p>使用 API 自动分析，或选择 ChatGPT Plus 辅助模式准备图片和指令。</p>
               </div>
               <span class="step-state">未完成</span>
             </li>
@@ -48,11 +48,40 @@
               <span class="step-index">3</span>
               <div>
                 <strong>带走结果</strong>
-                <p>反推提示词可复制英文 Prompt / Tags；诊断营销图可下载 Markdown Brief 或复制改图建议。</p>
+                <p>API 模式可复制结构化结果；辅助模式请下载图片、复制指令并在 ChatGPT 中完成分析。</p>
               </div>
               <span class="step-state">准备中</span>
             </li>
           </ol>
+        </div>
+      </section>
+
+      <section class="surface-card analysis-mode-card" aria-labelledby="analysis-mode-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="analysis-mode-title">分析方式</h2>
+            <p>选择自动调用 API，或使用 ChatGPT Plus 网页端手动完成分析。</p>
+          </div>
+        </div>
+        <div class="analysis-mode-options" role="radiogroup" aria-labelledby="analysis-mode-title">
+          <label class="analysis-mode-option">
+            <input id="analysis-mode-api" name="analysisMode" type="radio" value="api" checked>
+            <span>
+              <strong>API 自动分析</strong>
+              <small>使用你配置的 OpenAI-compatible Vision API，PromptLens 自动调用模型并展示结构化结果。</small>
+            </span>
+          </label>
+          <label class="analysis-mode-option">
+            <input id="analysis-mode-chatgpt" name="analysisMode" type="radio" value="chatgpt_assist">
+            <span>
+              <strong>ChatGPT Plus 辅助模式</strong>
+              <small>不需要 API Key。PromptLens 准备图片和指令，你在 ChatGPT 网页端上传图片并粘贴指令。</small>
+            </span>
+          </label>
+        </div>
+        <div id="analysis-mode-note" class="first-success-note" hidden>
+          <strong>当前模式：</strong>
+          <span>ChatGPT Plus 辅助模式不会调用 API，也不会自动上传、发送或读取 ChatGPT 网页端回复。</span>
         </div>
       </section>
 
@@ -77,8 +106,8 @@
       <section class="surface-card" aria-labelledby="config-title">
         <div class="section-heading">
           <div>
-            <h2 id="config-title">AI 服务配置</h2>
-            <p>PromptLens 不内置模型服务。请填写你自己的 OpenAI-compatible Vision API。API Key 只保存在本地浏览器，图片只会发送到你配置的 Base URL。</p>
+            <h2 id="config-title">API 自动分析配置</h2>
+            <p>PromptLens 不内置模型服务。请填写你自己的 OpenAI-compatible Vision API。API Key 只保存在本地浏览器，图片只会发送到你配置的 Base URL。<span id="api-config-mode-hint">PromptLens 会使用这些 API 字段自动调用你配置的模型服务。</span></p>
           </div>
         </div>
 
@@ -100,7 +129,7 @@
           <button id="edit-config" type="button" class="text-button">修改配置</button>
         </div>
 
-        <form id="options-form" class="settings-form">
+        <form id="options-form" class="settings-form" novalidate>
           <label class="field-row">
             <span class="field-label">Provider 预设</span>
             <select id="provider-preset" name="providerPreset"></select>

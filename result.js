@@ -96,7 +96,15 @@ const elements = {
   marketingContextSkip: document.getElementById('marketing-context-skip'),
   nextStepTitle: document.getElementById('next-step-title'),
   nextStepDescription: document.getElementById('next-step-description'),
-  nextStepList: document.getElementById('next-step-list')
+  nextStepList: document.getElementById('next-step-list'),
+  chatgptAssistCard: document.getElementById('chatgpt-assist-card'),
+  chatgptSend: document.getElementById('chatgpt-send'),
+  chatgptDownloadImage: document.getElementById('chatgpt-download-image'),
+  chatgptCopyInstruction: document.getElementById('chatgpt-copy-instruction'),
+  chatgptOpen: document.getElementById('chatgpt-open'),
+  chatgptCopyOpen: document.getElementById('chatgpt-copy-open'),
+  chatgptInstructionOutput: document.getElementById('chatgpt-instruction-output'),
+  chatgptAssistStatus: document.getElementById('chatgpt-assist-status')
 };
 
 /* ── Step SVG icons ───────────────────────────────────── */
@@ -121,6 +129,7 @@ function setLoading(text, activeStep) {
   loadingPanel.hidden = false;
   errorPanel.hidden = true;
   resultContent.hidden = true;
+  if (elements.chatgptAssistCard) elements.chatgptAssistCard.hidden = true;
   hideMarketingContextCard();
   loadingText.textContent = text;
   if (resultStatus) {
@@ -146,6 +155,7 @@ function showError(title, message) {
   loadingPanel.hidden = true;
   errorPanel.hidden = false;
   resultContent.hidden = true;
+  if (elements.chatgptAssistCard) elements.chatgptAssistCard.hidden = true;
   hideMarketingContextCard();
   if (resultStatus) {
     resultStatus.textContent = title;
@@ -174,6 +184,7 @@ function showResult() {
   loadingPanel.hidden = true;
   errorPanel.hidden = true;
   resultContent.hidden = false;
+  if (elements.chatgptAssistCard) elements.chatgptAssistCard.hidden = true;
   hideMarketingContextCard();
   if (resultStatus) {
     resultStatus.textContent = '分析完成。';
@@ -203,6 +214,8 @@ let currentTemplate = null;
 let currentUsage = null;
 let currentResponseTimeMs = null;
 let currentBusinessContext = null;
+let currentAssistImage = null;
+let currentAssistInstruction = '';
 
 function renderUsage(usage, responseTimeMs) {
   if (!usage && !responseTimeMs) {
@@ -228,12 +241,17 @@ async function copyTextWithFeedback(button, text) {
   try {
     await navigator.clipboard.writeText(text || '');
     button.textContent = '已复制';
+    window.setTimeout(() => {
+      button.textContent = oldText;
+    }, 1200);
+    return true;
   } catch {
     button.textContent = '复制失败';
+    window.setTimeout(() => {
+      button.textContent = oldText;
+    }, 1200);
+    return false;
   }
-  window.setTimeout(() => {
-    button.textContent = oldText;
-  }, 1200);
 }
 
 function renderPromptVariants(result) {
@@ -822,14 +840,20 @@ async function loadConfig() {
   const config = await chrome.storage.local.get({
     apiBaseUrl: '',
     apiKey: '',
-    apiModel: ''
+    apiModel: '',
+    analysisMode: 'api'
   });
+  const analysisMode = config.analysisMode === 'chatgpt_assist' ? 'chatgpt_assist' : 'api';
   const apiBaseUrl = String(config.apiBaseUrl || '').trim();
   const apiKey = String(config.apiKey || '').trim();
   const apiModel = String(config.apiModel || '').trim();
 
+  if (analysisMode === 'chatgpt_assist') {
+    return { analysisMode, apiBaseUrl, apiKey, apiModel };
+  }
+
   if (!apiBaseUrl || !apiKey || !apiModel) {
-    throw new Error('请先打开设置页，填写 AI Base URL、API Key 和 Model。');
+    throw new Error('请先在设置页选择 API 自动分析，并填写 AI Base URL、API Key 和 Model。');
   }
 
   try {
@@ -843,7 +867,7 @@ async function loadConfig() {
     throw new Error('AI Base URL 格式无效。');
   }
 
-  return { apiBaseUrl, apiKey, apiModel };
+  return { analysisMode, apiBaseUrl, apiKey, apiModel };
 }
 
 function buildChatCompletionsUrl(baseUrl) {
@@ -853,6 +877,131 @@ function buildChatCompletionsUrl(baseUrl) {
   }
   return `${trimmed}/chat/completions`;
 }
+
+/* ── ChatGPT Assist instruction builder ──────────────── */
+
+function isMarketingTemplate(template) {
+  return window.PromptTemplates.isMarketingDiagnosisTemplate(template);
+}
+
+function buildChatGptAssistInstruction(template, businessContext = '') {
+  const context = String(businessContext || '').trim();
+  const sharedEvidenceRules = [
+    '如果当前对话中没有实际附加图片，请先提醒我上传图片，不要凭空分析。',
+    '请严格基于图片可见内容回答；不要识别真实人物身份，不要推断年龄、种族、健康、政治、宗教、财务状况等敏感属性。',
+    '如果图片中有文字，只描述清晰可读的文字；模糊、被遮挡或无法确认的文字请标为“不确定”，不要猜测。'
+  ];
+  if (isMarketingTemplate(template)) {
+    return [
+      '请分析我上传的这张商业视觉图。请严格基于图片可见内容，并结合我提供的业务背景。',
+      ...sharedEvidenceRules,
+      '',
+      '业务背景：',
+      context || '未提供，请只基于图片可见内容判断。',
+      '',
+      '请用清晰的 Markdown 二级标题输出以上 7 个部分：',
+      '1. 老板能看懂的摘要',
+      '2. 画面内容与风格描述',
+      '3. 视觉营销诊断',
+      '4. 目标人群与卖点判断',
+      '5. 低成本改图建议',
+      '6. 可交给设计师 / 投放同事的 Markdown Brief',
+      '7. 可直接复用的英文生成 Prompt',
+      '',
+      '涉及目标人群、卖点、转化风险、商业意图时，请使用“可能”“看起来”“从画面推测”等谨慎措辞，并说明依据来自哪些可见元素。不要把推测写成事实。',
+      '如果业务背景为空，请只基于图片判断，不要编造品牌、价格、销量或投放数据。'
+    ].join('\n');
+  }
+
+  const lines = [
+    '请分析我上传的这张图片。请严格基于图片可见内容，不要编造不可见信息。',
+    ...sharedEvidenceRules,
+    '',
+    '请输出以下 Markdown 结构：',
+    '1. 中文提示词',
+    '2. English Prompt',
+    '3. Tags：6-10 个英文标签，覆盖主体、风格、光线、构图、情绪和视觉技法',
+    '4. Negative Prompt',
+    '5. 可直接复制到图像生成工具的最终英文 Prompt，不包含平台专属参数',
+    '6. 3 个不同风格变体：每个包含英文 Prompt、适用场景、Negative Prompt',
+    '',
+    '如果存在不确定内容，请明确写出“不确定”。'
+  ];
+
+  if (template && template.instruction) {
+    lines.push(
+      '',
+      '所选输出模板要求：',
+      String(template.instruction).trim(),
+      '',
+      '上面的模板要求来自 PromptLens 的结构化 API 模板。请不要输出 JSON，也不要输出 prompt_en、prompt_zh、prompt_tags、negative_prompt、json_prompt 或 prompt_variants 等字段名；请把这些要求映射到上面的 Markdown 小节中。',
+      '请在满足上述结构的同时，保留这个模板要求的输出风格；严格基于图片可见内容回答，不要编造图片中不存在的信息。'
+    );
+  }
+
+  return lines.join('\n');
+}
+
+/* ── ChatGPT Assist helpers ──────────────────────────── */
+
+function makeTimestamp() {
+  return new Date().toISOString().replace(/[-:]/g, '').replace(/\..+$/, '').replace('T', '-');
+}
+
+function base64ToBytes(base64) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+function downloadPreparedImage(preparedImage) {
+  const bytes = base64ToBytes(preparedImage.base64);
+  const blob = new Blob([bytes], { type: 'image/jpeg' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `promptlens-chatgpt-image-${makeTimestamp()}.jpg`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
+
+function showAssistStatus(message, tone) {
+  if (!elements.chatgptAssistStatus) return;
+  elements.chatgptAssistStatus.hidden = false;
+  elements.chatgptAssistStatus.className = `status-banner status-banner--${tone}`;
+  elements.chatgptAssistStatus.textContent = message;
+}
+
+function renderChatGptAssistPanel(preparedImage, instruction) {
+  currentResult = null;
+  currentRawText = '';
+  currentAssistImage = preparedImage;
+  currentAssistInstruction = instruction;
+
+  loadingPanel.hidden = true;
+  errorPanel.hidden = true;
+  if (resultContent) resultContent.hidden = true;
+  if (elements.chatgptAssistCard) elements.chatgptAssistCard.hidden = false;
+  if (elements.chatgptInstructionOutput) elements.chatgptInstructionOutput.value = instruction;
+  hideMarketingContextCard();
+  showAssistStatus('图片和指令已准备好。请下载图片、复制指令，并在 ChatGPT 中完成分析。', 'success');
+}
+
+function openChatGpt() {
+  const url = 'https://chatgpt.com/';
+  if (chrome && chrome.tabs && chrome.tabs.create) {
+    chrome.tabs.create({ url });
+    return;
+  }
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+/* ── Reverse prompt instruction ──────────────────────── */
 
 function buildReversePromptInstruction(template, businessContext = '') {
   return window.PromptTemplates.buildFinalPrompt(template, { businessContext });
@@ -1083,6 +1232,21 @@ async function analyzeInput(input) {
   elements.templateName.textContent = template.name;
   elements.templateDescription.textContent = template.description;
 
+  // ChatGPT Assist 分流
+  setLoading('正在准备图片和 ChatGPT 分析指令...', stepApi);
+  const config = await loadConfig();
+  if (config.analysisMode === 'chatgpt_assist') {
+    let businessContext = '';
+    if (window.PromptTemplates.isMarketingDiagnosisTemplate(template)) {
+      businessContext = await waitForMarketingContext();
+      currentBusinessContext = businessContext;
+    }
+    const instruction = buildChatGptAssistInstruction(template, businessContext);
+    renderChatGptAssistPanel(prepared, instruction);
+    return;
+  }
+
+  // API 自动分析路径
   if (window.PromptTemplates.isMarketingDiagnosisTemplate(template)) {
     currentBusinessContext = await waitForMarketingContext();
   } else {
@@ -1093,8 +1257,150 @@ async function analyzeInput(input) {
   currentUsage = usage;
   currentResponseTimeMs = responseTimeMs;
   validateResultSchema(parsed);
+  // ChatGPT Assist mode does not save history because PromptLens does not receive the ChatGPT web reply.
   await maybeSaveHistory(input, parsed, template);
   renderResult(parsed, rawText, template);
+}
+
+/* ── ChatGPT Auto Send helpers ──────────────────────── */
+
+// ChatGPT 自动发送消息类型（与 background.js 一致）
+const PROMPTLENS_CHATGPT_PAYLOAD_SAVE = 'PROMPTLENS_CHATGPT_PAYLOAD_SAVE';
+const PROMPTLENS_CHATGPT_STATUS = 'PROMPTLENS_CHATGPT_STATUS';
+const CHATGPT_STATUS_KEY_PREFIX = 'chatgpt-status:';
+const CHATGPT_STATUS_POLL_INTERVAL_MS = 1000;
+const CHATGPT_STATUS_POLL_MAX_ATTEMPTS = 45;
+
+function buildChatGptTransferPayload() {
+  if (!currentAssistImage || !currentAssistImage.base64 || !currentAssistInstruction) {
+    throw new Error('图片或指令还没有准备好，请重新分析。');
+  }
+  return {
+    imageBase64: currentAssistImage.base64,
+    mimeType: 'image/jpeg',
+    filename: `promptlens-chatgpt-image-${makeTimestamp()}.jpg`,
+    instruction: currentAssistInstruction
+  };
+}
+
+async function requestChatGptPermission() {
+  const origins = ['https://chatgpt.com/*'];
+  const hasPermission = await chrome.permissions.contains({ origins });
+  if (hasPermission) return true;
+  showAssistStatus('需要授权访问 chatgpt.com，才能尝试把图片和指令填入 ChatGPT。PromptLens 不会读取回复，也不会自动发送。', 'info');
+  return chrome.permissions.request({ origins });
+}
+
+function getChatGptStatusMessage(status) {
+  const messages = {
+    permission_denied: { tone: 'warning', message: '未授权访问 chatgpt.com。请使用下载图片和复制指令手动完成。' },
+    payload_missing: { tone: 'warning', message: '自动发送数据已过期。图片和指令仍在本页可用，请手动上传到 ChatGPT。' },
+    tab_open_failed: { tone: 'error', message: '无法打开 ChatGPT。请手动访问 https://chatgpt.com/。' },
+    script_injection_failed: { tone: 'warning', message: '无法连接 ChatGPT 页面。请下载图片、复制指令后手动上传。' },
+    input_not_found: { tone: 'warning', message: '已打开 ChatGPT，但没有找到输入框。请手动复制指令。' },
+    instruction_failed: { tone: 'warning', message: '已打开 ChatGPT，但指令填入失败。请手动复制指令。' },
+    image_input_not_found: { tone: 'warning', message: '已填入指令，但没有找到图片上传入口。请下载图片后手动上传。' },
+    image_attach_failed: { tone: 'warning', message: '已填入指令，但图片自动附加失败。请下载图片后手动上传。' },
+    partial_success_instruction_only: { tone: 'warning', message: '已填入指令，但图片自动附加失败。请下载图片后手动上传。' },
+    success_instruction_only: { tone: 'info', message: '已打开 ChatGPT 并填入指令。请确认图片是否已附加，然后手动发送。' },
+    success_instruction_and_image: { tone: 'success', message: '已尝试附加图片并填入指令。请在 ChatGPT 中确认后手动发送。' }
+  };
+  return messages[status] || { tone: 'warning', message: '自动发送失败。请下载图片、复制指令后手动上传到 ChatGPT。' };
+}
+
+async function pollChatGptStatus(jobId) {
+  const statusKey = CHATGPT_STATUS_KEY_PREFIX + jobId;
+  for (let attempt = 0; attempt < CHATGPT_STATUS_POLL_MAX_ATTEMPTS; attempt++) {
+    await new Promise(resolve => setTimeout(resolve, CHATGPT_STATUS_POLL_INTERVAL_MS));
+    const stored = await chrome.storage.session.get({ [statusKey]: null });
+    const entry = stored[statusKey];
+    if (entry && entry.status) {
+      const msg = getChatGptStatusMessage(entry.status);
+      showAssistStatus(msg.message, msg.tone);
+      return;
+    }
+  }
+}
+
+async function sendToChatGpt() {
+  const granted = await requestChatGptPermission();
+  if (!granted) {
+    showAssistStatus('未授权访问 chatgpt.com。请使用下载图片和复制指令手动完成。', 'warning');
+    return;
+  }
+
+  const response = await chrome.runtime.sendMessage({
+    type: 'PROMPTLENS_CHATGPT_PAYLOAD_SAVE',
+    payload: buildChatGptTransferPayload()
+  });
+  if (!response || !response.ok) {
+    throw new Error(response && response.error || '无法打开 ChatGPT。');
+  }
+  showAssistStatus('已打开 ChatGPT，将等待页面稳定后再填入图片和指令。请在 ChatGPT 页面确认后手动发送；如果没有出现图片，请回到本页下载图片手动上传。', 'info');
+  pollChatGptStatus(response.jobId);
+}
+
+/* ── ChatGPT Assist event listeners ──────────────────── */
+
+if (elements.chatgptSend) {
+  elements.chatgptSend.addEventListener('click', () => {
+    sendToChatGpt().catch(error => {
+      showAssistStatus(`自动发送失败：${error.message}`, 'error');
+    });
+  });
+}
+
+if (elements.chatgptDownloadImage) {
+  elements.chatgptDownloadImage.addEventListener('click', () => {
+    if (!currentAssistImage) {
+      showAssistStatus('图片还没有准备好。请重新分析。', 'warning');
+      return;
+    }
+    try {
+      downloadPreparedImage(currentAssistImage);
+      showAssistStatus('图片已开始下载。', 'success');
+    } catch (error) {
+      showAssistStatus('图片下载失败。你可以重新打开结果页，或改用框选截图。', 'error');
+    }
+  });
+}
+
+if (elements.chatgptCopyInstruction) {
+  elements.chatgptCopyInstruction.addEventListener('click', () => {
+    copyTextWithFeedback(elements.chatgptCopyInstruction, currentAssistInstruction).then(copied => {
+      if (!copied) {
+        showAssistStatus('浏览器阻止了自动复制。请手动选中下方指令复制。', 'warning');
+      }
+    });
+  });
+}
+
+if (elements.chatgptOpen) {
+  elements.chatgptOpen.addEventListener('click', () => {
+    try {
+      openChatGpt();
+      showAssistStatus('已打开 ChatGPT。请上传下载的图片并粘贴指令。', 'info');
+    } catch (error) {
+      showAssistStatus('无法自动打开 ChatGPT。请手动访问 https://chatgpt.com/。', 'error');
+    }
+  });
+}
+
+if (elements.chatgptCopyOpen) {
+  elements.chatgptCopyOpen.addEventListener('click', async () => {
+    let copied = true;
+    try {
+      await navigator.clipboard.writeText(currentAssistInstruction || '');
+    } catch {
+      copied = false;
+    }
+    try {
+      openChatGpt();
+      showAssistStatus(copied ? '已复制指令并打开 ChatGPT。请上传下载的图片。' : '已打开 ChatGPT，但浏览器阻止了自动复制。请手动复制下方指令。', copied ? 'info' : 'warning');
+    } catch {
+      showAssistStatus(copied ? '指令已复制，但无法自动打开 ChatGPT。请手动访问 https://chatgpt.com/。' : '浏览器阻止了自动复制，也无法自动打开 ChatGPT。请手动复制指令并访问 https://chatgpt.com/。', 'error');
+    }
+  });
 }
 
 async function main() {
