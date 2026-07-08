@@ -5,11 +5,14 @@
 ### Features
 - Add ChatGPT Plus Assist mode for users who have ChatGPT Plus / Pro but do not use an API key.
 - Add local assist actions to download the prepared image, copy a ChatGPT-ready instruction, and open ChatGPT.
-- Keep assist mode local-only: no chatgpt.com permission, no automatic upload, no automatic send, and no ChatGPT reply reading.
+- Add experimental ChatGPT handoff that requests optional `chatgpt.com` access only after user action, waits for the page to settle, attempts to attach the prepared image and fill the instruction, and leaves sending to the user.
+
+### Fixes
+- Stabilize ChatGPT handoff by keeping transfer payloads available until success, selecting the visible ChatGPT composer, preventing duplicate image attachments, and extending result-page status polling.
 
 ### Documentation
 - Explain API Automatic Analysis versus ChatGPT Plus Assist mode.
-- Document assist-mode privacy boundaries and manual ChatGPT web usage.
+- Document assist-mode privacy boundaries, optional ChatGPT page access, no automatic sending, and no ChatGPT reply reading.
 
 ## 0.5.1 - 2026-07-06
 
