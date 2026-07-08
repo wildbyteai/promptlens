@@ -47,4 +47,25 @@ const i18n = read('site/assets/i18n.js');
 assert.match(i18n, /PromptLens — Reverse image prompts and visual marketing diagnosis/);
 assert.match(i18n, /PromptLens — 图片反推提示词与视觉营销诊断/);
 
+const readmeEn = read('README.md');
+const readmeZhCn = read('README.zh-CN.md');
+const readmeZhTw = read('README.zh-TW.md');
+const security = read('SECURITY.md');
+const privacyPractices = read('docs/chrome-web-store/privacy-practices.md');
+
+assert.match(readmeEn, /implemented v0\.6\.0:[\s\S]*ChatGPT Plus Assist[\s\S]*experimental ChatGPT handoff/i);
+assert.match(readmeEn, /wait for the ChatGPT page to settle[\s\S]*attempt to attach the image and fill the instruction/i);
+assert.match(readmeZhCn, /已落地到 v0\.6\.0：[\s\S]*ChatGPT Plus 辅助模式[\s\S]*实验性 ChatGPT 交接/);
+assert.match(readmeZhCn, /等待 ChatGPT 页面稳定[\s\S]*尝试附加图片并填入指令/);
+assert.match(readmeZhTw, /已落地到 v0\.6\.0：[\s\S]*ChatGPT Plus 輔助模式[\s\S]*實驗性 ChatGPT 交接/);
+assert.match(readmeZhTw, /等待 ChatGPT 頁面穩定[\s\S]*嘗試附加圖片並填入指令/);
+assert.doesNotMatch(readmeEn, /implemented v0\.5\.0:/);
+assert.doesNotMatch(readmeZhCn, /已落地到 v0\.5\.0：/);
+assert.doesNotMatch(readmeZhTw, /已落地到 v0\.5\.0：/);
+
+for (const source of [security, privacyPractices]) {
+  assert.match(source, /可选的 `(?:https:\/\/)?chatgpt\.com(?:\/\*)?` 权限|optional (?:access to )?`(?:https:\/\/)?chatgpt\.com(?:\/\*)?`/i);
+  assert.doesNotMatch(source, /不新增 `chatgpt\.com` 权限|does not add `chatgpt\.com` permissions/i);
+}
+
 console.log('site SEO meta tests passed');

@@ -26,8 +26,8 @@ Core capabilities:
 - Choose built-in output templates or create custom templates.
 - Copy individual fields, copy all results, or download JSON and Markdown.
 - Optionally keep local text history in the browser. History is off by default and does not save image thumbnails.
-- ChatGPT Plus Assist mode: no API key needed. PromptLens prepares a local JPEG and ChatGPT-ready instruction for manual upload in ChatGPT Plus / Pro.
-- Experimental ChatGPT handoff can try to attach the prepared image and fill the instruction on chatgpt.com after optional user permission; manual fallback remains available.
+- ChatGPT Plus Assist mode: no API key needed. PromptLens prepares a local JPEG and ChatGPT-ready instruction, then can open ChatGPT, wait for the page to settle, and attempt to attach the image and fill the instruction for user review.
+- Experimental ChatGPT handoff requests optional `chatgpt.com` access only after user action, does not auto-send messages, and keeps manual download/copy fallback available.
 
 PromptLens does not provide model service access. Users need their own API service that supports vision input.
 

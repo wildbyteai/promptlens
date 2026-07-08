@@ -1269,7 +1269,7 @@ const PROMPTLENS_CHATGPT_PAYLOAD_SAVE = 'PROMPTLENS_CHATGPT_PAYLOAD_SAVE';
 const PROMPTLENS_CHATGPT_STATUS = 'PROMPTLENS_CHATGPT_STATUS';
 const CHATGPT_STATUS_KEY_PREFIX = 'chatgpt-status:';
 const CHATGPT_STATUS_POLL_INTERVAL_MS = 1000;
-const CHATGPT_STATUS_POLL_MAX_ATTEMPTS = 15;
+const CHATGPT_STATUS_POLL_MAX_ATTEMPTS = 45;
 
 function buildChatGptTransferPayload() {
   if (!currentAssistImage || !currentAssistImage.base64 || !currentAssistInstruction) {
@@ -1336,7 +1336,7 @@ async function sendToChatGpt() {
   if (!response || !response.ok) {
     throw new Error(response && response.error || '无法打开 ChatGPT。');
   }
-  showAssistStatus('已打开 ChatGPT，并尝试填入图片和指令。请在 ChatGPT 页面确认后手动发送；如果没有出现图片，请回到本页下载图片手动上传。', 'info');
+  showAssistStatus('已打开 ChatGPT，将等待页面稳定后再填入图片和指令。请在 ChatGPT 页面确认后手动发送；如果没有出现图片，请回到本页下载图片手动上传。', 'info');
   pollChatGptStatus(response.jobId);
 }
 

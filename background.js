@@ -67,13 +67,16 @@ async function saveChatGptPayload(payload) {
   return jobId;
 }
 
-async function takeChatGptPayload(jobId) {
+async function getChatGptPayload(jobId) {
   const key = chatGptPayloadKey(jobId);
   const stored = await chrome.storage.session.get({ [key]: null });
   const payload = stored[key];
-  await chrome.storage.session.remove(key);
   if (!isFreshChatGptPayload(payload)) return null;
   return payload;
+}
+
+async function clearChatGptPayload(jobId) {
+  await chrome.storage.session.remove(chatGptPayloadKey(jobId));
 }
 
 async function cleanupExpiredChatGptPayloads() {
@@ -199,7 +202,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message && message.type === 'PROMPTLENS_CHATGPT_PAYLOAD_GET') {
     (async () => {
-      const payload = await takeChatGptPayload(message.jobId);
+      const payload = await getChatGptPayload(message.jobId);
       sendResponse(payload ? { ok: true, payload } : { ok: false, status: 'payload_missing' });
     })().catch(error => sendResponse({ ok: false, error: error.message }));
     return true;
@@ -208,14 +211,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message && message.type === 'PROMPTLENS_CHATGPT_STATUS') {
     (async () => {
       const jobId = String(message.jobId || 'unknown');
+      const status = String(message.status || 'unknown');
       await chrome.storage.session.set({
         [chatGptStatusKey(jobId)]: {
           jobId,
-          status: String(message.status || 'unknown'),
+          status,
           message: String(message.message || ''),
           createdAt: Date.now()
         }
       });
+      if (status === 'success_instruction_and_image') {
+        await clearChatGptPayload(jobId);
+      }
       sendResponse({ ok: true });
     })().catch(error => sendResponse({ ok: false, error: error.message }));
     return true;

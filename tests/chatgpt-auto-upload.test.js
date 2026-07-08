@@ -62,6 +62,10 @@ for (const token of [
 // Task 3: background payload storage and injection orchestration
 assert.match(backgroundJs, /const CHATGPT_PAYLOAD_PREFIX = 'chatgpt-transfer:'/);
 assert.match(backgroundJs, /const CHATGPT_PAYLOAD_TTL_MS = 15 \* 60 \* 1000/);
+assert.match(backgroundJs, /function getChatGptPayload\(jobId\)[\s\S]*chrome\.storage\.session\.get\(\{ \[key\]: null \}\)[\s\S]*isFreshChatGptPayload/);
+assert.doesNotMatch(backgroundJs, /function getChatGptPayload\(jobId\)[\s\S]*chrome\.storage\.session\.remove\(key\)[\s\S]*return payload/);
+assert.match(backgroundJs, /function clearChatGptPayload\(jobId\)[\s\S]*chrome\.storage\.session\.remove\(chatGptPayloadKey\(jobId\)\)/);
+assert.match(backgroundJs, /status === 'success_instruction_and_image'[\s\S]*clearChatGptPayload\(jobId\)/);
 assert.match(backgroundJs, /chrome\.tabs\.create\(\{ url: `https:\/\/chatgpt\.com\/\?promptlensJob=\$\{encodeURIComponent\(jobId\)\}` \}\)/);
 assert.match(backgroundJs, /chrome\.scripting\.executeScript\(\{[\s\S]*files: \['chatgpt-bridge\.js'\]/);
 
