@@ -53,15 +53,33 @@ const i18n = require('../i18n.js');
         assert.equal(compiled.schemaId, 'marketing_v1');
         assert.match(apiPrompt, /"marketing_diagnosis"/);
         assert.match(assistPrompt, outputLanguage === 'en' ? /Owner-friendly summary/ : /老板能看懂的摘要/);
+        assert.match(
+          assistPrompt,
+          outputLanguage === 'en'
+            ? /Negative Prompt rules:/
+            : /反向提示词（Negative Prompt）要求：/
+        );
       } else if (template.id === 'concise') {
         assert.equal(compiled.schemaId, 'standard_concise_v1');
         assert.doesNotMatch(apiPrompt, /"prompt_variants"/);
         assert.doesNotMatch(assistPrompt, /Three distinct variants|3 个不同方向的变体/);
         assert.match(assistPrompt, outputLanguage === 'en' ? /Use this Markdown structure/ : /请输出以下 Markdown 结构/);
+        assert.match(
+          assistPrompt,
+          outputLanguage === 'en'
+            ? /4\. Negative Prompt in English/
+            : /4\. 反向提示词（Negative Prompt）/
+        );
       } else {
         assert.equal(compiled.schemaId, 'standard_v1');
         assert.match(apiPrompt, /"prompt_variants"/);
         assert.match(assistPrompt, outputLanguage === 'en' ? /Chinese Prompt in Simplified Chinese/ : /中文提示词/);
+        assert.match(
+          assistPrompt,
+          outputLanguage === 'en'
+            ? /4\. Negative Prompt in English/
+            : /4\. 反向提示词（Negative Prompt）/
+        );
       }
     }
   }

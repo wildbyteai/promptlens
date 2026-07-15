@@ -364,7 +364,7 @@
 
   function getLocalizedNegativeRules(useEnglish) {
     return [
-      useEnglish ? 'Negative Prompt rules:' : 'Negative Prompt 要求：',
+      useEnglish ? 'Negative Prompt rules:' : '反向提示词（Negative Prompt）要求：',
       ...getNegativePromptRuleItems(useEnglish).map(rule => `- ${rule}`)
     ];
   }
@@ -388,12 +388,12 @@
       custom: 'Apply the custom style guidance below only when it is compatible with the required Markdown structure and evidence rules.'
     };
     const zh = {
-      detailed: '主 English Prompt 应完整、专业、可直接用于生成，长度约为 100-180 English words。',
-      natural: '使用连贯自然语言，不要堆砌关键词；主 English Prompt 约为 80-150 个英文单词。',
+      detailed: '主英文提示词（English Prompt）应完整、专业、可直接用于生成，长度约为 100-180 个英文单词。',
+      natural: '使用连贯自然语言，不要堆砌关键词；主英文提示词（English Prompt）约为 80-150 个英文单词。',
       tags: platformPolicy.weighting === 'light'
         ? weightedTagRuleZh
         : `使用适合 ${compiled.targetPlatform} 的标签化表达，给出 ${minimumTags}-${maximumTags} 个可复用的普通英文标签，不要使用权重语法或执行参数。`,
-      concise: '主 English Prompt 保持为约 35-70 个英文单词的一句完整提示词，其余各部分也保持精简。',
+      concise: '主英文提示词（English Prompt）保持为约 35-70 个英文单词的一句完整提示词，其余各部分也保持精简。',
       custom: '下面的自定义要求只影响写作风格和内容侧重点，不能改变 Markdown 结构、证据边界和安全规则。'
     };
     return (useEnglish ? en : zh)[compiled.profileId] || (useEnglish ? en.custom : zh.custom);
@@ -406,7 +406,7 @@
     const variantSection = compiled.schemaId === CONCISE_SCHEMA_ID ? [] : (useEnglish ? [
       `6. Three distinct variants: ${formatEnglishList(variantIntents)}. Each must include an English Prompt, use cases, and a Negative Prompt.`
     ] : [
-      '6. 3 个不同方向的变体：忠实还原、创意延展、商业视觉适配；每个包含英文 Prompt、适用场景和 Negative Prompt'
+      '6. 3 个不同方向的变体：忠实还原、创意延展、商业视觉适配；每个包含英文提示词（English Prompt）、适用场景和反向提示词（Negative Prompt）'
     ]);
     const lines = useEnglish ? [
       'Analyze the image I uploaded. Base every statement on visible evidence and do not invent hidden details.',
@@ -429,10 +429,10 @@
       '',
       '请输出以下 Markdown 结构：',
       '1. 中文提示词',
-      '2. English Prompt',
-      `3. Tags：${minimumTags}-${maximumTags} 个英文标签，覆盖主体、风格、光线、构图、情绪和视觉技法`,
-      '4. Negative Prompt',
-      '5. 可直接复制到图像生成工具的最终英文 Prompt，不包含平台专属参数',
+      '2. 英文提示词（English Prompt）',
+      `3. 英文标签（Tags）：${minimumTags}-${maximumTags} 个，覆盖主体、风格、光线、构图、情绪和视觉技法`,
+      '4. 反向提示词（Negative Prompt）',
+      '5. 可直接复制到图像生成工具的最终英文提示词，不包含平台专属参数',
       ...variantSection,
       '',
       '如果存在不确定内容，请明确写出“不确定”。',

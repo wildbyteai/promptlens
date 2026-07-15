@@ -40,7 +40,12 @@ const compiler = require('../prompt-compiler.js');
 
   const chatGptPrompt = compiler.renderChatGptPrompt(compiledDetailed);
   assert.match(chatGptPrompt, /请输出以下 Markdown 结构/);
-  assert.match(chatGptPrompt, /100-180 English words/);
+  assert.match(chatGptPrompt, /2\. 英文提示词（English Prompt）/);
+  assert.match(chatGptPrompt, /3\. 英文标签（Tags）：/);
+  assert.match(chatGptPrompt, /4\. 反向提示词（Negative Prompt）/);
+  assert.match(chatGptPrompt, /反向提示词（Negative Prompt）要求：/);
+  assert.doesNotMatch(chatGptPrompt, /\n4\. Negative Prompt\n/);
+  assert.match(chatGptPrompt, /100-180 个英文单词/);
   assert.match(chatGptPrompt, /目标图像有意使用运动模糊、浅景深、颗粒、文字、不对称或风格化时/);
   assert.match(chatGptPrompt, /避免使用与该图片类型无关的通用套话/);
   assert.doesNotMatch(chatGptPrompt, /Return valid JSON|prompt_zh|json_prompt|prompt_variants/);
@@ -55,6 +60,14 @@ const compiler = require('../prompt-compiler.js');
   assert.equal(genericTags.targetPlatform, 'generic');
   assert.doesNotMatch(compiler.renderApiPrompt(genericTags), /\(masterpiece:1\.1\)/);
   assert.match(compiler.renderApiPrompt(genericTags), /Do not use weighted-tag syntax/);
+
+  const englishDetailedAssist = compiler.renderChatGptPrompt(compiler.compile(detailed, {
+    outputLanguage: 'en'
+  }));
+  assert.match(englishDetailedAssist, /2\. English Prompt/);
+  assert.match(englishDetailedAssist, /3\. Tags:/);
+  assert.match(englishDetailedAssist, /4\. Negative Prompt in English/);
+  assert.doesNotMatch(englishDetailedAssist, /反向提示词/);
 
   const stableDiffusionTags = compiler.compile({
     id: 'tags',
@@ -166,7 +179,7 @@ const compiler = require('../prompt-compiler.js');
     ].join('\n')
   });
   const copiedAssist = compiler.renderChatGptPrompt(copiedDetailed);
-  assert.match(copiedAssist, /100-180 English words/);
+  assert.match(copiedAssist, /100-180 个英文单词/);
   assert.match(copiedAssist, /Use restrained watercolor language\./);
   assert.doesNotMatch(copiedAssist, /prompt_en|json_prompt/);
 
