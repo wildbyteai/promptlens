@@ -184,9 +184,9 @@
     } catch {}
   }
 
-  function getVerifiedTransferStatus(instructionInput, imageInput, instruction) {
+  function getVerifiedTransferStatus(instructionInput, imageInput, instruction, imageAttached = false) {
     const textOk = getInstructionText(instructionInput) === instruction;
-    const imageOk = Boolean(imageInput && imageInput.files && imageInput.files.length > 0);
+    const imageOk = imageAttached || Boolean(imageInput && imageInput.files && imageInput.files.length > 0);
     if (textOk && imageOk) return STATUS.SUCCESS_INSTRUCTION_AND_IMAGE;
     if (textOk) return STATUS.PARTIAL_SUCCESS_INSTRUCTION_ONLY;
     if (imageOk) return STATUS.INSTRUCTION_FAILED;
@@ -198,27 +198,34 @@
     const intervalMs = options.intervalMs || TRANSFER_RETRY_INTERVAL_MS;
     const instruction = payload.instruction || '';
     let lastStatus = STATUS.IMAGE_ATTACH_FAILED;
-    let imageAttachAttempted = false;
-    let attachedImageInput = null;
+    let targetInstructionInput = null;
 
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
       const instructionInput = await waitForInstructionInput(doc, { maxAttempts: 2, intervalMs });
       if (!instructionInput) {
         lastStatus = STATUS.INPUT_NOT_FOUND;
       } else {
-        fillInstructionInput(instructionInput, instruction);
-        const imageInput = attachedImageInput || await waitForImageInput(doc, { maxAttempts: 2, intervalMs });
+        if (targetInstructionInput && instructionInput !== targetInstructionInput) {
+          return lastStatus;
+        }
+        targetInstructionInput = instructionInput;
+        if (getInstructionText(instructionInput) !== instruction) {
+          fillInstructionInput(instructionInput, instruction);
+        }
+        lastStatus = getInstructionText(instructionInput) === instruction ? STATUS.IMAGE_INPUT_NOT_FOUND : STATUS.INPUT_NOT_FOUND;
+        const imageInput = await waitForImageInput(doc, { maxAttempts: 2, intervalMs });
+        if (findInstructionInput(doc) !== targetInstructionInput) {
+          return lastStatus;
+        }
         if (!imageInput) {
           lastStatus = getInstructionText(instructionInput) === instruction ? STATUS.IMAGE_INPUT_NOT_FOUND : STATUS.INPUT_NOT_FOUND;
         } else {
-          if (!imageAttachAttempted) {
-            attachImageToInput(imageInput, payload);
-            imageAttachAttempted = true;
-            attachedImageInput = imageInput;
+          const imageAttached = attachImageToInput(imageInput, payload) === 'attached';
+          if (getInstructionText(instructionInput) !== instruction) {
+            fillInstructionInput(instructionInput, instruction);
           }
-          fillInstructionInput(instructionInput, instruction);
-          lastStatus = getVerifiedTransferStatus(instructionInput, imageInput, instruction);
-          if (lastStatus === STATUS.SUCCESS_INSTRUCTION_AND_IMAGE) return lastStatus;
+          lastStatus = getVerifiedTransferStatus(instructionInput, imageInput, instruction, imageAttached);
+          return lastStatus;
         }
       }
       if (attempt < maxAttempts - 1) await wait(intervalMs);

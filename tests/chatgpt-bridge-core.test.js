@@ -179,6 +179,45 @@ function makeDelayedFileInputDoc(readyAfterFileQueries = 3) {
   };
 }
 
+function makeComposerReplacementDoc(options = {}) {
+  const makeComposer = () => ({
+    value: '',
+    events: [],
+    dispatchEvent(event) { this.events.push(event.type); },
+    focus() { this.focused = true; }
+  });
+  const firstComposer = makeComposer();
+  const replacementComposer = makeComposer();
+  const imageInput = {
+    type: 'file',
+    accept: 'image/*',
+    files: [],
+    events: [],
+    dispatchEvent(event) { this.events.push(event.type); }
+  };
+  return {
+    firstComposer,
+    replacementComposer,
+    imageInput,
+    composer: firstComposer,
+    replaceComposer() { this.composer = replacementComposer; },
+    querySelector(selector) {
+      if (selector === 'textarea') return this.composer;
+      if (selector === 'input[type="file"]') {
+        return options.showImageAfterReplacement && this.composer === replacementComposer ? imageInput : null;
+      }
+      return null;
+    },
+    querySelectorAll(selector) {
+      if (selector === 'textarea') return [this.composer];
+      if (selector === 'input[type="file"]') {
+        return options.showImageAfterReplacement && this.composer === replacementComposer ? [imageInput] : [];
+      }
+      return [];
+    }
+  };
+}
+
 const context = createContext();
 const bridge = context.PromptLensChatGptBridge;
 
@@ -299,6 +338,55 @@ assert.deepEqual(visibleComposerDoc.execCommands, [{ command: 'insertText', valu
   assert.equal(fileInput.files.length, 1);
   assert.equal(uploadAttempts, 2);
   assert.ok(statuses.includes('success_instruction_and_image'));
+
+  const replacementDoc = makeComposerReplacementDoc();
+  let transferWaits = 0;
+  const replacementContext = createContext({
+    setTimeout: callback => {
+      transferWaits += 1;
+      if (transferWaits === 1) replacementDoc.replaceComposer();
+      callback();
+      return 1;
+    }
+  });
+  const replacementStatus = await replacementContext.PromptLensChatGptBridge.completeTransfer(replacementDoc, {
+    imageBase64: Buffer.from('fake-image').toString('base64'),
+    mimeType: 'image/jpeg',
+    filename: 'promptlens-test.jpg',
+    instruction: 'do not reinsert after submit'
+  }, { maxAttempts: 2, intervalMs: 1 });
+  assert.equal(replacementStatus, 'image_input_not_found');
+  assert.equal(replacementDoc.firstComposer.value, 'do not reinsert after submit');
+  assert.equal(
+    replacementDoc.replacementComposer.value,
+    '',
+    'an old transfer must not fill the new composer after the user submits the first one'
+  );
+
+  const replacementWithImageDoc = makeComposerReplacementDoc({ showImageAfterReplacement: true });
+  let imageWaits = 0;
+  const replacementWithImageContext = createContext({
+    setTimeout: callback => {
+      imageWaits += 1;
+      if (imageWaits === 1) replacementWithImageDoc.replaceComposer();
+      callback();
+      return 1;
+    }
+  });
+  const replacementWithImageStatus = await replacementWithImageContext.PromptLensChatGptBridge.completeTransfer(replacementWithImageDoc, {
+    imageBase64: Buffer.from('fake-image').toString('base64'),
+    mimeType: 'image/jpeg',
+    filename: 'promptlens-test.jpg',
+    instruction: 'do not attach after submit'
+  }, { maxAttempts: 2, intervalMs: 1 });
+  assert.equal(replacementWithImageStatus, 'image_input_not_found');
+  assert.equal(replacementWithImageDoc.replacementComposer.value, '');
+  assert.equal(replacementWithImageDoc.imageInput.files.length, 0);
+  assert.deepEqual(
+    replacementWithImageDoc.imageInput.events,
+    [],
+    'an old transfer must not attach its image to the replacement composer'
+  );
 
   console.log('chatgpt bridge core tests passed');
 })().catch(error => {

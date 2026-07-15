@@ -19,6 +19,7 @@
 - Publish only the complete Simplified Chinese and English extension locales; Traditional Chinese documentation remains separate from the extension UI.
 - Prefer an explicit template type over the legacy marketing-template ID fallback.
 - Localize Chinese ChatGPT Assist section names such as English Prompt, Tags, and Negative Prompt while retaining the English professional terms in parentheses.
+- Stop a stale ChatGPT transfer retry from inserting the same instruction into the new composer after the user submits the first message.
 
 ### Observability
 - Store Prompt Hash, Schema, Compiler, template version, target platform, model adapter, and validation metadata on new history records while keeping old records compatible.
