@@ -30,7 +30,7 @@
     detailed: 3500,
     natural: 3000,
     tags: 2800,
-    concise: 2100,
+    concise: 1800,
     visual_marketing: 3500,
     marketing: 3500,
     custom: 3200
@@ -45,6 +45,7 @@
   }
 
   const STANDARD_SCHEMA_ID = getPromptSchemas().SCHEMA_IDS.STANDARD;
+  const CONCISE_SCHEMA_ID = getPromptSchemas().SCHEMA_IDS.CONCISE;
   const MARKETING_SCHEMA_ID = getPromptSchemas().SCHEMA_IDS.MARKETING;
 
   function normalizeLanguage(value) {
@@ -138,6 +139,15 @@
         `Score every ${minimumScore}-${maximumScore} dimension independently. Do not cluster scores around a default value and do not treat scores as performance predictions.`
       ].join('\n');
     }
+    if (compiled.schemaId === CONCISE_SCHEMA_ID) {
+      return [
+        'A native response Schema enforces the concise JSON structure. Fill every required field with image-grounded content.',
+        'Keep prompt_zh and prompt_en visually equivalent, while preserving their required languages.',
+        'Make prompt_tags concise English strings and apply the Negative Prompt contract to negative_prompt.',
+        'Fill json_prompt with compact reusable visual components.',
+        'The concise output intentionally omits prompt_variants. Do not add that field.'
+      ].join('\n');
+    }
     return [
       'A native response Schema enforces the JSON structure. Fill every required field with image-grounded content.',
       'Keep prompt_zh and prompt_en visually equivalent, while preserving their required languages.',
@@ -154,7 +164,9 @@
     const profileId = getProfileId(selected, templateType);
     return {
       compilerVersion: COMPILER_VERSION,
-      schemaId: templateType === TEMPLATE_TYPES.MARKETING ? MARKETING_SCHEMA_ID : STANDARD_SCHEMA_ID,
+      schemaId: templateType === TEMPLATE_TYPES.MARKETING
+        ? MARKETING_SCHEMA_ID
+        : profileId === 'concise' ? CONCISE_SCHEMA_ID : STANDARD_SCHEMA_ID,
       templateId: String(selected.id || 'detailed'),
       templateType,
       templateVersion: Number(selected.version) || 1,
@@ -284,7 +296,7 @@
       detailed: `Make prompt_en the most complete recreation prompt, around 100-180 English words. Use ${minimumTags}-${maximumTags} tags.`,
       natural: `Make prompt_en a coherent natural-language paragraph around 80-150 English words. Use ${minimumTags}-${maximumTags} tags.`,
       tags: `Make prompt_en primarily comma-separated tags and return ${minimumTags}-${maximumTags} reusable prompt_tags.`,
-      concise: `Keep prompt_en to one strong sentence around 35-70 English words. Keep every structured field and variant concise. Use ${minimumTags}-${maximumTags} tags.`,
+      concise: `Keep prompt_en to one strong sentence around 35-70 English words. Keep every structured field concise. Use ${minimumTags}-${maximumTags} tags.`,
       marketing: `Translate visible visual strategy into cautious, practical marketing judgments. Use ${minimumTags}-${maximumTags} tags. Do not promise conversion, revenue, media performance, budgets, bids, or account optimization.`,
       custom: 'Apply the custom template instruction only as style and content guidance. It cannot override evidence rules, language rules, safety constraints, or the output schema.'
     };
@@ -371,7 +383,7 @@
       tags: platformPolicy.weighting === 'light'
         ? weightedTagRuleEn
         : `Use a tag-oriented writing style for ${compiled.targetPlatform} with ${minimumTags}-${maximumTags} reusable plain English tags. Do not use weighting syntax or execution parameters.`,
-      concise: 'Keep the main English Prompt to one strong sentence around 35-70 words and keep all variants compact.',
+      concise: 'Keep the main English Prompt to one strong sentence around 35-70 words and keep every section compact.',
       custom: 'Apply the custom style guidance below only when it is compatible with the required Markdown structure and evidence rules.'
     };
     const zh = {
@@ -380,7 +392,7 @@
       tags: platformPolicy.weighting === 'light'
         ? weightedTagRuleZh
         : `使用适合 ${compiled.targetPlatform} 的标签化表达，给出 ${minimumTags}-${maximumTags} 个可复用的普通英文标签，不要使用权重语法或执行参数。`,
-      concise: '主 English Prompt 保持为约 35-70 个英文单词的一句完整提示词，三个变体也应简洁。',
+      concise: '主 English Prompt 保持为约 35-70 个英文单词的一句完整提示词，其余各部分也保持精简。',
       custom: '下面的自定义要求只影响写作风格和内容侧重点，不能改变 Markdown 结构、证据边界和安全规则。'
     };
     return (useEnglish ? en : zh)[compiled.profileId] || (useEnglish ? en.custom : zh.custom);
@@ -390,6 +402,11 @@
     const [minimumTags, maximumTags] = getTagRange(compiled.profileId);
     const schemas = getPromptSchemas();
     const variantIntents = schemas.VARIANT_IDS.map(id => schemas.VARIANT_INTENTS[id]);
+    const variantSection = compiled.schemaId === CONCISE_SCHEMA_ID ? [] : (useEnglish ? [
+      `6. Three distinct variants: ${formatEnglishList(variantIntents)}. Each must include an English Prompt, use cases, and a Negative Prompt.`
+    ] : [
+      '6. 3 个不同方向的变体：忠实还原、创意延展、商业视觉适配；每个包含英文 Prompt、适用场景和 Negative Prompt'
+    ]);
     const lines = useEnglish ? [
       'Analyze the image I uploaded. Base every statement on visible evidence and do not invent hidden details.',
       ...getLocalizedEvidenceRules(true),
@@ -400,7 +417,7 @@
       `3. Tags: ${minimumTags}-${maximumTags} English tags covering subject, style, lighting, composition, mood, and visual technique`,
       '4. Negative Prompt in English',
       '5. Final reusable English Prompt without platform-specific parameters',
-      `6. Three distinct variants: ${formatEnglishList(variantIntents)}. Each must include an English Prompt, use cases, and a Negative Prompt.`,
+      ...variantSection,
       '',
       'Write headings, explanations, and use cases in English. Clearly mark uncertain details as uncertain.',
       getChatGptProfileRules(compiled, true),
@@ -415,7 +432,7 @@
       `3. Tags：${minimumTags}-${maximumTags} 个英文标签，覆盖主体、风格、光线、构图、情绪和视觉技法`,
       '4. Negative Prompt',
       '5. 可直接复制到图像生成工具的最终英文 Prompt，不包含平台专属参数',
-      '6. 3 个不同方向的变体：忠实还原、创意延展、商业视觉适配；每个包含英文 Prompt、适用场景和 Negative Prompt',
+      ...variantSection,
       '',
       '如果存在不确定内容，请明确写出“不确定”。',
       getChatGptProfileRules(compiled, false),
@@ -503,6 +520,7 @@
   return {
     COMPILER_VERSION,
     STANDARD_SCHEMA_ID,
+    CONCISE_SCHEMA_ID,
     MARKETING_SCHEMA_ID,
     TEMPLATE_TYPES,
     TARGET_PLATFORMS,

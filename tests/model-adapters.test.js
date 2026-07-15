@@ -52,6 +52,9 @@ assert.equal(schemaRequest.body.response_format.json_schema.schema.properties.js
 const marketingSchema = adapters.getJsonSchema('marketing_v1');
 assert.ok(marketingSchema.required.includes('marketing_diagnosis'));
 assert.equal(marketingSchema.properties.marketing_diagnosis.required.includes('next_actions'), true);
+const conciseSchema = adapters.getJsonSchema('standard_concise_v1');
+assert.equal(conciseSchema.required.includes('prompt_variants'), false);
+assert.equal(Object.hasOwn(conciseSchema.properties, 'prompt_variants'), false);
 assert.deepEqual(adapters.getJsonSchema('standard_v1'), schemas.getJsonSchema('standard_v1'));
 
 const parsed = adapters.parseResponse('openai_compatible', {

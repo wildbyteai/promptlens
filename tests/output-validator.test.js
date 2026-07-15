@@ -78,6 +78,22 @@ const weakNegative = validateOutput(weakNegativeResult, {
 assert.equal(weakNegative.status, 'partial_success');
 assert.ok(weakNegative.warnings.some(item => item.code === 'negative_term_count'));
 
+const conciseResult = standardResult();
+delete conciseResult.prompt_variants;
+assert.equal(validateOutput(conciseResult, {
+  schemaId: 'standard_concise_v1',
+  profileId: 'concise'
+}).status, 'success');
+assert.throws(
+  () => validateOutput(standardResult(), {
+    schemaId: 'standard_concise_v1',
+    profileId: 'concise'
+  }),
+  error => error instanceof OutputValidationError
+    && error.code === 'unexpected_field'
+    && error.path === 'prompt_variants'
+);
+
 assert.throws(
   () => validateOutput({ ...standardResult(), prompt_en: '' }, { schemaId: 'standard_v1' }),
   error => error instanceof OutputValidationError && error.path === 'prompt_en'

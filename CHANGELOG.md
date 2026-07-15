@@ -8,6 +8,7 @@
 - Add Native JSON Schema, per-template Token budgets, truncation detection, and partial-success warnings.
 - Add Anthropic Messages API `tool_use` support and Midjourney as a target-platform option.
 - Centralize all structured output contracts in one Prompt Schema module shared by the compiler, adapters, and validator.
+- Give Quick Copy a dedicated concise Schema that omits prompt variants and reduces its output Token budget.
 
 ### Fixes
 - Preserve the marketing template type when duplicating the visual marketing template.
@@ -15,6 +16,7 @@
 - Stop appending API Schema instructions directly to ChatGPT Assist Markdown prompts.
 - Increment custom template versions and modification timestamps when saving edits.
 - Warn before saving a custom instruction that attempts to override the fixed format or Schema, requiring a second confirmation click.
+- Publish only the complete Simplified Chinese and English extension locales; Traditional Chinese documentation remains separate from the extension UI.
 
 ### Observability
 - Store Prompt Hash, Schema, Compiler, template version, target platform, model adapter, and validation metadata on new history records while keeping old records compatible.

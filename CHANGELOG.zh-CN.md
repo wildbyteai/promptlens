@@ -8,6 +8,7 @@
 - 新增 Native JSON Schema、分模板 Token 预算、输出截断识别和部分成功提示。
 - 新增 Anthropic Messages API `tool_use` 支持，并加入 Midjourney 目标平台选项。
 - 将结构化输出契约集中到单一 Prompt Schema 模块，供 Compiler、Adapter 和 Validator 共享。
+- 为快速复制模板增加独立精简 Schema，省略专业变体并降低输出 Token 预算。
 
 ### 修复
 - 修复复制视觉营销模板后退化为普通模板的问题。
@@ -15,6 +16,7 @@
 - 移除 ChatGPT Assist 直接拼接 API Schema instruction 导致的格式冲突。
 - 自定义模板保存时递增版本并更新修改时间。
 - 自定义指令试图覆盖固定格式或 Schema 时，改为保存前警告，并要求再次点击确认。
+- 扩展运行时只发布完整的简体中文和英文目录；繁体中文文档继续独立保留，不作为扩展界面语言开放。
 
 ### 可观测性
 - 新历史记录保存 Prompt Hash、Schema、Compiler、模板版本、平台、模型适配器和校验状态元数据；旧记录保持兼容。

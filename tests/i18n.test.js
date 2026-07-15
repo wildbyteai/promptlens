@@ -5,6 +5,11 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const zhCatalog = JSON.parse(fs.readFileSync(path.join(root, '_locales/zh_CN/messages.json'), 'utf8'));
 const enCatalog = JSON.parse(fs.readFileSync(path.join(root, '_locales/en/messages.json'), 'utf8'));
+const extensionLocaleFolders = fs.readdirSync(path.join(root, '_locales'), { withFileTypes: true })
+  .filter(entry => entry.isDirectory())
+  .map(entry => entry.name)
+  .sort();
+assert.deepEqual(extensionLocaleFolders, ['en', 'zh_CN'], 'the extension must publish only complete English and Simplified Chinese locales');
 
 function placeholders(message) {
   return [...String(message).matchAll(/\{\{([A-Z0-9_]+)\}\}/gi)]

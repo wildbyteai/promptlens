@@ -35,6 +35,7 @@ require('../templates.js');
   const builtIns = templates.listBuiltInTemplates();
   const marketing = builtIns.find(item => item.id === templates.MARKETING_TEMPLATE_ID);
   const detailed = builtIns.find(item => item.id === 'detailed');
+  const concise = builtIns.find(item => item.id === 'concise');
 
   assert.equal(marketing.templateType, 'marketing');
   assert.equal(detailed.templateType, 'standard');
@@ -45,6 +46,11 @@ require('../templates.js');
   assert.equal(templates.isMarketingDiagnosisTemplate(marketingCopy), true);
   assert.match(templates.buildFinalPrompt(marketingCopy), /"marketing_diagnosis": \{/);
   assert.doesNotMatch(templates.buildFinalPrompt(marketingCopy), /"prompt_variants": \[/);
+
+  const conciseCopy = await templates.duplicateTemplate(concise.id);
+  assert.equal(conciseCopy.templateType, 'standard');
+  assert.equal(conciseCopy.templateProfile, 'concise');
+  assert.doesNotMatch(templates.buildFinalPrompt(conciseCopy), /"prompt_variants"/);
 
   const standardCustom = await templates.createCustomTemplate({
     name: 'Standard custom',

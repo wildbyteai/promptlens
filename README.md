@@ -32,7 +32,7 @@ Its goal is to stay simple, transparent, and self-hosting-friendly: no login, no
 - **Structured results**: Chinese prompt, English Prompt, Tags, Negative Prompt, JSON Prompt, and Raw JSON.
 - **Professional prompt variants**: generates recreate, creative extension, and commercial visual prompt cards for professional design workflows.
 - **Visual marketing diagnosis**: optional business-focused analysis for commercial visuals, with owner-friendly summary, marketing diagnosis, low-cost adaptation brief, and Markdown case export.
-- **Built-in output templates**: Detailed Analysis, Natural Language, Weighted Tags, and Quick Copy.
+- **Built-in output templates**: Detailed Analysis, Natural Language, Weighted Tags, and Quick Copy. Quick Copy uses a smaller output contract without professional variants to reduce Token usage.
 - **Custom templates**: copy built-ins, create, edit, delete, import, and export custom templates.
 - **ChatGPT Plus Assist mode**: for users with ChatGPT Plus / Pro but no API key; PromptLens prepares the image and instruction, then can open ChatGPT, wait for the page to settle, and attempt to attach the image and fill the instruction for you to review and send manually.
 - **Provider presets**: OpenAI, Anthropic, DeepSeek, Alibaba, SiliconFlow, Groq, OpenRouter, Ollama, and Custom.

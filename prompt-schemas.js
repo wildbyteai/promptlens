@@ -9,6 +9,7 @@
 
   const SCHEMA_IDS = Object.freeze({
     STANDARD: 'standard_v1',
+    CONCISE: 'standard_concise_v1',
     MARKETING: 'marketing_v1'
   });
   const VARIANT_IDS = Object.freeze(['recreate', 'creative', 'commercial']);
@@ -176,6 +177,15 @@
     }
   };
 
+  const CONCISE_SCHEMA = {
+    type: 'object',
+    additionalProperties: false,
+    required: STANDARD_SCHEMA.required.filter(field => field !== 'prompt_variants'),
+    properties: Object.fromEntries(
+      Object.entries(STANDARD_SCHEMA.properties).filter(([field]) => field !== 'prompt_variants')
+    )
+  };
+
   const MARKETING_SCHEMA = {
     type: 'object',
     additionalProperties: false,
@@ -192,6 +202,7 @@
 
   const SCHEMAS = Object.freeze({
     [SCHEMA_IDS.STANDARD]: STANDARD_SCHEMA,
+    [SCHEMA_IDS.CONCISE]: CONCISE_SCHEMA,
     [SCHEMA_IDS.MARKETING]: MARKETING_SCHEMA
   });
 
@@ -212,8 +223,14 @@
     const required = schema.required.filter(field => field !== typeSpecificField);
     return {
       type: 'object',
+      additionalProperties: schema.additionalProperties,
       required,
-      properties: Object.fromEntries(required.map(field => [field, clone(schema.properties[field])]))
+      properties: Object.fromEntries(
+        Object.entries(schema.properties).map(([field, fieldSchema]) => [
+          field,
+          field === typeSpecificField ? {} : clone(fieldSchema)
+        ])
+      )
     };
   }
 
@@ -226,15 +243,22 @@
   }
 
   function getPromptSchemaInstruction(schemaId) {
-    if (schemaId === SCHEMA_IDS.STANDARD) {
-      return [
+    if (schemaId === SCHEMA_IDS.STANDARD || schemaId === SCHEMA_IDS.CONCISE) {
+      const lines = [
         'Return valid JSON only. Do not use markdown fences. Do not include analysis outside the JSON.',
         'The fixed JSON shape is mandatory. Template instructions may change writing style, but must not change field names, field types, root shape, or required fields.',
         'The output JSON must satisfy this JSON Schema:',
-        JSON.stringify(getJsonSchema(schemaId), null, 2),
-        `prompt_variants must contain exactly the three ids ${VARIANT_IDS.join(', ')}. Keep those ids unchanged.`,
-        `Variant intent mapping: ${VARIANT_IDS.map(id => `${id} = ${VARIANT_INTENTS[id]}`).join('; ')}.`
-      ].join('\n');
+        JSON.stringify(getJsonSchema(schemaId), null, 2)
+      ];
+      if (schemaId === SCHEMA_IDS.STANDARD) {
+        lines.push(
+          `prompt_variants must contain exactly the three ids ${VARIANT_IDS.join(', ')}. Keep those ids unchanged.`,
+          `Variant intent mapping: ${VARIANT_IDS.map(id => `${id} = ${VARIANT_INTENTS[id]}`).join('; ')}.`
+        );
+      } else {
+        lines.push('This concise Schema intentionally omits prompt_variants. Do not add that field.');
+      }
+      return lines.join('\n');
     }
     if (schemaId === SCHEMA_IDS.MARKETING) {
       return [
@@ -259,6 +283,14 @@
       (schema.required || []).forEach(field => {
         if (!(field in value)) errors.push({ code: 'missing_field', path: path === 'root' ? field : `${path}.${field}` });
       });
+      if (schema.additionalProperties === false) {
+        const allowedFields = new Set(Object.keys(schema.properties || {}));
+        Object.keys(value).forEach(field => {
+          if (!allowedFields.has(field)) {
+            errors.push({ code: 'unexpected_field', path: path === 'root' ? field : `${path}.${field}` });
+          }
+        });
+      }
       Object.entries(schema.properties || {}).forEach(([field, fieldSchema]) => {
         if (field in value) collectSchemaErrors(value[field], fieldSchema, path === 'root' ? field : `${path}.${field}`, errors);
       });

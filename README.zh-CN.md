@@ -30,7 +30,7 @@ PromptLens 是一个轻量级 Chrome MV3 图片反推提示词工具，也可以
 - **自定义模型服务**：自行配置 AI Base URL、API Key 和 Model。
 - **模型适配器**：支持 OpenAI-compatible `/chat/completions`，以及通过 `tool_use` 返回结构化结果的 Anthropic Messages API。
 - **结构化结果**：输出中文提示词、English Prompt、Tags、Negative Prompt、JSON Prompt 和 Raw JSON。
-- **内置输出模板**：提供详细分析、自然语言、标签加权、快速复制和视觉营销诊断等输出格式。
+- **内置输出模板**：提供详细分析、自然语言、标签加权、快速复制和视觉营销诊断等输出格式；快速复制使用不含专业变体的精简契约，降低 Token 消耗。
 - **视觉营销诊断**：面向商业视觉图的可选业务分析，输出老板摘要、营销诊断、低成本改编 brief 和可发布 Markdown 案例初稿。
 - **自定义模板**：支持复制内置模板、新建、编辑、删除、导入和导出自定义模板。
 - **ChatGPT Plus 辅助模式**：适合有 ChatGPT Plus / Pro 但没有 API Key 的用户；PromptLens 准备图片和指令，并可打开 ChatGPT、等待页面稳定后尝试附加图片并填入指令，供你确认后手动发送。

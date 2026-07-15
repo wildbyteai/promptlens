@@ -120,7 +120,14 @@ assert.match(markdown, /借鉴暖色生活方式产品图/);
 assert.match(markdown, /诊断仅用于营销创意参考，不代表真实投放效果/);
 
 assert.equal(normalizeSafeMarketingText('请完全复刻并 copy exactly'), '请参考视觉结构并 adapt safely');
-assert.doesNotThrow(() => validateMarketingDiagnosisResult(result));
+const validDiagnosisResult = structuredClone(result);
+validDiagnosisResult.marketing_diagnosis.marketing_diagnosis.marketing_readiness_score.dimensions.attention = 5;
+validDiagnosisResult.marketing_diagnosis.marketing_diagnosis.marketing_readiness_score.dimensions.actionability = 1;
+assert.doesNotThrow(() => validateMarketingDiagnosisResult(validDiagnosisResult));
+assert.throws(
+  () => validateMarketingDiagnosisResult(result),
+  /1-5/
+);
 assert.throws(
   () => validateMarketingDiagnosisResult({ ...result, marketing_diagnosis: {} }),
   /business_snapshot/
@@ -132,7 +139,10 @@ assert.throws(
       ...result.marketing_diagnosis,
       marketing_diagnosis: {
         ...result.marketing_diagnosis.marketing_diagnosis,
-        marketing_readiness_score: { overall: 9 }
+        marketing_readiness_score: {
+          ...result.marketing_diagnosis.marketing_diagnosis.marketing_readiness_score,
+          overall: 9
+        }
       }
     }
   }),

@@ -132,15 +132,15 @@
 
   function validateOutput(result, options = {}) {
     const schemas = getPromptSchemas();
-    const schemaId = options.schemaId === schemas.SCHEMA_IDS.MARKETING
-      ? schemas.SCHEMA_IDS.MARKETING
+    const schemaId = Object.values(schemas.SCHEMA_IDS).includes(options.schemaId)
+      ? options.schemaId
       : schemas.SCHEMA_IDS.STANDARD;
     validateCore(result, schemaId);
     const warnings = [];
     validateQualityContracts(result, { ...options, schemaId }, warnings);
     if (schemaId === schemas.SCHEMA_IDS.MARKETING) {
       validateMarketing(result);
-    } else {
+    } else if (schemaId === schemas.SCHEMA_IDS.STANDARD) {
       validateVariants(result, warnings);
     }
     return {

@@ -40,14 +40,24 @@ const i18n = require('../i18n.js');
 
       assert.match(apiPrompt, /Return valid JSON only/);
       assert.match(apiPrompt, /Negative Prompt contract/);
+      assert.match(
+        apiPrompt,
+        outputLanguage === 'en'
+          ? /Write explanatory content in English/
+          : /Write explanatory content in Simplified Chinese/
+      );
       assert.doesNotMatch(apiPrompt, /undefined|null\nnull/);
       assert.doesNotMatch(assistPrompt, /Return valid JSON|"prompt_zh"|"json_prompt"|"prompt_variants"/);
-      assert.match(assistPrompt, outputLanguage === 'en' ? /Markdown/ : /Markdown/);
 
       if (template.templateType === 'marketing') {
         assert.equal(compiled.schemaId, 'marketing_v1');
         assert.match(apiPrompt, /"marketing_diagnosis"/);
         assert.match(assistPrompt, outputLanguage === 'en' ? /Owner-friendly summary/ : /老板能看懂的摘要/);
+      } else if (template.id === 'concise') {
+        assert.equal(compiled.schemaId, 'standard_concise_v1');
+        assert.doesNotMatch(apiPrompt, /"prompt_variants"/);
+        assert.doesNotMatch(assistPrompt, /Three distinct variants|3 个不同方向的变体/);
+        assert.match(assistPrompt, outputLanguage === 'en' ? /Use this Markdown structure/ : /请输出以下 Markdown 结构/);
       } else {
         assert.equal(compiled.schemaId, 'standard_v1');
         assert.match(apiPrompt, /"prompt_variants"/);
@@ -58,7 +68,7 @@ const i18n = require('../i18n.js');
 
   const detailed = compiler.compile(templates.find(item => item.id === 'detailed'));
   const concise = compiler.compile(templates.find(item => item.id === 'concise'));
-  assert.ok(concise.maxOutputTokens <= detailed.maxOutputTokens * 0.6);
+  assert.ok(concise.maxOutputTokens < detailed.maxOutputTokens * 0.6);
 
   const genericTags = compiler.renderApiPrompt(compiler.compile(templates.find(item => item.id === 'tags')));
   assert.match(genericTags, /Do not use weighted-tag syntax/);

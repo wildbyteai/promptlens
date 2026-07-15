@@ -7,6 +7,7 @@
 }(typeof globalThis !== 'undefined' ? globalThis : window, function () {
   'use strict';
 
+  const runtime = typeof globalThis !== 'undefined' ? globalThis : window;
   const t = (key, params) => globalThis.PromptLensI18n ? globalThis.PromptLensI18n.t(key, params) : key;
   const localizedError = (key, params = {}) => globalThis.PromptLensI18n.createError(key, params);
 
@@ -159,57 +160,29 @@
     ];
   }
 
-  function requireObject(value, error) {
-    if (!value || typeof value !== 'object' || Array.isArray(value)) {
-      throw error;
+  function getPromptSchemas() {
+    if (runtime.PromptSchemas) return runtime.PromptSchemas;
+    if (typeof module === 'object' && module.exports && typeof require === 'function') {
+      return require('./prompt-schemas.js');
     }
-    return value;
-  }
-
-  function requireNonEmptyString(value, error) {
-    if (typeof value !== 'string' || !value.trim()) {
-      throw error;
-    }
-  }
-
-  function requireStringArray(value, error) {
-    if (!Array.isArray(value) || !value.some(item => typeof item === 'string' && item.trim())) {
-      throw error;
-    }
-  }
-
-  function requireScore(value, error) {
-    const score = Number(value);
-    if (!Number.isFinite(score) || score < 1 || score > 5) {
-      throw error;
-    }
+    throw new Error('PromptSchemas is not loaded.');
   }
 
   function validateMarketingDiagnosisResult(result) {
-    const objectError = field => localizedError('errorMarketingObject', { field });
-    const fieldError = field => localizedError('errorMarketingField', { field });
-    const arrayError = field => localizedError('errorMarketingArray', { field });
-    const source = requireObject(result && result.marketing_diagnosis, objectError('marketing_diagnosis'));
-    const snapshot = requireObject(source.business_snapshot, objectError('marketing_diagnosis.business_snapshot'));
-    const diagnosis = requireObject(source.marketing_diagnosis, objectError('marketing_diagnosis.marketing_diagnosis'));
-    const actions = requireObject(source.next_actions, objectError('marketing_diagnosis.next_actions'));
-    const score = requireObject(diagnosis.marketing_readiness_score, objectError('marketing_readiness_score'));
-
-    requireNonEmptyString(snapshot.business_summary, fieldError('business_summary'));
-    requireNonEmptyString(snapshot.target_customer, fieldError('target_customer'));
-    requireNonEmptyString(snapshot.core_offer, fieldError('core_offer'));
-    requireNonEmptyString(snapshot.conversion_hook, fieldError('conversion_hook'));
-    requireNonEmptyString(snapshot.quick_judgement, fieldError('quick_judgement'));
-    requireNonEmptyString(diagnosis.visual_strategy, fieldError('visual_strategy'));
-    requireNonEmptyString(diagnosis.trust_signals, fieldError('trust_signals'));
-    requireNonEmptyString(diagnosis.emotional_driver, fieldError('emotional_driver'));
-    requireNonEmptyString(diagnosis.friction_points, fieldError('friction_points'));
-    requireScore(score.overall, localizedError('errorMarketingScore'));
-    requireStringArray(actions.improvement_suggestions, arrayError('improvement_suggestions'));
-    requireNonEmptyString(actions.ai_adaptation_brief, fieldError('ai_adaptation_brief'));
-    requireNonEmptyString(actions.designer_execution_brief, fieldError('designer_execution_brief'));
-    requireStringArray(actions.content_angles, arrayError('content_angles'));
-    requireStringArray(actions.next_tests, arrayError('next_tests'));
+    const schemas = getPromptSchemas();
+    const errors = schemas.collectSchemaErrors(
+      result && result.marketing_diagnosis,
+      schemas.getMarketingDiagnosisSchema(),
+      'marketing_diagnosis'
+    );
+    if (!errors.length) return;
+    const first = errors[0];
+    if (first.code === 'invalid_integer') throw localizedError('errorMarketingScore');
+    if (first.code === 'invalid_object') throw localizedError('errorMarketingObject', { field: first.path });
+    if (first.code === 'invalid_array' || first.code === 'min_items') {
+      throw localizedError('errorMarketingArray', { field: first.path });
+    }
+    throw localizedError('errorMarketingField', { field: first.path });
   }
 
   function buildMarketingDiagnosisCopyText(result) {

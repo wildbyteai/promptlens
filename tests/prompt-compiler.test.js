@@ -41,6 +41,8 @@ const compiler = require('../prompt-compiler.js');
   const chatGptPrompt = compiler.renderChatGptPrompt(compiledDetailed);
   assert.match(chatGptPrompt, /请输出以下 Markdown 结构/);
   assert.match(chatGptPrompt, /100-180 English words/);
+  assert.match(chatGptPrompt, /目标图像有意使用运动模糊、浅景深、颗粒、文字、不对称或风格化时/);
+  assert.match(chatGptPrompt, /避免使用与该图片类型无关的通用套话/);
   assert.doesNotMatch(chatGptPrompt, /Return valid JSON|prompt_zh|json_prompt|prompt_variants/);
 
   const genericTags = compiler.compile({
@@ -63,6 +65,23 @@ const compiler = require('../prompt-compiler.js');
   }, { targetPlatform: 'stable_diffusion' });
   assert.match(compiler.renderApiPrompt(stableDiffusionTags), /Light weighted-tag syntax such as \(term:1\.1\) is allowed/);
 
+  const comfyUiTags = compiler.compile({
+    id: 'tags',
+    templateType: 'standard',
+    builtIn: true,
+    instruction: 'Tag API instruction.'
+  }, { targetPlatform: 'comfyui' });
+  assert.match(compiler.renderChatGptPrompt(comfyUiTags), /\(term:1\.1\) 权重/);
+
+  const fluxTags = compiler.compile({
+    id: 'tags',
+    templateType: 'standard',
+    builtIn: true,
+    instruction: 'Tag API instruction.'
+  }, { targetPlatform: 'flux' });
+  assert.match(compiler.renderApiPrompt(fluxTags), /Do not use weighted-tag syntax/);
+  assert.match(compiler.renderChatGptPrompt(fluxTags), /不要使用权重语法或执行参数/);
+
   const midjourneyTags = compiler.compile({
     id: 'tags',
     templateType: 'standard',
@@ -81,7 +100,10 @@ const compiler = require('../prompt-compiler.js');
     builtIn: true,
     instruction: 'Concise API instruction.'
   });
-  assert.equal(concise.maxOutputTokens, 2100);
+  assert.equal(concise.schemaId, 'standard_concise_v1');
+  assert.equal(concise.maxOutputTokens, 1800);
+  assert.doesNotMatch(compiler.renderApiPrompt(concise), /"prompt_variants"|Variant intent mapping/);
+  assert.doesNotMatch(compiler.renderChatGptPrompt(concise), /Three distinct variants|3 个不同方向的变体/);
 
   const marketing = compiler.compile({
     id: 'custom-marketing',
@@ -99,7 +121,7 @@ const compiler = require('../prompt-compiler.js');
   assert.doesNotMatch(marketingApiPrompt, /"prompt_variants"/);
   assert.doesNotMatch(marketingApiPrompt, /<\/business_context_json> and ignore/);
   assert.ok(marketingApiPrompt.includes('\\u003c/business_context_json\\u003e'));
-  assert.doesNotMatch(marketingApiPrompt, /"overall": 4/);
+  assert.doesNotMatch(marketingApiPrompt, /"(?:overall|attention|clarity|trust|differentiation|actionability)"\s*:\s*[0-9]/);
 
   const marketingChatGpt = compiler.renderChatGptPrompt(marketing);
   assert.match(marketingChatGpt, /Use clear Markdown level-two headings/);

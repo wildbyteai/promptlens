@@ -67,6 +67,7 @@ PromptLens 使用一个稳定的模板领域模型和一个统一 Prompt Compile
 ## 稳定兼容边界
 
 - `standard_v1` 与 `marketing_v1` 顶层结果字段不变。
+- `standard_concise_v1` 用于快速复制模板，保留核心双语 Prompt、Tags、Negative Prompt 与 `json_prompt`，明确省略 `prompt_variants` 以降低输出 Token。
 - `prompt_zh` 始终为简体中文。
 - `prompt_en`、Tags、Negative Prompt 和 `json_prompt` 保持英文。
 - 评分继续使用 1–5。
