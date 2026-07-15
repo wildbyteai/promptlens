@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run tests
+        run: node --test tests/*.test.js
+      - name: Enforce core coverage
+        run: bash scripts/check-core-coverage.sh
+      - name: Validate extension package
+        run: |
+          bash tests/package-extension-forbidden-regex.sh
+          bash scripts/package-extension.sh

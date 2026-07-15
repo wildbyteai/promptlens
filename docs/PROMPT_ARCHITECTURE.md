@@ -81,3 +81,10 @@ PromptLens 使用一个稳定的模板领域模型和一个统一 Prompt Compile
 - Output Validator 完整、部分成功、营销结构和截断测试。
 - Model Adapter Prompt/JSON Object/Native JSON Schema/Anthropic `tool_use` 测试。
 - 历史 `_meta` 与旧记录兼容测试。
+- Node 原生覆盖率门禁要求核心模块行覆盖率与函数覆盖率均不低于 80%，并由 GitHub Actions 执行：`bash scripts/check-core-coverage.sh`。
+- 营销评分离散度使用 10 张本地合成、无业务数据的营销图进行真实模型评测；要求 1–5 总评分的总体标准差大于 1.5。评测同时检查：无人物图片不得返回解剖类 Negative Prompt，明确以文字为核心的广告不得把文字本身列为排除项。评测脚本复用正式 Compiler、OpenAI-compatible Adapter、JSON Schema 和 Output Validator，不记录 API Key；只允许生成器固定清单中 SHA-256 匹配的合成图片，并将 `OPENAI_API_KEY` 固定发送到 OpenAI 官方 HTTPS API。样本生成器需要 Python Pillow，仅用于评测，不进入扩展发布包：
+
+```bash
+python3 scripts/generate-marketing-eval-fixtures.py
+OPENAI_API_KEY=... node scripts/evaluate-marketing-scores.mjs
+```

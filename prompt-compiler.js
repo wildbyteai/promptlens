@@ -57,6 +57,7 @@
 
   function normalizeTemplateType(template) {
     if (template && template.templateType === TEMPLATE_TYPES.MARKETING) return TEMPLATE_TYPES.MARKETING;
+    if (template && template.templateType === TEMPLATE_TYPES.STANDARD) return TEMPLATE_TYPES.STANDARD;
     if (template && template.id === 'visual_marketing') return TEMPLATE_TYPES.MARKETING;
     return TEMPLATE_TYPES.STANDARD;
   }

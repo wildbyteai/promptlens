@@ -128,6 +128,22 @@ const compiler = require('../prompt-compiler.js');
   assert.match(marketingChatGpt, /Owner-friendly summary/);
   assert.doesNotMatch(marketingChatGpt, /Return valid JSON|marketing_diagnosis/);
 
+  const explicitStandardWithLegacyMarketingId = compiler.compile({
+    id: 'visual_marketing',
+    templateType: 'standard',
+    templateProfile: 'custom',
+    instruction: 'Treat this explicitly typed template as a standard prompt.'
+  });
+  assert.equal(explicitStandardWithLegacyMarketingId.templateType, 'standard');
+  assert.equal(explicitStandardWithLegacyMarketingId.schemaId, 'standard_v1');
+
+  const legacyMarketingWithoutType = compiler.compile({
+    id: 'visual_marketing',
+    instruction: 'Legacy built-in marketing template.'
+  });
+  assert.equal(legacyMarketingWithoutType.templateType, 'marketing');
+  assert.equal(legacyMarketingWithoutType.schemaId, 'marketing_v1');
+
   const custom = compiler.compile({
     id: 'custom-watercolor',
     templateType: 'standard',

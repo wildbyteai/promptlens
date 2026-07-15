@@ -17,9 +17,14 @@
 - Increment custom template versions and modification timestamps when saving edits.
 - Warn before saving a custom instruction that attempts to override the fixed format or Schema, requiring a second confirmation click.
 - Publish only the complete Simplified Chinese and English extension locales; Traditional Chinese documentation remains separate from the extension UI.
+- Prefer an explicit template type over the legacy marketing-template ID fallback.
 
 ### Observability
 - Store Prompt Hash, Schema, Compiler, template version, target platform, model adapter, and validation metadata on new history records while keeping old records compatible.
+
+### Validation
+- Add a repeatable 10-image synthetic marketing benchmark for score dispersion and image-specific Negative Prompt rules without using business data.
+- Add a CI gate that requires at least 80% line and function coverage across the core runtime modules.
 
 ## 0.6.0 - 2026-07-07
 

@@ -84,6 +84,7 @@ rm -f "${ZIP_PATH}"
 zip -qr "${ZIP_PATH}" "${FILES[@]}" "${DIRS[@]}"
 
 [[ -s "${ZIP_PATH}" ]] || fail "zip was not created or is empty: ${ZIP_PATH}"
+unzip -t "${ZIP_PATH}" >/dev/null || fail "zip integrity validation failed: ${ZIP_PATH}"
 
 ZIP_ENTRIES=()
 while IFS= read -r line; do
