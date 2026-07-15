@@ -2,6 +2,9 @@ const DEFAULT_CONFIG = {
   apiBaseUrl: '',
   apiKey: '',
   apiModel: '',
+  modelAdapter: 'openai_compatible',
+  structuredOutputMode: 'prompt',
+  targetPlatform: 'generic',
   activeTemplateId: window.PromptTemplates.DEFAULT_TEMPLATE_ID,
   analysisMode: 'api'
 };
@@ -9,25 +12,30 @@ const DEFAULT_CONFIG = {
 const t = (key, params) => window.PromptLensI18n.t(key, params);
 
 const PROVIDER_PRESETS = [
-  { id: 'custom', nameKey: 'providerCustomName', baseUrl: '' },
-  { id: 'openai', name: 'OpenAI', baseUrl: 'https://api.openai.com/v1' },
-  { id: 'deepseek', name: 'DeepSeek', baseUrl: 'https://api.deepseek.com/v1' },
-  { id: 'alibaba', name: 'Alibaba DashScope', baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1' },
-  { id: 'siliconflow', name: 'SiliconFlow', baseUrl: 'https://api.siliconflow.cn/v1' },
-  { id: 'groq', name: 'Groq', baseUrl: 'https://api.groq.com/openai/v1' },
-  { id: 'openrouter', name: 'OpenRouter', baseUrl: 'https://openrouter.ai/api/v1' },
-  { id: 'ollama', nameKey: 'providerOllamaLocalName', baseUrl: 'http://localhost:11434/v1' }
+  { id: 'custom', nameKey: 'providerCustomName', baseUrl: '', modelAdapter: 'openai_compatible' },
+  { id: 'openai', name: 'OpenAI', baseUrl: 'https://api.openai.com/v1', modelAdapter: 'openai_compatible' },
+  { id: 'anthropic', name: 'Anthropic', baseUrl: 'https://api.anthropic.com/v1', modelAdapter: 'anthropic' },
+  { id: 'deepseek', name: 'DeepSeek', baseUrl: 'https://api.deepseek.com/v1', modelAdapter: 'openai_compatible' },
+  { id: 'alibaba', name: 'Alibaba DashScope', baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', modelAdapter: 'openai_compatible' },
+  { id: 'siliconflow', name: 'SiliconFlow', baseUrl: 'https://api.siliconflow.cn/v1', modelAdapter: 'openai_compatible' },
+  { id: 'groq', name: 'Groq', baseUrl: 'https://api.groq.com/openai/v1', modelAdapter: 'openai_compatible' },
+  { id: 'openrouter', name: 'OpenRouter', baseUrl: 'https://openrouter.ai/api/v1', modelAdapter: 'openai_compatible' },
+  { id: 'ollama', nameKey: 'providerOllamaLocalName', baseUrl: 'http://localhost:11434/v1', modelAdapter: 'openai_compatible' }
 ];
 
 /* ── DOM refs ──────────────────────────────────────────── */
 
 const form = document.getElementById('options-form');
 const uiLanguageSelect = document.getElementById('ui-language');
+const modelAdapterSelect = document.getElementById('model-adapter');
 const providerPresetSelect = document.getElementById('provider-preset');
 const baseUrlInput = document.getElementById('api-base-url');
 const apiKeyInput = document.getElementById('api-key');
 const modelInput = document.getElementById('api-model');
+const structuredOutputModeSelect = document.getElementById('structured-output-mode');
+const structuredOutputModeHint = document.getElementById('structured-output-mode-hint');
 const templateSelect = document.getElementById('prompt-template');
+const targetPlatformSelect = document.getElementById('target-platform');
 const templateHint = document.getElementById('template-hint');
 const templateNameInput = document.getElementById('template-name-input');
 const templateDescriptionInput = document.getElementById('template-description-input');
@@ -71,6 +79,7 @@ const firstSuccessStepAnalyze = document.getElementById('first-success-step-anal
 const firstSuccessStepOutput = document.getElementById('first-success-step-output');
 
 const FIRST_SUCCESS_COLLAPSED_KEY = 'firstSuccessChecklistCollapsed';
+let pendingTemplateWarningFingerprint = '';
 
 /* ── Debounce helper ──────────────────────────────────────── */
 
@@ -163,6 +172,18 @@ function syncProviderPresetFromUrl() {
   const value = baseUrlInput.value.trim().replace(/\/+$/, '');
   const matched = PROVIDER_PRESETS.find(provider => provider.baseUrl && provider.baseUrl.replace(/\/+$/, '') === value);
   providerPresetSelect.value = matched ? matched.id : 'custom';
+  if (matched && matched.modelAdapter && modelAdapterSelect.value !== matched.modelAdapter) {
+    modelAdapterSelect.value = matched.modelAdapter;
+    renderModelAdapter();
+  }
+}
+
+function renderModelAdapter() {
+  const adapterId = window.PromptModelAdapters.normalizeModelAdapter(modelAdapterSelect.value);
+  modelAdapterSelect.value = adapterId;
+  const isAnthropic = adapterId === 'anthropic';
+  structuredOutputModeSelect.disabled = isAnthropic;
+  structuredOutputModeHint.textContent = t(isAnthropic ? 'structuredOutputAnthropicHint' : 'structuredOutputModeHint');
 }
 
 /* ── Provider recipe examples ─────────────────────────── */
@@ -181,6 +202,13 @@ const PROVIDER_RECIPES = [
     modelKey: 'providerRecipeOpenaiModel',
     checkKey: 'providerRecipeOpenaiCheck',
     cautionKey: 'providerRecipeOpenaiCaution'
+  },
+  {
+    name: 'Anthropic',
+    baseUrl: 'https://api.anthropic.com/v1',
+    modelKey: 'providerRecipeAnthropicModel',
+    checkKey: 'providerRecipeAnthropicCheck',
+    cautionKey: 'providerRecipeAnthropicCaution'
   },
   {
     nameKey: 'providerOllamaLocalName',
@@ -241,6 +269,7 @@ async function getSelectedTemplate() {
 }
 
 async function updateTemplateHint() {
+  pendingTemplateWarningFingerprint = '';
   const template = await getSelectedTemplate();
   templateHint.textContent = template.description;
   templateNameInput.value = template.name;
@@ -281,13 +310,26 @@ async function saveCurrentCustomTemplate() {
     showLocalizedConfigStatus('errorTemplateBuiltInEdit', 'warning');
     return;
   }
-  const updated = await window.PromptTemplates.updateCustomTemplate(template.id, {
+  const draft = {
     name: templateNameInput.value,
     description: templateDescriptionInput.value,
     instruction: templateInstructionInput.value
-  });
+  };
+  const warnings = window.PromptCompiler.inspectTemplateInstruction(draft.instruction);
+  const warningFingerprint = warnings.length ? JSON.stringify(draft) : '';
+  if (warnings.length && pendingTemplateWarningFingerprint !== warningFingerprint) {
+    pendingTemplateWarningFingerprint = warningFingerprint;
+    showLocalizedConfigStatus('optionsStatusTemplateWarningConfirm', 'warning', { count: warnings.length });
+    return;
+  }
+  const updated = await window.PromptTemplates.updateCustomTemplate(template.id, draft);
+  pendingTemplateWarningFingerprint = '';
   await populateTemplateSelect(updated.id);
-  showLocalizedConfigStatus('optionsStatusTemplateSaved', 'success');
+  showLocalizedConfigStatus(
+    warnings.length ? 'optionsStatusTemplateSavedWithWarnings' : 'optionsStatusTemplateSaved',
+    warnings.length ? 'warning' : 'success',
+    { count: warnings.length }
+  );
 }
 
 function downloadText(filename, text, mimeType) {
@@ -399,6 +441,9 @@ function trimConfig(config) {
     apiBaseUrl: String(config.apiBaseUrl || '').trim(),
     apiKey: String(config.apiKey || '').trim(),
     apiModel: String(config.apiModel || '').trim(),
+    modelAdapter: window.PromptModelAdapters.normalizeModelAdapter(config.modelAdapter),
+    structuredOutputMode: window.PromptModelAdapters.normalizeStructuredOutputMode(config.structuredOutputMode),
+    targetPlatform: window.PromptCompiler.normalizeTargetPlatform(config.targetPlatform),
     activeTemplateId: String(config.activeTemplateId || window.PromptTemplates.DEFAULT_TEMPLATE_ID).trim(),
     analysisMode: normalizeAnalysisMode(config.analysisMode)
   };
@@ -443,6 +488,9 @@ function getCurrentFormConfig() {
     apiBaseUrl: baseUrlInput.value,
     apiKey: apiKeyInput.value,
     apiModel: modelInput.value,
+    modelAdapter: modelAdapterSelect.value,
+    structuredOutputMode: structuredOutputModeSelect.value,
+    targetPlatform: targetPlatformSelect.value,
     activeTemplateId: templateSelect.value,
     analysisMode: getAnalysisMode()
   });
@@ -518,6 +566,10 @@ async function loadConfig() {
   baseUrlInput.value = config.apiBaseUrl;
   apiKeyInput.value = config.apiKey;
   modelInput.value = config.apiModel;
+  modelAdapterSelect.value = config.modelAdapter;
+  structuredOutputModeSelect.value = config.structuredOutputMode;
+  renderModelAdapter();
+  targetPlatformSelect.value = config.targetPlatform;
   historyEnabledInput.checked = Boolean(stored.historyEnabled);
   maxImageSideInput.value = Number(stored.maxImageSide) || 2048;
   jpegQualityInput.value = Number(stored.jpegQuality) || 0.85;
@@ -538,6 +590,9 @@ async function saveConfig() {
     apiBaseUrl: baseUrlInput.value,
     apiKey: apiKeyInput.value,
     apiModel: modelInput.value,
+    modelAdapter: modelAdapterSelect.value,
+    structuredOutputMode: structuredOutputModeSelect.value,
+    targetPlatform: targetPlatformSelect.value,
     activeTemplateId: templateSelect.value,
     analysisMode: getAnalysisMode()
   });
@@ -616,6 +671,19 @@ providerPresetSelect.addEventListener('change', () => {
   if (selected && selected.baseUrl) {
     baseUrlInput.value = selected.baseUrl;
     baseUrlInput.classList.remove('input-error');
+  }
+  if (selected && selected.modelAdapter) {
+    modelAdapterSelect.value = selected.modelAdapter;
+    renderModelAdapter();
+  }
+  debouncedRefreshChecklistState();
+});
+
+modelAdapterSelect.addEventListener('change', () => {
+  renderModelAdapter();
+  const selected = PROVIDER_PRESETS.find(provider => provider.id === providerPresetSelect.value);
+  if (selected && selected.modelAdapter !== modelAdapterSelect.value) {
+    providerPresetSelect.value = 'custom';
   }
   debouncedRefreshChecklistState();
 });
@@ -703,12 +771,16 @@ resetFormButton.addEventListener('click', () => {
   baseUrlInput.value = '';
   apiKeyInput.value = '';
   modelInput.value = '';
+  modelAdapterSelect.value = 'openai_compatible';
+  structuredOutputModeSelect.value = 'prompt';
+  renderModelAdapter();
+  targetPlatformSelect.value = 'generic';
   providerPresetSelect.value = 'custom';
   templateSelect.value = window.PromptTemplates.DEFAULT_TEMPLATE_ID;
   updateTemplateHint().catch(() => {});
   baseUrlInput.classList.remove('input-error');
   hideBanner(configStatusBanner);
-  chrome.storage.local.remove(['apiBaseUrl', 'apiKey', 'apiModel', 'activeTemplateId', 'analysisMode']).then(() => {
+  chrome.storage.local.remove(['apiBaseUrl', 'apiKey', 'apiModel', 'modelAdapter', 'structuredOutputMode', 'targetPlatform', 'activeTemplateId', 'analysisMode']).then(() => {
     showLocalizedConfigStatus('optionsStatusSettingsCleared', 'info');
     hideSummary();
     refreshChecklistState().catch(() => {});
@@ -777,6 +849,7 @@ async function renderLocalizedOptions() {
   window.PromptLensI18n.apply(document);
   uiLanguageSelect.value = window.PromptLensI18n.getLanguage();
   populateProviderPresets();
+  renderModelAdapter();
   syncProviderPresetFromUrl();
   renderProviderRecipes();
   renderAnalysisMode(getAnalysisMode());
@@ -798,6 +871,7 @@ async function main() {
   await window.PromptLensI18n.init();
   uiLanguageSelect.value = window.PromptLensI18n.getLanguage();
   populateProviderPresets();
+  renderModelAdapter();
   renderProviderRecipes();
   await loadFirstSuccessCollapsedState();
   await loadConfig();

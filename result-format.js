@@ -14,7 +14,7 @@
   const t = (key, params) => globalThis.PromptLensI18n ? globalThis.PromptLensI18n.t(key, params) : key;
 
   function isMarketingTemplate(template) {
-    return Boolean(PromptTemplates && PromptTemplates.isMarketingDiagnosisTemplate(template && template.id));
+    return Boolean(PromptTemplates && PromptTemplates.isMarketingDiagnosisTemplate(template));
   }
 
   function buildStandardView(data) {

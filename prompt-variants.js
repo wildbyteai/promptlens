@@ -7,7 +7,16 @@
 }(typeof globalThis !== 'undefined' ? globalThis : window, function () {
   'use strict';
 
-  const VARIANT_ORDER = ['recreate', 'creative', 'commercial'];
+  const runtime = typeof globalThis !== 'undefined' ? globalThis : window;
+  function getPromptSchemas() {
+    if (runtime.PromptSchemas) return runtime.PromptSchemas;
+    if (typeof module === 'object' && module.exports && typeof require === 'function') {
+      return require('./prompt-schemas.js');
+    }
+    throw new Error('PromptSchemas is not loaded.');
+  }
+
+  const VARIANT_ORDER = getPromptSchemas().VARIANT_IDS;
   const t = (key, params) => globalThis.PromptLensI18n ? globalThis.PromptLensI18n.t(key, params) : key;
 
   const DEFAULT_VARIANTS = {

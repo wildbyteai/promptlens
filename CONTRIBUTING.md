@@ -52,6 +52,9 @@ content.js         页面内框选截图交互
 selection.css      注入网页的框选样式
 i18n.js            扩展运行时语言加载、切换和 DOM 文案应用
 _locales/          Manifest 与扩展运行时共用的语言目录
+prompt-schemas.js  结构化输出 Schema 与校验契约的唯一来源
+prompt-compiler.js 模板、语言、证据和平台规则的统一编译器
+model-adapters.js  OpenAI-compatible / Anthropic 请求与响应适配
 options.html/js    设置页
 result.html/js     结果页与模型调用
 result-format.js   结果复制与 Markdown 导出格式化
@@ -65,7 +68,7 @@ styles.css         设置页和结果页样式
 - 不引入构建工具，除非有明确收益并经过讨论。
 - 不引入 npm 依赖，优先使用浏览器原生 API。
 - 不加载外部脚本、字体、样式或图片资源。
-- 保持 OpenAI-compatible `/chat/completions` 的 provider-neutral 设计。
+- 保持 OpenAI-compatible `/chat/completions` 的 provider-neutral 设计；新增供应商协议时通过 Model Adapter 隔离，不在 Prompt Compiler 中拼接传输细节。
 - 不加入登录、支付、云同步、遥测或默认后端。
 - 新增权限前必须说明用途和替代方案。
 - 用户文本和模型返回内容应使用 `textContent` 渲染，避免 XSS。

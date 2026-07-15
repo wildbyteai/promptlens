@@ -52,7 +52,7 @@ const i18n = require('../i18n.js');
 
   const historyStoreSource = fs.readFileSync(path.join(root, 'history-store.js'), 'utf8');
   assert.match(historyStoreSource, /contentLanguage: item\.contentLanguage === 'en' \? 'en' : 'zh-CN'/);
-  assert.match(historyStoreSource, /\.map\(item => \(\{ \.\.\.item, contentLanguage: item\.contentLanguage === 'en' \? 'en' : 'zh-CN' \}\)\)/);
+  assert.match(historyStoreSource, /\.map\(normalizeHistoryRecord\)/);
 
   console.log('history format language tests passed');
 })().catch(error => {

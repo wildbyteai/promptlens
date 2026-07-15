@@ -114,6 +114,12 @@
         </aside>
 
         <section class="result-column" aria-label="生成结果" data-i18n-aria-label="resultGeneratedAria">
+          <article id="validation-warning-card" class="status-banner status-banner--warning validation-warning-card" hidden>
+            <strong data-i18n="resultPartialTitle">结果不完整</strong>
+            <p id="validation-warning-description"></p>
+            <ul id="validation-warning-list"></ul>
+          </article>
+
           <article class="template-summary result-card" aria-label="当前输出模板" data-i18n-aria-label="resultCurrentTemplateAria">
             <div>
               <span class="card-kicker" data-i18n="resultCurrentTemplateKicker">当前模板</span>
@@ -235,6 +241,10 @@
       </div>
     </main>
     <script src="i18n.js"></script>
+    <script src="prompt-schemas.js"></script>
+    <script src="prompt-compiler.js"></script>
+    <script src="model-adapters.js"></script>
+    <script src="output-validator.js"></script>
     <script src="templates.js"></script>
     <script src="prompt-variants.js"></script>
     <script src="marketing-diagnosis.js"></script>

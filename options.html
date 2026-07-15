@@ -123,7 +123,7 @@
         <div class="section-heading">
           <div>
             <h2 id="config-title" data-i18n="apiConfigTitle">API 自动分析配置</h2>
-            <p><span data-i18n="apiConfigDescription">PromptLens 不内置模型服务。请填写你自己的 OpenAI-compatible Vision API。API Key 只保存在本地浏览器，图片只会发送到你配置的 Base URL。</span> <span id="api-config-mode-hint" data-i18n="apiConfigModeHintApi">PromptLens 会使用这些 API 字段自动调用你配置的模型服务。</span></p>
+            <p><span data-i18n="apiConfigDescription">PromptLens 不内置模型服务。请填写你自己的 Vision API，并选择对应的 OpenAI-compatible 或 Anthropic 协议。API Key 只保存在本地浏览器，图片只会发送到你配置的 Base URL。</span> <span id="api-config-mode-hint" data-i18n="apiConfigModeHintApi">PromptLens 会使用这些 API 字段自动调用你配置的模型服务。</span></p>
           </div>
         </div>
 
@@ -147,15 +147,24 @@
 
         <form id="options-form" class="settings-form" novalidate>
           <label class="field-row">
+            <span class="field-label" data-i18n="modelAdapterLabel">API 协议</span>
+            <select id="model-adapter" name="modelAdapter">
+              <option value="openai_compatible" data-i18n="modelAdapterOpenaiCompatible">OpenAI-compatible</option>
+              <option value="anthropic" data-i18n="modelAdapterAnthropic">Anthropic Messages API</option>
+            </select>
+            <span class="field-hint" data-i18n="modelAdapterHint">选择服务商实际使用的请求协议。Anthropic 使用 Messages API 和 tool_use 结构化输出。</span>
+          </label>
+
+          <label class="field-row">
             <span class="field-label" data-i18n="providerPresetLabel">Provider 预设</span>
             <select id="provider-preset" name="providerPreset"></select>
-            <span class="field-hint" data-i18n="providerPresetHint">预设只填充 Base URL，不包含 API Key 或 Model；具体可用性以实际分析结果和服务商文档为准。</span>
+            <span class="field-hint" data-i18n="providerPresetHint">预设会填充 API 协议和 Base URL，不包含 API Key 或 Model；具体可用性以实际分析结果和服务商文档为准。</span>
           </label>
 
           <label class="field-row">
             <span class="field-label">AI Base URL</span>
             <input id="api-base-url" name="apiBaseUrl" type="url" placeholder="https://api.openai.com/v1" autocomplete="off" required>
-            <span class="field-hint" data-i18n="apiBaseUrlHint">必须使用 HTTPS；本地模型服务可用 http://localhost 或 http://127.0.0.1。填写到 /chat/completions 或只填 /v1 均可。</span>
+            <span class="field-hint" data-i18n="apiBaseUrlHint">必须使用 HTTPS；本地模型服务可用 http://localhost 或 http://127.0.0.1。可填写到对应 endpoint，或只填 /v1。</span>
           </label>
 
           <label class="field-row">
@@ -173,6 +182,16 @@
             <span class="field-hint" data-i18n="apiModelHint">请输入用于图片分析的模型名称；如果右键分析能出结果，就说明当前配置可用。</span>
           </label>
 
+          <label class="field-row">
+            <span class="field-label" data-i18n="structuredOutputModeLabel">结构化输出模式</span>
+            <select id="structured-output-mode" name="structuredOutputMode">
+              <option value="prompt" data-i18n="structuredOutputPrompt">提示词约束（兼容性最高）</option>
+              <option value="json_object" data-i18n="structuredOutputJsonObject">JSON Object</option>
+              <option value="json_schema" data-i18n="structuredOutputJsonSchema">Native JSON Schema</option>
+            </select>
+            <span id="structured-output-mode-hint" class="field-hint" data-i18n="structuredOutputModeHint">默认使用提示词约束。只有确认服务商支持 response_format 时，才选择 JSON Object 或 Native JSON Schema。</span>
+          </label>
+
           <div class="first-success-note" aria-label="隐私与权限说明" data-i18n-aria-label="privacyPermissionAria">
             <strong data-i18n="privacyBoundaryLabel">隐私边界：</strong>
             <span data-i18n="apiPrivacyBoundary">PromptLens 没有自有后端。分析时，请求会发送到你配置的 Base URL，可能包含 API Key、图片 URL 或截图数据、模板提示词、模型名称和业务背景。</span>
@@ -186,6 +205,18 @@
             <span class="field-label" data-i18n="defaultTemplateLabel">默认输出模板</span>
             <select id="prompt-template" name="promptTemplate"></select>
             <span class="field-hint" id="template-hint" data-i18n="defaultTemplateHint">内置模板按输出格式划分；平台专属差异后续可通过自定义模板维护。</span>
+          </label>
+
+          <label class="field-row">
+            <span class="field-label" data-i18n="targetPlatformLabel">目标图像生成平台</span>
+            <select id="target-platform" name="targetPlatform">
+              <option value="generic" data-i18n="targetPlatformGeneric">通用（不使用平台参数）</option>
+              <option value="stable_diffusion" data-i18n="targetPlatformStableDiffusion">Stable Diffusion</option>
+              <option value="flux" data-i18n="targetPlatformFlux">Flux</option>
+              <option value="comfyui" data-i18n="targetPlatformComfyui">ComfyUI</option>
+              <option value="midjourney" data-i18n="targetPlatformMidjourney">Midjourney</option>
+            </select>
+            <span class="field-hint" data-i18n="targetPlatformHint">只影响标签和权重规则，不会加入版本号、Seed、LoRA 或工作流节点参数。</span>
           </label>
 
           <div class="template-manager" aria-labelledby="template-manager-title">
@@ -278,6 +309,9 @@
       </section>
     </main>
     <script src="i18n.js"></script>
+    <script src="prompt-schemas.js"></script>
+    <script src="prompt-compiler.js"></script>
+    <script src="model-adapters.js"></script>
     <script src="templates.js"></script>
     <script src="history-store.js"></script>
     <script src="options.js"></script>

@@ -19,7 +19,7 @@
   <img src="https://img.shields.io/badge/build-none-7c3aed" alt="无需构建" />
 </p>
 
-PromptLens 是一个轻量级 Chrome MV3 图片反推提示词工具，也可以作为图片转提示词、AI 识图生成提示词和商业视觉诊断工作流使用。它会把网页图片或框选截图发送到你自己配置的 OpenAI-compatible Vision API，并生成可复制到 Midjourney、Stable Diffusion 或其他图像生成工具中的提示词。
+PromptLens 是一个轻量级 Chrome MV3 图片反推提示词工具，也可以作为图片转提示词、AI 识图生成提示词和商业视觉诊断工作流使用。它会把网页图片或框选截图发送到你自己配置的 OpenAI-compatible 或 Anthropic Vision API，并生成可复制到 Midjourney、Stable Diffusion 或其他图像生成工具中的提示词。
 
 它的目标是提供一个简单、透明、可自托管思路的图片提示词反推工具：不登录、不付费、不内置后端、不绑定特定模型服务。
 
@@ -28,13 +28,13 @@ PromptLens 是一个轻量级 Chrome MV3 图片反推提示词工具，也可以
 - **右键图片分析**：在网页图片上右键，生成反向图片提示词。
 - **框选截图分析**：对当前可见页面区域框选截图并分析，适合 `blob:` 图片、防盗链图片或未授权远程图片。
 - **自定义模型服务**：自行配置 AI Base URL、API Key 和 Model。
-- **OpenAI-compatible Vision API**：请求格式兼容 `/chat/completions` 的视觉模型接口。
+- **模型适配器**：支持 OpenAI-compatible `/chat/completions`，以及通过 `tool_use` 返回结构化结果的 Anthropic Messages API。
 - **结构化结果**：输出中文提示词、English Prompt、Tags、Negative Prompt、JSON Prompt 和 Raw JSON。
 - **内置输出模板**：提供详细分析、自然语言、标签加权、快速复制和视觉营销诊断等输出格式。
 - **视觉营销诊断**：面向商业视觉图的可选业务分析，输出老板摘要、营销诊断、低成本改编 brief 和可发布 Markdown 案例初稿。
 - **自定义模板**：支持复制内置模板、新建、编辑、删除、导入和导出自定义模板。
 - **ChatGPT Plus 辅助模式**：适合有 ChatGPT Plus / Pro 但没有 API Key 的用户；PromptLens 准备图片和指令，并可打开 ChatGPT、等待页面稳定后尝试附加图片并填入指令，供你确认后手动发送。
-- **Provider 预设**：提供 OpenAI、DeepSeek、Alibaba、SiliconFlow、Groq、OpenRouter、Ollama 和 Custom。
+- **Provider 预设**：提供 OpenAI、Anthropic、DeepSeek、Alibaba、SiliconFlow、Groq、OpenRouter、Ollama 和 Custom。
 - **界面语言**：默认简体中文，可在设置页切换英文，覆盖设置、结果、历史、右键菜单、框选提示、错误和导出文案。
 - **快捷键框选**：支持 `Alt+Shift+S` 触发框选截图，可在 `chrome://extensions/shortcuts` 修改。
 - **可选历史记录**：默认关闭；开启后保存文本结果、来源域名、原始图片 URL、页面 URL 和模板信息，不保存图片缩略图。
@@ -59,10 +59,10 @@ PromptLens 刻意不包含以下能力：
 1. 用户在网页中右键图片，或启动框选截图。
 2. 扩展读取图片 URL、data URL 或当前标签页可见截图。
 3. 图片会在本地被校验、裁剪、压缩，并统一转换为 JPEG。
-4. 结果页按选定模板调用用户配置的 OpenAI-compatible Vision API。
+4. 结果页通过所选 OpenAI-compatible 或 Anthropic Adapter 调用用户配置的 Vision API。
 5. 模型返回 JSON 后，结果页展示并提供复制、JSON 下载和 Markdown 下载。
 
-PromptLens 提供两种分析路径：API 自动分析会调用你配置的 OpenAI-compatible Vision API 并展示结构化结果；ChatGPT Plus 辅助模式不调用 API，而是在本地生成 JPEG 图片和 ChatGPT 指令，供你在 chatgpt.com 使用。实验性 ChatGPT 交接可打开 ChatGPT，等待 ChatGPT 页面稳定后尝试附加图片并填入指令，但不会自动发送消息。
+PromptLens 提供两种分析路径：API 自动分析会调用你配置的 OpenAI-compatible 或 Anthropic Vision API 并展示结构化结果；ChatGPT Plus 辅助模式不调用 API，而是在本地生成 JPEG 图片和 ChatGPT 指令，供你在 chatgpt.com 使用。实验性 ChatGPT 交接可打开 ChatGPT，等待 ChatGPT 页面稳定后尝试附加图片并填入指令，但不会自动发送消息。
 
 PromptLens 不提供内置模型服务。你需要自行准备支持视觉输入的 API 服务。
 
@@ -89,6 +89,7 @@ PromptLens 不提供内置模型服务。你需要自行准备支持视觉输入
 
 1. 在 Chrome 扩展详情页点击「扩展程序选项」。
 2. 填写：
+   - **API 协议**：OpenAI-compatible 或 Anthropic Messages API。
    - **AI Base URL**：例如 `https://api.openai.com/v1`。
    - **API Key**：你的模型服务密钥。
    - **Model**：支持视觉输入的模型名称。

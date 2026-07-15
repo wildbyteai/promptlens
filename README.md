@@ -19,7 +19,7 @@
   <img src="https://img.shields.io/badge/build-none-7c3aed" alt="No build step" />
 </p>
 
-PromptLens is a lightweight image-to-prompt Chrome MV3 extension and reverse image prompt generator. It sends a web image or a selected screenshot region to your own OpenAI-compatible Vision API and generates reusable prompts for Midjourney, Stable Diffusion, commercial visual analysis, and visual marketing diagnosis.
+PromptLens is a lightweight image-to-prompt Chrome MV3 extension and reverse image prompt generator. It sends a web image or a selected screenshot region to your own OpenAI-compatible or Anthropic Vision API and generates reusable prompts for Midjourney, Stable Diffusion, commercial visual analysis, and visual marketing diagnosis.
 
 Its goal is to stay simple, transparent, and self-hosting-friendly: no login, no payment system, no built-in backend, and no lock-in to a specific model provider.
 
@@ -28,14 +28,14 @@ Its goal is to stay simple, transparent, and self-hosting-friendly: no login, no
 - **Right-click image analysis**: right-click a web image and generate reverse image prompts.
 - **Selection screenshot analysis**: select a visible page region for `blob:` images, hotlink-protected images, or remote images without host permission.
 - **Bring your own model service**: configure AI Base URL, API Key, and Model.
-- **OpenAI-compatible Vision API**: uses the `/chat/completions` style vision request format.
+- **Model adapters**: supports OpenAI-compatible `/chat/completions` and Anthropic Messages API with `tool_use` structured output.
 - **Structured results**: Chinese prompt, English Prompt, Tags, Negative Prompt, JSON Prompt, and Raw JSON.
 - **Professional prompt variants**: generates recreate, creative extension, and commercial visual prompt cards for professional design workflows.
 - **Visual marketing diagnosis**: optional business-focused analysis for commercial visuals, with owner-friendly summary, marketing diagnosis, low-cost adaptation brief, and Markdown case export.
 - **Built-in output templates**: Detailed Analysis, Natural Language, Weighted Tags, and Quick Copy.
 - **Custom templates**: copy built-ins, create, edit, delete, import, and export custom templates.
 - **ChatGPT Plus Assist mode**: for users with ChatGPT Plus / Pro but no API key; PromptLens prepares the image and instruction, then can open ChatGPT, wait for the page to settle, and attempt to attach the image and fill the instruction for you to review and send manually.
-- **Provider presets**: OpenAI, DeepSeek, Alibaba, SiliconFlow, Groq, OpenRouter, Ollama, and Custom.
+- **Provider presets**: OpenAI, Anthropic, DeepSeek, Alibaba, SiliconFlow, Groq, OpenRouter, Ollama, and Custom.
 - **Interface language**: Simplified Chinese by default, with an English switch covering settings, results, history, context menus, selection hints, errors, and exports.
 - **Keyboard selection shortcut**: `Alt+Shift+S` starts screenshot selection; users can change it at `chrome://extensions/shortcuts`.
 - **Optional local history**: off by default; stores text results, source domain, original image URL, page URL, and template metadata. No image thumbnails are saved.
@@ -60,10 +60,10 @@ PromptLens intentionally does not include:
 1. The user right-clicks a web image or starts screenshot selection.
 2. The extension reads an image URL, data URL, or current-tab visible screenshot.
 3. The image is validated, cropped, compressed, and normalized to JPEG locally.
-4. The result page calls the user-configured OpenAI-compatible Vision API with the selected template.
+4. The result page calls the user-configured Vision API through the selected OpenAI-compatible or Anthropic adapter.
 5. The model returns JSON; the result page renders it and provides copy / JSON / Markdown export.
 
-PromptLens has two analysis paths: API Automatic Analysis calls your configured OpenAI-compatible Vision API and renders structured results; ChatGPT Plus Assist mode does not call an API and instead prepares a local JPEG plus a ChatGPT-ready instruction for use on chatgpt.com. The experimental ChatGPT handoff can open ChatGPT, wait for the ChatGPT page to settle, then attempt to attach the image and fill the instruction without automatically sending the message.
+PromptLens has two analysis paths: API Automatic Analysis calls your configured OpenAI-compatible or Anthropic Vision API and renders structured results; ChatGPT Plus Assist mode does not call an API and instead prepares a local JPEG plus a ChatGPT-ready instruction for use on chatgpt.com. The experimental ChatGPT handoff can open ChatGPT, wait for the ChatGPT page to settle, then attempt to attach the image and fill the instruction without automatically sending the message.
 
 PromptLens does not provide a built-in model service. You need your own API service that supports vision input.
 
@@ -90,6 +90,7 @@ Not published yet. A Chrome Web Store link will be added here when available.
 
 1. Open the extension options page from Chrome extension details.
 2. Fill in:
+   - **API protocol**: OpenAI-compatible or Anthropic Messages API.
    - **AI Base URL**: for example `https://api.openai.com/v1`.
    - **API Key**: your model service key.
    - **Model**: a model name that supports vision input.

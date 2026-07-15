@@ -19,10 +19,19 @@ assert.ok(
   resultHtml.indexOf('<script src="i18n.js"></script>') < resultHtml.indexOf('<script src="result.js"></script>'),
   'result page must load i18n.js before result.js'
 );
+assert.ok(
+  resultHtml.indexOf('<script src="prompt-schemas.js"></script>') < resultHtml.indexOf('<script src="prompt-compiler.js"></script>'),
+  'result page must load the shared Prompt Schema before the compiler'
+);
+assert.ok(
+  resultHtml.indexOf('<script src="prompt-compiler.js"></script>') < resultHtml.indexOf('<script src="templates.js"></script>'),
+  'result page must load the shared Prompt Compiler before templates.js'
+);
 assert.match(resultJs, /await window\.PromptLensI18n\.init\(\)/);
 assert.match(resultJs, /PromptLensI18n\.onChange/);
-assert.match(resultJs, /buildReversePromptInstruction\(template, businessContext = '', outputLanguage = window\.PromptLensI18n\.getLanguage\(\)\)/);
-assert.match(resultJs, /buildFinalPrompt\(template, \{\s*businessContext,\s*outputLanguage\s*\}\)/s);
+assert.match(resultJs, /PromptCompiler\.compile\(template, \{\s*businessContext: currentBusinessContext,\s*outputLanguage,\s*targetPlatform: config\.targetPlatform\s*\}\)/s);
+assert.match(resultJs, /PromptCompiler\.renderApiPrompt\(compiledPrompt, \{/);
+assert.match(resultJs, /PromptModelAdapters\.buildRequest\(config\.modelAdapter/);
 assert.doesNotMatch(resultJs, /showAssistStatus\(['"`][^'"`]+['"`]/, 'assist status copy must come from the locale catalog');
 assert.doesNotMatch(resultJs, /textContent\s*=\s*['"`][\u4e00-\u9fff][^'"`]*['"`]/, 'dynamic Chinese UI copy must not be hardcoded');
 

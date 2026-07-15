@@ -51,7 +51,8 @@ const i18n = require('../i18n.js');
   assert.match(englishPrompt, /prompt_zh must remain Simplified Chinese/);
   assert.match(englishPrompt, /prompt_en, prompt_tags, negative_prompt, and json_prompt must remain English/);
   assert.doesNotMatch(englishPrompt, /简短说明这个版本/);
-  assert.match(englishPrompt, /<localized short explanation of how this version recreates the reference>/);
+  assert.match(englishPrompt, /"prompt_zh_summary"/);
+  assert.doesNotMatch(englishPrompt, /<localized/);
 
   const chinesePrompt = globalThis.PromptTemplates.buildFinalPrompt(detailed, { outputLanguage: 'zh-CN' });
   assert.match(chinesePrompt, /Write explanatory content in Simplified Chinese/);

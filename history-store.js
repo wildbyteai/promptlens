@@ -32,10 +32,53 @@
     await chrome.storage.local.set({ historyEnabled: Boolean(enabled) });
   }
 
-  async function addHistoryItem(item) {
-    if (!await isHistoryEnabled()) return false;
-    const db = await openDB();
-    const record = {
+  function normalizeValidationWarnings(value) {
+    if (!Array.isArray(value)) return [];
+    return value
+      .filter(item => item && typeof item === 'object')
+      .map(item => ({
+        code: String(item.code || ''),
+        path: String(item.path || '')
+      }))
+      .filter(item => item.code || item.path);
+  }
+
+  function normalizeHistoryMetadata(value) {
+    const source = value && typeof value === 'object' ? value : null;
+    if (!source) {
+      return {
+        promptHash: '',
+        schemaId: 'legacy_v1',
+        promptCompilerVersion: 'legacy',
+        templateVersion: 1,
+        templateType: 'standard',
+        templateProfile: 'custom',
+        targetPlatform: 'generic',
+        modelAdapter: 'openai_compatible',
+        modelId: '',
+        finishReason: '',
+        validationStatus: 'unknown',
+        validationWarnings: []
+      };
+    }
+    return {
+      promptHash: String(source.promptHash || ''),
+      schemaId: String(source.schemaId || 'legacy_v1'),
+      promptCompilerVersion: String(source.promptCompilerVersion || 'legacy'),
+      templateVersion: Number(source.templateVersion) || 1,
+      templateType: source.templateType === 'marketing' ? 'marketing' : 'standard',
+      templateProfile: ['detailed', 'natural', 'tags', 'concise', 'marketing', 'custom'].includes(source.templateProfile) ? source.templateProfile : 'custom',
+      targetPlatform: ['stable_diffusion', 'flux', 'comfyui', 'midjourney'].includes(source.targetPlatform) ? source.targetPlatform : 'generic',
+      modelAdapter: source.modelAdapter === 'anthropic' ? 'anthropic' : 'openai_compatible',
+      modelId: String(source.modelId || ''),
+      finishReason: String(source.finishReason || ''),
+      validationStatus: ['success', 'partial_success'].includes(source.validationStatus) ? source.validationStatus : 'unknown',
+      validationWarnings: normalizeValidationWarnings(source.validationWarnings)
+    };
+  }
+
+  function normalizeHistoryRecord(item = {}) {
+    return {
       id: item.id || makeId(),
       createdAt: item.createdAt || Date.now(),
       sourceDomain: item.sourceDomain || '',
@@ -53,8 +96,15 @@
       rawText: item.rawText || '',
       usage: item.usage && typeof item.usage === 'object' ? item.usage : null,
       responseTimeMs: Number.isFinite(Number(item.responseTimeMs)) ? Number(item.responseTimeMs) : null,
+      _meta: normalizeHistoryMetadata(item._meta || item.metadata),
       result: item.result || {}
     };
+  }
+
+  async function addHistoryItem(item) {
+    if (!await isHistoryEnabled()) return false;
+    const db = await openDB();
+    const record = normalizeHistoryRecord(item);
 
     await txDone(db, STORE_NAME, 'readwrite', store => store.put(record));
     await pruneHistory();
@@ -65,7 +115,7 @@
     const db = await openDB();
     const items = await txDone(db, STORE_NAME, 'readonly', store => store.getAll());
     return items
-      .map(item => ({ ...item, contentLanguage: item.contentLanguage === 'en' ? 'en' : 'zh-CN' }))
+      .map(normalizeHistoryRecord)
       .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
   }
 
@@ -131,6 +181,7 @@
     listHistoryItems,
     deleteHistoryItem,
     clearHistory,
+    normalizeHistoryRecord,
     sourceDomainFromUrl
   };
 }());

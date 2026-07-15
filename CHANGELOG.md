@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased
+
+### Features
+- Add a unified Prompt Compiler that shares evidence, language, Negative Prompt, variant, and platform rules across API analysis and ChatGPT Assist.
+- Add structured-output and target image-generation platform settings.
+- Add Native JSON Schema, per-template Token budgets, truncation detection, and partial-success warnings.
+- Add Anthropic Messages API `tool_use` support and Midjourney as a target-platform option.
+- Centralize all structured output contracts in one Prompt Schema module shared by the compiler, adapters, and validator.
+
+### Fixes
+- Preserve the marketing template type when duplicating the visual marketing template.
+- Stop reporting a fully successful analysis when required prompt variants are incomplete.
+- Stop appending API Schema instructions directly to ChatGPT Assist Markdown prompts.
+- Increment custom template versions and modification timestamps when saving edits.
+- Warn before saving a custom instruction that attempts to override the fixed format or Schema, requiring a second confirmation click.
+
+### Observability
+- Store Prompt Hash, Schema, Compiler, template version, target platform, model adapter, and validation metadata on new history records while keeping old records compatible.
+
 ## 0.6.0 - 2026-07-07
 
 ### Features

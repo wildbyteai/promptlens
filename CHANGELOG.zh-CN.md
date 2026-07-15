@@ -1,5 +1,24 @@
 # 更新日志
 
+## 未发布
+
+### 新功能
+- 新增统一 Prompt Compiler，为 API 自动分析和 ChatGPT Assist 共享证据、语言、Negative Prompt、变体和平台规则。
+- 新增结构化输出模式和目标图像生成平台设置。
+- 新增 Native JSON Schema、分模板 Token 预算、输出截断识别和部分成功提示。
+- 新增 Anthropic Messages API `tool_use` 支持，并加入 Midjourney 目标平台选项。
+- 将结构化输出契约集中到单一 Prompt Schema 模块，供 Compiler、Adapter 和 Validator 共享。
+
+### 修复
+- 修复复制视觉营销模板后退化为普通模板的问题。
+- 修复 `prompt_variants` 缺失时仍静默显示完整成功的问题。
+- 移除 ChatGPT Assist 直接拼接 API Schema instruction 导致的格式冲突。
+- 自定义模板保存时递增版本并更新修改时间。
+- 自定义指令试图覆盖固定格式或 Schema 时，改为保存前警告，并要求再次点击确认。
+
+### 可观测性
+- 新历史记录保存 Prompt Hash、Schema、Compiler、模板版本、平台、模型适配器和校验状态元数据；旧记录保持兼容。
+
 ## 0.6.0 - 2026-07-07
 
 ### 新功能

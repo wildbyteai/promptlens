@@ -626,6 +626,28 @@ a:active {
   color: var(--danger);
 }
 
+.status-text[data-tone="warning"] {
+  color: #9a6700;
+}
+
+.validation-warning-card {
+  display: grid;
+  gap: 8px;
+}
+
+.validation-warning-card[hidden] {
+  display: none;
+}
+
+.validation-warning-card p,
+.validation-warning-card ul {
+  margin: 0;
+}
+
+.validation-warning-card ul {
+  padding-left: 20px;
+}
+
 .state-panel {
   min-height: 260px;
   display: grid;
