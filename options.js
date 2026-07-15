@@ -6,20 +6,23 @@ const DEFAULT_CONFIG = {
   analysisMode: 'api'
 };
 
+const t = (key, params) => window.PromptLensI18n.t(key, params);
+
 const PROVIDER_PRESETS = [
-  { id: 'custom', name: 'Custom', baseUrl: '' },
+  { id: 'custom', nameKey: 'providerCustomName', baseUrl: '' },
   { id: 'openai', name: 'OpenAI', baseUrl: 'https://api.openai.com/v1' },
   { id: 'deepseek', name: 'DeepSeek', baseUrl: 'https://api.deepseek.com/v1' },
   { id: 'alibaba', name: 'Alibaba DashScope', baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1' },
   { id: 'siliconflow', name: 'SiliconFlow', baseUrl: 'https://api.siliconflow.cn/v1' },
   { id: 'groq', name: 'Groq', baseUrl: 'https://api.groq.com/openai/v1' },
   { id: 'openrouter', name: 'OpenRouter', baseUrl: 'https://openrouter.ai/api/v1' },
-  { id: 'ollama', name: 'Ollama 本地', baseUrl: 'http://localhost:11434/v1' }
+  { id: 'ollama', nameKey: 'providerOllamaLocalName', baseUrl: 'http://localhost:11434/v1' }
 ];
 
 /* ── DOM refs ──────────────────────────────────────────── */
 
 const form = document.getElementById('options-form');
+const uiLanguageSelect = document.getElementById('ui-language');
 const providerPresetSelect = document.getElementById('provider-preset');
 const baseUrlInput = document.getElementById('api-base-url');
 const apiKeyInput = document.getElementById('api-key');
@@ -106,12 +109,42 @@ function hideBanner(el) {
   el.innerHTML = '';
 }
 
-function showConfigStatus(message, tone) {
-  showBanner(configStatusBanner, message, tone);
+let currentConfigStatus = null;
+let currentPermStatus = null;
+
+function localizeStatus(status) {
+  if (status.actionKey) {
+    const detail = status.error && status.error.i18nKey
+      ? t(status.error.i18nKey, status.error.i18nParams || {})
+      : status.error && status.error.message ? status.error.message : t('commonUnknown');
+    return t('optionsErrorWithDetail', { action: t(status.actionKey), detail });
+  }
+  return t(status.key, status.params || {});
 }
 
-function showPermStatus(message, tone) {
-  showBanner(permStatusBanner, message, tone);
+function renderLocalizedStatus(el, status) {
+  if (!status) return;
+  showBanner(el, localizeStatus(status), status.tone);
+}
+
+function showLocalizedConfigStatus(key, tone, params = {}) {
+  currentConfigStatus = { key, tone, params };
+  renderLocalizedStatus(configStatusBanner, currentConfigStatus);
+}
+
+function showConfigActionError(actionKey, error) {
+  currentConfigStatus = { actionKey, error, tone: 'error' };
+  renderLocalizedStatus(configStatusBanner, currentConfigStatus);
+}
+
+function showLocalizedPermStatus(key, tone, params = {}) {
+  currentPermStatus = { key, tone, params };
+  renderLocalizedStatus(permStatusBanner, currentPermStatus);
+}
+
+function showPermActionError(actionKey, error) {
+  currentPermStatus = { actionKey, error, tone: 'error' };
+  renderLocalizedStatus(permStatusBanner, currentPermStatus);
 }
 
 /* ── Provider presets ─────────────────────────────────── */
@@ -121,7 +154,7 @@ function populateProviderPresets() {
   PROVIDER_PRESETS.forEach(provider => {
     const option = document.createElement('option');
     option.value = provider.id;
-    option.textContent = provider.name;
+    option.textContent = provider.nameKey ? t(provider.nameKey) : provider.name;
     providerPresetSelect.appendChild(option);
   });
 }
@@ -136,39 +169,39 @@ function syncProviderPresetFromUrl() {
 
 const PROVIDER_RECIPES = [
   {
-    name: 'Custom OpenAI-compatible',
+    nameKey: 'providerRecipeCustomName',
     baseUrl: 'https://your-provider.example/v1',
-    model: '填写支持 vision 的模型名',
-    check: '确认服务支持 /chat/completions 与 image_url 输入。',
-    caution: '不要把陌生或不可信地址作为 Base URL。'
+    modelKey: 'providerRecipeCustomModel',
+    checkKey: 'providerRecipeCustomCheck',
+    cautionKey: 'providerRecipeCustomCaution'
   },
   {
     name: 'OpenAI',
     baseUrl: 'https://api.openai.com/v1',
-    model: '选择支持视觉输入的模型',
-    check: '保存后直接用右键图片或框选截图验证实际分析。',
-    caution: '不同模型能力和价格不同，请以控制台为准。'
+    modelKey: 'providerRecipeOpenaiModel',
+    checkKey: 'providerRecipeOpenaiCheck',
+    cautionKey: 'providerRecipeOpenaiCaution'
   },
   {
-    name: 'Ollama 本地',
+    nameKey: 'providerOllamaLocalName',
     baseUrl: 'http://localhost:11434/v1',
-    model: '本地已安装的 vision-capable 模型',
-    check: '确认 Ollama 正在运行，且模型支持图片输入。',
-    caution: '本地 HTTP 仅允许 localhost 或 127.0.0.1。'
+    modelKey: 'providerRecipeOllamaModel',
+    checkKey: 'providerRecipeOllamaCheck',
+    cautionKey: 'providerRecipeOllamaCaution'
   },
   {
-    name: 'OpenRouter / SiliconFlow',
-    baseUrl: '使用服务商提供的 OpenAI-compatible /v1 地址',
-    model: '选择明确支持 vision 的模型',
-    check: '如果分析失败，优先检查模型名、路由和服务商错误日志。',
-    caution: 'Provider 预设不代表所有模型都支持图片。'
+    nameKey: 'providerRecipeRouterName',
+    baseUrlKey: 'providerRecipeRouterUrl',
+    modelKey: 'providerRecipeRouterModel',
+    checkKey: 'providerRecipeRouterCheck',
+    cautionKey: 'providerRecipeRouterCaution'
   },
   {
-    name: 'DeepSeek 注意事项',
+    nameKey: 'providerRecipeDeepseekName',
     baseUrl: 'https://api.deepseek.com/v1',
-    model: '以官方文档和实际分析结果为准',
-    check: 'DeepSeek 文本接口可达不代表所有模型都能分析图片。',
-    caution: '不要把 DeepSeek 预设理解为所有 DeepSeek 模型都支持图片。'
+    modelKey: 'providerRecipeDeepseekModel',
+    checkKey: 'providerRecipeDeepseekCheck',
+    cautionKey: 'providerRecipeDeepseekCaution'
   }
 ];
 
@@ -180,13 +213,13 @@ function renderProviderRecipes() {
     const card = document.createElement('article');
     card.className = 'provider-recipe-card';
     const title = document.createElement('h4');
-    title.textContent = recipe.name;
+    title.textContent = recipe.nameKey ? t(recipe.nameKey) : recipe.name;
     const dl = document.createElement('dl');
     [
-      ['Base URL', recipe.baseUrl],
-      ['Model', recipe.model],
-      ['检查点', recipe.check],
-      ['注意', recipe.caution]
+      [t('providerRecipeBaseUrl'), recipe.baseUrlKey ? t(recipe.baseUrlKey) : recipe.baseUrl],
+      [t('providerRecipeModel'), t(recipe.modelKey)],
+      [t('providerRecipeCheck'), t(recipe.checkKey)],
+      [t('providerRecipeCaution'), t(recipe.cautionKey)]
     ].forEach(([label, value]) => {
       const row = document.createElement('div');
       const dt = document.createElement('dt');
@@ -221,8 +254,8 @@ async function updateTemplateHint() {
   saveTemplateButton.disabled = isBuiltIn;
   deleteTemplateButton.disabled = isBuiltIn;
   templateEditorHint.textContent = isBuiltIn
-    ? '内置模板不可直接编辑。可点击“复制当前模板”后再维护平台专属差异。'
-    : `自定义 instruction 上限 ${window.PromptTemplates.INSTRUCTION_MAX_LENGTH} 字符，系统会固定追加 JSON 输出结构要求。`;
+    ? t('customTemplateBuiltInReadonly')
+    : t('customTemplateInstructionLimit', { limit: window.PromptTemplates.INSTRUCTION_MAX_LENGTH });
 }
 
 async function populateTemplateSelect(selectedId) {
@@ -245,7 +278,7 @@ async function saveCurrentCustomTemplate() {
   hideBanner(configStatusBanner);
   const template = await getSelectedTemplate();
   if (template.builtIn) {
-    showConfigStatus('内置模板不可直接编辑，请先复制为自定义模板。', 'warning');
+    showLocalizedConfigStatus('errorTemplateBuiltInEdit', 'warning');
     return;
   }
   const updated = await window.PromptTemplates.updateCustomTemplate(template.id, {
@@ -254,7 +287,7 @@ async function saveCurrentCustomTemplate() {
     instruction: templateInstructionInput.value
   });
   await populateTemplateSelect(updated.id);
-  showConfigStatus('自定义模板已保存。', 'success');
+  showLocalizedConfigStatus('optionsStatusTemplateSaved', 'success');
 }
 
 function downloadText(filename, text, mimeType) {
@@ -274,8 +307,8 @@ function downloadText(filename, text, mimeType) {
 async function showSummary(config) {
   const mode = normalizeAnalysisMode(config.analysisMode);
   if (mode === 'chatgpt_assist') {
-    summaryUrl.textContent = 'ChatGPT Plus 辅助模式';
-    summaryModel.textContent = '不需要 API Key';
+    summaryUrl.textContent = t('analysisModeChatgptSummary');
+    summaryModel.textContent = t('analysisModeNoApiKey');
     const template = await window.PromptTemplates.getTemplateById(config.activeTemplateId);
     summaryTemplate.textContent = template.name;
     configSummary.hidden = false;
@@ -306,24 +339,27 @@ async function refreshPermissionStatus() {
   try {
     const has = await chrome.permissions.contains({ origins: ['<all_urls>'] });
     if (has) {
-      permImageDesc.textContent = '已授权。可以右键分析任意网站的图片。';
+      permImageDesc.textContent = t('imagePermissionGrantedDescription');
       permImageBadge.className = 'badge badge--success';
-      permImageBadge.innerHTML = '<span class="badge-dot"></span> 已授权';
-      grantImageButton.textContent = '权限已授权';
+      permImageBadge.replaceChildren();
+      permImageBadge.append(Object.assign(document.createElement('span'), { className: 'badge-dot' }), document.createTextNode(` ${t('statusGranted')}`));
+      grantImageButton.textContent = t('imagePermissionGrantedButton');
       grantImageButton.disabled = true;
       grantImageButton.className = 'secondary-button';
     } else {
-      permImageDesc.textContent = '未授权。右键分析远程图片时会提示权限不足，可改用框选截图。';
+      permImageDesc.textContent = t('imagePermissionMissingDescription');
       permImageBadge.className = 'badge badge--warning';
-      permImageBadge.innerHTML = '<span class="badge-dot"></span> 未授权';
-      grantImageButton.textContent = '授权图片读取权限';
+      permImageBadge.replaceChildren();
+      permImageBadge.append(Object.assign(document.createElement('span'), { className: 'badge-dot' }), document.createTextNode(` ${t('statusNotGranted')}`));
+      grantImageButton.textContent = t('imagePermissionGrant');
       grantImageButton.disabled = false;
       grantImageButton.className = 'primary-button';
     }
   } catch {
-    permImageDesc.textContent = '无法检测权限状态。';
+    permImageDesc.textContent = t('imagePermissionCheckFailed');
     permImageBadge.className = 'badge badge--error';
-    permImageBadge.innerHTML = '<span class="badge-dot"></span> 检测失败';
+    permImageBadge.replaceChildren();
+    permImageBadge.append(Object.assign(document.createElement('span'), { className: 'badge-dot' }), document.createTextNode(` ${t('statusCheckFailed')}`));
   }
 }
 
@@ -334,15 +370,15 @@ function validateApiBaseUrl(urlString) {
   try {
     url = new URL(urlString);
   } catch {
-    return 'AI Base URL 格式无效，请输入合法 URL。';
+    return 'errorApiUrlInvalid';
   }
   if (url.protocol === 'https:') return null;
   if (url.protocol === 'http:') {
     const hostname = url.hostname;
     if (hostname === 'localhost' || hostname === '127.0.0.1') return null;
-    return 'AI Base URL 必须使用 HTTPS（本地开发可使用 http://localhost 或 http://127.0.0.1）。';
+    return 'errorApiHttpsRequired';
   }
-  return 'AI Base URL 必须使用 http 或 https 协议。';
+  return 'errorApiProtocolInvalid';
 }
 
 async function requestApiOriginPermission(apiBaseUrl) {
@@ -385,8 +421,8 @@ function renderAnalysisMode(mode) {
   if (analysisModeNote) analysisModeNote.hidden = normalized !== 'chatgpt_assist';
   if (apiConfigModeHint) {
     apiConfigModeHint.textContent = normalized === 'chatgpt_assist'
-      ? '当前使用 ChatGPT Plus 辅助模式，API 字段不是必填；切回 API 自动分析时再填写。'
-      : 'PromptLens 会使用这些 API 字段自动调用你配置的模型服务。';
+      ? t('apiConfigModeHintChatgpt')
+      : t('apiConfigModeHintApi');
   }
   baseUrlInput.required = normalized === 'api';
   apiKeyInput.required = normalized === 'api';
@@ -429,15 +465,15 @@ function deriveChecklistState(config) {
   const hasConfig = isCompleteConfig(config);
   if (mode === 'chatgpt_assist') {
     return {
-      config: { state: 'done', label: '已选择' },
-      analyze: { state: 'active', label: '可开始' },
-      output: { state: 'pending', label: '在 ChatGPT 中完成' }
+      config: { state: 'done', label: t('statusSelected') },
+      analyze: { state: 'active', label: t('statusReady') },
+      output: { state: 'pending', label: t('statusCompleteInChatgpt') }
     };
   }
   return {
-    config: hasConfig ? { state: 'done', label: '已填写' } : { state: 'active', label: '待配置' },
-    analyze: hasConfig ? { state: 'active', label: '可开始' } : { state: 'pending', label: '准备中' },
-    output: hasConfig ? { state: 'active', label: '分析后完成' } : { state: 'pending', label: '准备中' }
+    config: hasConfig ? { state: 'done', label: t('statusConfigured') } : { state: 'active', label: t('statusNeedsConfig') },
+    analyze: hasConfig ? { state: 'active', label: t('statusReady') } : { state: 'pending', label: t('statusPreparing') },
+    output: hasConfig ? { state: 'active', label: t('statusCompleteAfterAnalysis') } : { state: 'pending', label: t('statusPreparing') }
   };
 }
 
@@ -458,14 +494,14 @@ async function loadFirstSuccessCollapsedState() {
   const collapsed = Boolean(stored[FIRST_SUCCESS_COLLAPSED_KEY]);
   firstSuccessBody.hidden = collapsed;
   firstSuccessToggle.setAttribute('aria-expanded', String(!collapsed));
-  firstSuccessToggle.textContent = collapsed ? '展开' : '收起';
+  firstSuccessToggle.textContent = collapsed ? t('commonExpand') : t('commonCollapse');
 }
 
 async function toggleFirstSuccessCollapsed() {
   const collapsed = !firstSuccessBody.hidden;
   firstSuccessBody.hidden = collapsed;
   firstSuccessToggle.setAttribute('aria-expanded', String(!collapsed));
-  firstSuccessToggle.textContent = collapsed ? '展开' : '收起';
+  firstSuccessToggle.textContent = collapsed ? t('commonExpand') : t('commonCollapse');
   await chrome.storage.local.set({ [FIRST_SUCCESS_COLLAPSED_KEY]: collapsed });
 }
 
@@ -510,7 +546,7 @@ async function saveConfig() {
 
   if (config.analysisMode === 'api') {
     if (!config.apiBaseUrl) {
-      showConfigStatus('请填写 AI Base URL。', 'error');
+      showLocalizedConfigStatus('errorApiBaseUrlRequired', 'error');
       baseUrlInput.focus();
       baseUrlInput.classList.add('input-error');
       return;
@@ -519,7 +555,7 @@ async function saveConfig() {
 
     const urlError = validateApiBaseUrl(config.apiBaseUrl);
     if (urlError) {
-      showConfigStatus(urlError, 'error');
+      showLocalizedConfigStatus(urlError, 'error');
       baseUrlInput.focus();
       baseUrlInput.classList.add('input-error');
       return;
@@ -527,20 +563,20 @@ async function saveConfig() {
     baseUrlInput.classList.remove('input-error');
 
     if (!config.apiKey) {
-      showConfigStatus('请填写 API Key。', 'error');
+      showLocalizedConfigStatus('errorApiKeyRequired', 'error');
       apiKeyInput.focus();
       return;
     }
 
     if (!config.apiModel) {
-      showConfigStatus('请填写 Model。', 'error');
+      showLocalizedConfigStatus('errorApiModelRequired', 'error');
       modelInput.focus();
       return;
     }
 
     const granted = await requestApiOriginPermission(config.apiBaseUrl);
     if (!granted) {
-      showConfigStatus('需要授权 API 地址的网络权限才能发送请求。', 'error');
+      showLocalizedConfigStatus('errorApiPermissionRequired', 'error');
       return;
     }
   }
@@ -551,7 +587,7 @@ async function saveConfig() {
     maxImageSide,
     jpegQuality
   });
-  showConfigStatus('设置已保存。', 'success');
+  showLocalizedConfigStatus('optionsStatusSettingsSaved', 'success');
   await refreshChecklistState();
   await showSummary(config);
 }
@@ -559,13 +595,19 @@ async function saveConfig() {
 /* ── Event listeners ───────────────────────────────────── */
 
 firstSuccessToggle.addEventListener('click', () => {
-  toggleFirstSuccessCollapsed().catch(error => showConfigStatus(`引导区状态保存失败：${error.message}`, 'error'));
+  toggleFirstSuccessCollapsed().catch(error => showConfigActionError('errorActionStateSave', error));
 });
 
 form.addEventListener('submit', event => {
   event.preventDefault();
   saveConfig().catch(error => {
-    showConfigStatus(`保存失败：${error.message}`, 'error');
+    showConfigActionError('errorActionSave', error);
+  });
+});
+
+uiLanguageSelect.addEventListener('change', () => {
+  window.PromptLensI18n.setLanguage(uiLanguageSelect.value).catch(error => {
+    showConfigActionError('errorActionSettingsLoad', error);
   });
 });
 
@@ -581,53 +623,53 @@ providerPresetSelect.addEventListener('change', () => {
 baseUrlInput.addEventListener('input', syncProviderPresetFromUrl);
 
 templateSelect.addEventListener('change', () => {
-  updateTemplateHint().catch(error => showConfigStatus(`模板加载失败：${error.message}`, 'error'));
+  updateTemplateHint().catch(error => showConfigActionError('errorActionTemplateLoad', error));
 });
 
 copyTemplateButton.addEventListener('click', () => {
   window.PromptTemplates.duplicateTemplate(templateSelect.value).then(template => {
     return populateTemplateSelect(template.id).then(() => {
-      showConfigStatus('已复制为自定义模板，可以编辑后保存。', 'success');
+      showLocalizedConfigStatus('optionsStatusTemplateCopied', 'success');
     });
-  }).catch(error => showConfigStatus(`复制失败：${error.message}`, 'error'));
+  }).catch(error => showConfigActionError('errorActionCopy', error));
 });
 
 newTemplateButton.addEventListener('click', () => {
   window.PromptTemplates.createCustomTemplate({
-    name: '新建自定义模板',
-    description: '用户自定义模板。',
+    name: t('customTemplateNewDefaultName'),
+    description: t('templateUserDefined'),
     instruction: 'Describe the visible image for a specific image-generation workflow. Keep all details grounded in visible evidence.'
   }).then(template => {
     return populateTemplateSelect(template.id).then(() => {
-      showConfigStatus('已创建自定义模板。', 'success');
+      showLocalizedConfigStatus('optionsStatusTemplateCreated', 'success');
     });
-  }).catch(error => showConfigStatus(`创建失败：${error.message}`, 'error'));
+  }).catch(error => showConfigActionError('errorActionCreate', error));
 });
 
 saveTemplateButton.addEventListener('click', () => {
-  saveCurrentCustomTemplate().catch(error => showConfigStatus(`保存模板失败：${error.message}`, 'error'));
+  saveCurrentCustomTemplate().catch(error => showConfigActionError('errorActionTemplateSave', error));
 });
 
 deleteTemplateButton.addEventListener('click', () => {
   getSelectedTemplate().then(template => {
     if (template.builtIn) {
-      showConfigStatus('内置模板不可删除。', 'warning');
+      showLocalizedConfigStatus('errorTemplateBuiltInDelete', 'warning');
       return null;
     }
     return window.PromptTemplates.deleteCustomTemplate(template.id).then(() => {
       return populateTemplateSelect(window.PromptTemplates.DEFAULT_TEMPLATE_ID).then(() => {
-        showConfigStatus('自定义模板已删除。', 'info');
+        showLocalizedConfigStatus('optionsStatusTemplateDeleted', 'info');
       });
     });
-  }).catch(error => showConfigStatus(`删除失败：${error.message}`, 'error'));
+  }).catch(error => showConfigActionError('errorActionDelete', error));
 });
 
 exportTemplatesButton.addEventListener('click', () => {
   window.PromptTemplates.exportCustomTemplates().then(payload => {
     const stamp = new Date().toISOString().slice(0, 16).replace(/:/g, '-');
     downloadText(`promptlens-templates-${stamp}.json`, JSON.stringify(payload, null, 2), 'application/json;charset=utf-8');
-    showConfigStatus('自定义模板已导出。', 'success');
-  }).catch(error => showConfigStatus(`导出失败：${error.message}`, 'error'));
+    showLocalizedConfigStatus('optionsStatusTemplateExported', 'success');
+  }).catch(error => showConfigActionError('errorActionExport', error));
 });
 
 importTemplatesButton.addEventListener('click', () => {
@@ -642,10 +684,10 @@ templateImportFile.addEventListener('change', () => {
   }).then(imported => {
     const selectedId = imported[0] ? imported[0].id : window.PromptTemplates.DEFAULT_TEMPLATE_ID;
     return populateTemplateSelect(selectedId).then(() => {
-      showConfigStatus(`已导入 ${imported.length} 个自定义模板。`, 'success');
+      showLocalizedConfigStatus('optionsStatusTemplateImported', 'success', { count: imported.length });
     });
   }).catch(error => {
-    showConfigStatus(`导入失败：${error.message}`, 'error');
+    showConfigActionError('errorActionImport', error);
   }).finally(() => {
     templateImportFile.value = '';
   });
@@ -654,7 +696,7 @@ templateImportFile.addEventListener('change', () => {
 toggleApiKeyButton.addEventListener('click', () => {
   const shouldShow = apiKeyInput.type === 'password';
   apiKeyInput.type = shouldShow ? 'text' : 'password';
-  toggleApiKeyButton.textContent = shouldShow ? '隐藏' : '显示';
+  toggleApiKeyButton.textContent = shouldShow ? t('commonHide') : t('commonShow');
 });
 
 resetFormButton.addEventListener('click', () => {
@@ -667,11 +709,11 @@ resetFormButton.addEventListener('click', () => {
   baseUrlInput.classList.remove('input-error');
   hideBanner(configStatusBanner);
   chrome.storage.local.remove(['apiBaseUrl', 'apiKey', 'apiModel', 'activeTemplateId', 'analysisMode']).then(() => {
-    showConfigStatus('设置已清空。', 'info');
+    showLocalizedConfigStatus('optionsStatusSettingsCleared', 'info');
     hideSummary();
     refreshChecklistState().catch(() => {});
   }).catch(error => {
-    showConfigStatus(`清空失败：${error.message}`, 'error');
+    showConfigActionError('errorActionClear', error);
   });
 });
 
@@ -684,27 +726,27 @@ grantImageButton.addEventListener('click', async () => {
   try {
     const granted = await chrome.permissions.request({ origins: ['<all_urls>'] });
     if (granted) {
-      showPermStatus('图片读取权限已授权。现在可以右键分析任意网站的图片。', 'success');
+      showLocalizedPermStatus('imagePermissionGrantedMessage', 'success');
     } else {
-      showPermStatus('权限请求被拒绝。如需分析远程图片，请重新点击授权，或使用"框选截图并分析"。', 'warning');
+      showLocalizedPermStatus('imagePermissionDeniedMessage', 'warning');
     }
     await refreshPermissionStatus();
   } catch (error) {
-    showPermStatus(`授权失败：${error.message}`, 'error');
+    showPermActionError('errorActionAuthorize', error);
   }
 });
 
 
 historyEnabledInput.addEventListener('change', () => {
   window.PromptHistory.setHistoryEnabled(historyEnabledInput.checked).then(() => {
-    showConfigStatus(historyEnabledInput.checked ? '本地历史记录已开启。' : '本地历史记录已关闭。', 'info');
-  }).catch(error => showConfigStatus(`历史记录设置失败：${error.message}`, 'error'));
+    showLocalizedConfigStatus(historyEnabledInput.checked ? 'optionsStatusHistoryEnabled' : 'optionsStatusHistoryDisabled', 'info');
+  }).catch(error => showConfigActionError('errorActionHistorySettings', error));
 });
 
 clearHistoryButton.addEventListener('click', () => {
   window.PromptHistory.clearHistory().then(() => {
-    showConfigStatus('本地历史记录已清空。', 'info');
-  }).catch(error => showConfigStatus(`清空历史失败：${error.message}`, 'error'));
+    showLocalizedConfigStatus('optionsStatusHistoryCleared', 'info');
+  }).catch(error => showConfigActionError('errorActionHistoryClear', error));
 });
 
 // 清除输入框错误样式；配置字段变化时刷新首次成功引导
@@ -719,18 +761,52 @@ clearHistoryButton.addEventListener('click', () => {
 [analysisModeApiInput, analysisModeChatGptInput].forEach(input => {
   if (!input) return;
   input.addEventListener('change', () => {
-    persistAnalysisModeFromSelection().catch(error => showConfigStatus(`分析方式保存失败：${error.message}`, 'error'));
+    persistAnalysisModeFromSelection().catch(error => showConfigActionError('errorActionAnalysisModeSave', error));
   });
 });
 
 /* ── Init ──────────────────────────────────────────────── */
 
-populateProviderPresets();
-renderProviderRecipes();
-loadFirstSuccessCollapsedState().catch(() => {});
+async function renderLocalizedOptions() {
+  const selectedBefore = templateSelect.value ? await getSelectedTemplate() : null;
+  const customDraft = selectedBefore && !selectedBefore.builtIn ? {
+    name: templateNameInput.value,
+    description: templateDescriptionInput.value,
+    instruction: templateInstructionInput.value
+  } : null;
+  window.PromptLensI18n.apply(document);
+  uiLanguageSelect.value = window.PromptLensI18n.getLanguage();
+  populateProviderPresets();
+  syncProviderPresetFromUrl();
+  renderProviderRecipes();
+  renderAnalysisMode(getAnalysisMode());
+  await populateTemplateSelect(templateSelect.value || window.PromptTemplates.DEFAULT_TEMPLATE_ID);
+  if (customDraft) {
+    templateNameInput.value = customDraft.name;
+    templateDescriptionInput.value = customDraft.description;
+    templateInstructionInput.value = customDraft.instruction;
+  }
+  await refreshChecklistState();
+  await loadFirstSuccessCollapsedState();
+  await refreshPermissionStatus();
+  if (!configSummary.hidden) await showSummary(getCurrentFormConfig());
+  if (!configStatusBanner.hidden) renderLocalizedStatus(configStatusBanner, currentConfigStatus);
+  if (!permStatusBanner.hidden) renderLocalizedStatus(permStatusBanner, currentPermStatus);
+}
 
-loadConfig().catch(error => {
-  showConfigStatus(`加载设置失败：${error.message}`, 'error');
+async function main() {
+  await window.PromptLensI18n.init();
+  uiLanguageSelect.value = window.PromptLensI18n.getLanguage();
+  populateProviderPresets();
+  renderProviderRecipes();
+  await loadFirstSuccessCollapsedState();
+  await loadConfig();
+  await refreshPermissionStatus();
+  window.PromptLensI18n.onChange(() => {
+    renderLocalizedOptions().catch(error => showConfigActionError('errorActionSettingsLoad', error));
+  });
+}
+
+main().catch(error => {
+  showConfigActionError('errorActionSettingsLoad', error);
 });
-
-refreshPermissionStatus().catch(() => {});

@@ -21,7 +21,7 @@
         "default": "Alt+Shift+S",
         "mac": "Alt+Shift+S"
       },
-      "description": "框选截图并分析"
+      "description": "__MSG_commandCaptureSelectionDescription__"
     }
   },
   "optional_host_permissions": [

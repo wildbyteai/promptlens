@@ -44,6 +44,7 @@
       inputType: item.inputType || 'unknown',
       templateId: item.templateId || '',
       templateName: item.templateName || '',
+      contentLanguage: item.contentLanguage === 'en' ? 'en' : 'zh-CN',
       promptEn: item.promptEn || '',
       promptZh: item.promptZh || '',
       promptTags: Array.isArray(item.promptTags) ? item.promptTags : [],
@@ -63,7 +64,9 @@
   async function listHistoryItems() {
     const db = await openDB();
     const items = await txDone(db, STORE_NAME, 'readonly', store => store.getAll());
-    return items.sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+    return items
+      .map(item => ({ ...item, contentLanguage: item.contentLanguage === 'en' ? 'en' : 'zh-CN' }))
+      .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
   }
 
   async function deleteHistoryItem(id) {

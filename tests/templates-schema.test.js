@@ -1,4 +1,8 @@
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const zhCatalog = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../_locales/zh_CN/messages.json'), 'utf8'));
 
 globalThis.window = globalThis;
 globalThis.chrome = {
@@ -8,6 +12,16 @@ globalThis.chrome = {
       set: async () => {}
     }
   }
+};
+globalThis.PromptLensI18n = {
+  t: key => zhCatalog[key] ? zhCatalog[key].message : key,
+  createError(key, params = {}) {
+    const error = new Error(this.t(key, params));
+    error.i18nKey = key;
+    error.i18nParams = params;
+    return error;
+  },
+  normalizeLanguage: value => value === 'en' ? 'en' : 'zh-CN'
 };
 
 require('../templates.js');

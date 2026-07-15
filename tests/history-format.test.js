@@ -1,4 +1,17 @@
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const zhCatalog = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../_locales/zh_CN/messages.json'), 'utf8'));
+globalThis.PromptLensI18n = {
+  t(key, params = {}) {
+    const message = zhCatalog[key] ? zhCatalog[key].message : key;
+    return message.replace(/\{\{([A-Z0-9_]+)\}\}/gi, (match, name) => {
+      const entry = Object.entries(params).find(([param]) => param.toLowerCase() === name.toLowerCase());
+      return entry ? String(entry[1]) : match;
+    });
+  }
+};
 
 globalThis.PromptVariants = require('../prompt-variants.js');
 
@@ -52,7 +65,7 @@ assert.deepEqual(fields.map(field => field.label), [
   '标签',
   '反向提示词',
   '结构化提示词',
-  '专业用途 Prompt 候选',
+  '专业用途提示词候选',
   '原始 JSON'
 ]);
 assert.equal(fields[0].value, item.imageUrl);
@@ -70,7 +83,7 @@ assert.equal(fields[5].value, 'blurry, low quality');
 assert.equal(fields[6].value, JSON.stringify(item.result.json_prompt, null, 2));
 assert.equal(fields[6].collapsed, true);
 assert.equal(fields[6].emphasis, 'debug');
-assert.match(fields[7].value, /## 专业用途 Prompt 候选/);
+assert.match(fields[7].value, /## 专业用途提示词候选/);
 assert.match(fields[7].value, /### 复刻版/);
 assert.match(fields[7].value, /Faithfully recreate the cinematic cat portrait/);
 assert.equal(fields[7].kind, 'variant-card');
@@ -85,7 +98,7 @@ assert.equal(fields[4].kind, 'tags');
 
 const copyText = buildHistoryCopyText(item);
 assert.match(copyText, /来源：example\.com/);
-assert.match(copyText, /输入类型：selection/);
+assert.match(copyText, /输入类型：框选截图/);
 assert.match(copyText, /模板：详细分析/);
 assert.match(copyText, /来源图片 URL\nhttps:\/\/cdn\.example\.com\/assets\/cat\.jpg\?token=abc/);
 assert.match(copyText, /来源页面 URL\nhttps:\/\/example\.com\/gallery\/cat/);
@@ -94,7 +107,7 @@ assert.match(copyText, /中文提示词\n一张电影感猫咪肖像/);
 assert.match(copyText, /标签\ncat, cinematic, soft light/);
 assert.match(copyText, /反向提示词\nblurry, low quality/);
 assert.match(copyText, /结构化提示词\n\{\n  "subject": "cat",\n  "lighting": "soft light"\n\}/);
-assert.match(copyText, /专业用途 Prompt 候选/);
+assert.match(copyText, /专业用途提示词候选/);
 assert.match(copyText, /Extend the cat portrait into a dreamy editorial concept/);
 
 const legacyItem = {

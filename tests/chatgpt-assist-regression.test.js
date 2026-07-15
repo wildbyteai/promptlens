@@ -62,6 +62,15 @@ assert.match(
   'ChatGPT Assist 指令必须保留内置非营销模板的 instruction 语义'
 );
 
+assert.match(
+  resultJs,
+  /function buildChatGptAssistInstruction\(template, businessContext = '', outputLanguage = window\.PromptLensI18n\.getLanguage\(\)\)/,
+  'ChatGPT Assist 指令构建接口必须接收输出语言'
+);
+assert.match(resultJs, /const useEnglish = outputLanguage === 'en'/);
+assert.match(resultJs, /Write headings, explanations, and use cases in English/);
+assert.match(resultJs, /buildChatGptAssistInstruction\(template, businessContext, window\.PromptLensI18n\.getLanguage\(\)\)/);
+
 const requiredAssistPromptText = [
   '如果当前对话中没有实际附加图片，请先提醒我上传图片，不要凭空分析。',
   '不要识别真实人物身份',

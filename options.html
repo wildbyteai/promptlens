@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>PromptLens 设置</title>
+    <title data-i18n="optionsPageTitle">PromptLens 设置</title>
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
@@ -12,45 +12,61 @@
         <div class="brand-mark" aria-hidden="true">P</div>
         <div>
           <h1>PromptLens</h1>
-          <p class="subtitle">将图片快速转换为可复制的提示词卡片。</p>
+          <p class="subtitle" data-i18n="optionsSubtitle">将图片快速转换为可复制的提示词卡片。</p>
         </div>
       </header>
+
+      <section class="surface-card" aria-labelledby="language-settings-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="language-settings-title" data-i18n="languageSettingsTitle">界面语言</h2>
+            <p data-i18n="languageSettingsDescription">设置扩展页面、右键菜单和框选提示使用的语言。修改后立即生效。</p>
+          </div>
+        </div>
+        <label class="field-row">
+          <span class="field-label" data-i18n="languageSettingsLabel">显示语言</span>
+          <select id="ui-language" name="uiLanguage">
+            <option value="zh-CN" data-i18n="languageChinese">简体中文</option>
+            <option value="en" data-i18n="languageEnglish">English</option>
+          </select>
+        </label>
+      </section>
 
       <section id="first-success-card" class="surface-card first-success-card" aria-labelledby="first-success-title">
         <div class="section-heading first-success-heading">
           <div>
-            <span class="card-kicker">First Success</span>
-            <h2 id="first-success-title">完成第一次成功分析</h2>
-            <p>配置你的 Vision API，然后用右键图片或框选截图完成第一次分析。</p>
+            <span class="card-kicker" data-i18n="firstSuccessKicker">首次成功</span>
+            <h2 id="first-success-title" data-i18n="firstSuccessTitle">完成第一次成功分析</h2>
+            <p data-i18n="firstSuccessDescription">配置你的 Vision API，然后用右键图片或框选截图完成第一次分析。</p>
           </div>
-          <button id="first-success-toggle" type="button" class="text-button" aria-expanded="true" aria-controls="first-success-body">收起</button>
+          <button id="first-success-toggle" type="button" class="text-button" aria-expanded="true" aria-controls="first-success-body" data-i18n="commonCollapse">收起</button>
         </div>
         <div id="first-success-body" class="first-success-body">
-          <p class="first-success-promise">选择 API 自动分析或 ChatGPT Plus 辅助模式后，你就可以分析第一张图并带走结果。</p>
-          <ol class="first-success-steps" aria-label="首次成功分析步骤">
+          <p class="first-success-promise" data-i18n="firstSuccessPromise">选择 API 自动分析或 ChatGPT Plus 辅助模式后，你就可以分析第一张图并带走结果。</p>
+          <ol class="first-success-steps" aria-label="首次成功分析步骤" data-i18n-aria-label="firstSuccessStepsAria">
             <li id="first-success-step-config" class="first-success-step" data-state="pending">
               <span class="step-index">1</span>
               <div>
-                <strong>选择分析方式</strong>
-                <p>使用 API 自动分析，或选择 ChatGPT Plus 辅助模式准备图片和指令。</p>
+                <strong data-i18n="firstSuccessChooseMode">选择分析方式</strong>
+                <p data-i18n="firstSuccessChooseModeDescription">使用 API 自动分析，或选择 ChatGPT Plus 辅助模式准备图片和指令。</p>
               </div>
-              <span class="step-state">未完成</span>
+              <span class="step-state" data-i18n="statusNotCompleted">未完成</span>
             </li>
             <li id="first-success-step-analyze" class="first-success-step" data-state="pending">
               <span class="step-index">2</span>
               <div>
-                <strong>开始分析图片</strong>
-                <p>右键网页图片最快；如果图片受限、无法右键或不想授权站点权限，请使用框选截图。</p>
+                <strong data-i18n="firstSuccessAnalyzeImage">开始分析图片</strong>
+                <p data-i18n="firstSuccessAnalyzeImageDescription">右键网页图片最快；如果图片受限、无法右键或不想授权站点权限，请使用框选截图。</p>
               </div>
-              <span class="step-state">准备中</span>
+              <span class="step-state" data-i18n="statusPreparing">准备中</span>
             </li>
             <li id="first-success-step-output" class="first-success-step" data-state="pending">
               <span class="step-index">3</span>
               <div>
-                <strong>带走结果</strong>
-                <p>API 模式可复制结构化结果；辅助模式请下载图片、复制指令并在 ChatGPT 中完成分析。</p>
+                <strong data-i18n="firstSuccessTakeResult">带走结果</strong>
+                <p data-i18n="firstSuccessTakeResultDescription">API 模式可复制结构化结果；辅助模式请下载图片、复制指令并在 ChatGPT 中完成分析。</p>
               </div>
-              <span class="step-state">准备中</span>
+              <span class="step-state" data-i18n="statusPreparing">准备中</span>
             </li>
           </ol>
         </div>
@@ -59,46 +75,46 @@
       <section class="surface-card analysis-mode-card" aria-labelledby="analysis-mode-title">
         <div class="section-heading">
           <div>
-            <h2 id="analysis-mode-title">分析方式</h2>
-            <p>选择自动调用 API，或使用 ChatGPT Plus 网页端手动完成分析。</p>
+            <h2 id="analysis-mode-title" data-i18n="analysisModeTitle">分析方式</h2>
+            <p data-i18n="analysisModeDescription">选择自动调用 API，或使用 ChatGPT Plus 网页端手动完成分析。</p>
           </div>
         </div>
         <div class="analysis-mode-options" role="radiogroup" aria-labelledby="analysis-mode-title">
           <label class="analysis-mode-option">
             <input id="analysis-mode-api" name="analysisMode" type="radio" value="api" checked>
             <span>
-              <strong>API 自动分析</strong>
-              <small>使用你配置的 OpenAI-compatible Vision API，PromptLens 自动调用模型并展示结构化结果。</small>
+              <strong data-i18n="analysisModeApiName">API 自动分析</strong>
+              <small data-i18n="analysisModeApiDescription">使用你配置的 OpenAI-compatible Vision API，PromptLens 自动调用模型并展示结构化结果。</small>
             </span>
           </label>
           <label class="analysis-mode-option">
             <input id="analysis-mode-chatgpt" name="analysisMode" type="radio" value="chatgpt_assist">
             <span>
-              <strong>ChatGPT Plus 辅助模式</strong>
-              <small>不需要 API Key。PromptLens 准备图片和指令，你在 ChatGPT 网页端上传图片并粘贴指令。</small>
+              <strong data-i18n="analysisModeChatgptName">ChatGPT Plus 辅助模式</strong>
+              <small data-i18n="analysisModeChatgptDescription">不需要 API Key。PromptLens 准备图片和指令，你在 ChatGPT 网页端上传图片并粘贴指令。</small>
             </span>
           </label>
         </div>
         <div id="analysis-mode-note" class="first-success-note" hidden>
-          <strong>当前模式：</strong>
-          <span>ChatGPT Plus 辅助模式不会调用 API，也不会自动上传、发送或读取 ChatGPT 网页端回复。</span>
+          <strong data-i18n="analysisModeCurrentLabel">当前模式：</strong>
+          <span data-i18n="analysisModeChatgptNote">ChatGPT Plus 辅助模式不会调用 API，也不会自动上传、发送或读取 ChatGPT 网页端回复。</span>
         </div>
       </section>
 
       <section class="surface-card permission-card" aria-labelledby="permission-title">
         <div>
-          <h2 id="permission-title">图片读取权限</h2>
-          <p>右键分析远程图片需要一次性授权；框选截图可作为无需授权的替代方案。</p>
+          <h2 id="permission-title" data-i18n="imagePermissionTitle">图片读取权限</h2>
+          <p data-i18n="imagePermissionDescription">右键分析远程图片需要一次性授权；框选截图可作为无需授权的替代方案。</p>
         </div>
         <div class="permission-row" id="perm-image-status">
           <div class="permission-copy">
-            <span class="permission-label">所有网站图片读取</span>
-            <span class="permission-desc" id="perm-image-desc">检测中...</span>
+            <span class="permission-label" data-i18n="imagePermissionAllSites">所有网站图片读取</span>
+            <span class="permission-desc" id="perm-image-desc" data-i18n="statusCheckingEllipsis">检测中...</span>
           </div>
-          <span class="badge" id="perm-image-badge"><span class="badge-dot"></span>检测中</span>
+          <span class="badge" id="perm-image-badge"><span class="badge-dot"></span><span data-i18n="statusChecking">检测中</span></span>
         </div>
         <div class="button-row">
-          <button id="grant-image-permission" type="button" class="primary-button">授权图片读取权限</button>
+          <button id="grant-image-permission" type="button" class="primary-button" data-i18n="imagePermissionGrant">授权图片读取权限</button>
         </div>
         <div id="perm-status-banner" class="status-banner" hidden></div>
       </section>
@@ -106,8 +122,8 @@
       <section class="surface-card" aria-labelledby="config-title">
         <div class="section-heading">
           <div>
-            <h2 id="config-title">API 自动分析配置</h2>
-            <p>PromptLens 不内置模型服务。请填写你自己的 OpenAI-compatible Vision API。API Key 只保存在本地浏览器，图片只会发送到你配置的 Base URL。<span id="api-config-mode-hint">PromptLens 会使用这些 API 字段自动调用你配置的模型服务。</span></p>
+            <h2 id="config-title" data-i18n="apiConfigTitle">API 自动分析配置</h2>
+            <p><span data-i18n="apiConfigDescription">PromptLens 不内置模型服务。请填写你自己的 OpenAI-compatible Vision API。API Key 只保存在本地浏览器，图片只会发送到你配置的 Base URL。</span> <span id="api-config-mode-hint" data-i18n="apiConfigModeHintApi">PromptLens 会使用这些 API 字段自动调用你配置的模型服务。</span></p>
           </div>
         </div>
 
@@ -122,104 +138,104 @@
               <dd id="summary-model">-</dd>
             </div>
             <div>
-              <dt>模板</dt>
+              <dt data-i18n="commonTemplate">模板</dt>
               <dd id="summary-template">-</dd>
             </div>
           </dl>
-          <button id="edit-config" type="button" class="text-button">修改配置</button>
+          <button id="edit-config" type="button" class="text-button" data-i18n="apiConfigEdit">修改配置</button>
         </div>
 
         <form id="options-form" class="settings-form" novalidate>
           <label class="field-row">
-            <span class="field-label">Provider 预设</span>
+            <span class="field-label" data-i18n="providerPresetLabel">Provider 预设</span>
             <select id="provider-preset" name="providerPreset"></select>
-            <span class="field-hint">预设只填充 Base URL，不包含 API Key 或 Model；具体可用性以实际分析结果和服务商文档为准。</span>
+            <span class="field-hint" data-i18n="providerPresetHint">预设只填充 Base URL，不包含 API Key 或 Model；具体可用性以实际分析结果和服务商文档为准。</span>
           </label>
 
           <label class="field-row">
             <span class="field-label">AI Base URL</span>
             <input id="api-base-url" name="apiBaseUrl" type="url" placeholder="https://api.openai.com/v1" autocomplete="off" required>
-            <span class="field-hint">必须使用 HTTPS；本地模型服务可用 http://localhost 或 http://127.0.0.1。填写到 /chat/completions 或只填 /v1 均可。</span>
+            <span class="field-hint" data-i18n="apiBaseUrlHint">必须使用 HTTPS；本地模型服务可用 http://localhost 或 http://127.0.0.1。填写到 /chat/completions 或只填 /v1 均可。</span>
           </label>
 
           <label class="field-row">
             <span class="field-label">API Key</span>
             <div class="password-row">
               <input id="api-key" name="apiKey" type="password" placeholder="sk-..." autocomplete="off" required>
-              <button id="toggle-api-key" type="button" class="secondary-button compact-button">显示</button>
+              <button id="toggle-api-key" type="button" class="secondary-button compact-button" data-i18n="commonShow">显示</button>
             </div>
-            <span class="field-hint">密钥保存在浏览器本地 chrome.storage.local。分析请求会发送到你配置的 Base URL，请只使用可信服务。</span>
+            <span class="field-hint" data-i18n="apiKeyHint">密钥保存在浏览器本地 chrome.storage.local。分析请求会发送到你配置的 Base URL，请只使用可信服务。</span>
           </label>
 
           <label class="field-row">
             <span class="field-label">Model</span>
             <input id="api-model" name="apiModel" type="text" placeholder="gpt-4.1-mini / qwen-vl-max / gemini-2.5-flash" autocomplete="off" required>
-            <span class="field-hint">请输入用于图片分析的模型名称；如果右键分析能出结果，就说明当前配置可用。</span>
+            <span class="field-hint" data-i18n="apiModelHint">请输入用于图片分析的模型名称；如果右键分析能出结果，就说明当前配置可用。</span>
           </label>
 
-          <div class="first-success-note" aria-label="隐私与权限说明">
-            <strong>隐私边界：</strong>
-            <span>PromptLens 没有自有后端。分析时，请求会发送到你配置的 Base URL，可能包含 API Key、图片 URL 或截图数据、模板提示词、模型名称和业务背景。</span>
+          <div class="first-success-note" aria-label="隐私与权限说明" data-i18n-aria-label="privacyPermissionAria">
+            <strong data-i18n="privacyBoundaryLabel">隐私边界：</strong>
+            <span data-i18n="apiPrivacyBoundary">PromptLens 没有自有后端。分析时，请求会发送到你配置的 Base URL，可能包含 API Key、图片 URL 或截图数据、模板提示词、模型名称和业务背景。</span>
           </div>
-          <div class="first-success-note" aria-label="图片分析方式说明">
-            <strong>右键 vs 框选：</strong>
-            <span>右键网页图片最快，但部分远程图片需要可选站点权限；框选截图更通用，适合防盗链、canvas、blob、登录页或无法右键的内容。</span>
+          <div class="first-success-note" aria-label="图片分析方式说明" data-i18n-aria-label="imageAnalysisMethodAria">
+            <strong data-i18n="rightClickVsSelectionLabel">右键 vs 框选：</strong>
+            <span data-i18n="rightClickVsSelectionDescription">右键网页图片最快，但部分远程图片需要可选站点权限；框选截图更通用，适合防盗链、canvas、blob、登录页或无法右键的内容。</span>
           </div>
 
           <label class="field-row">
-            <span class="field-label">默认输出模板</span>
+            <span class="field-label" data-i18n="defaultTemplateLabel">默认输出模板</span>
             <select id="prompt-template" name="promptTemplate"></select>
-            <span class="field-hint" id="template-hint">内置模板按输出格式划分；平台专属差异后续可通过自定义模板维护。</span>
+            <span class="field-hint" id="template-hint" data-i18n="defaultTemplateHint">内置模板按输出格式划分；平台专属差异后续可通过自定义模板维护。</span>
           </label>
 
           <div class="template-manager" aria-labelledby="template-manager-title">
             <div class="section-heading compact-heading">
               <div>
-                <h3 id="template-manager-title">自定义模板</h3>
-                <p>内置模板不可直接编辑，可复制为自定义模板后维护平台专属差异。</p>
+                <h3 id="template-manager-title" data-i18n="customTemplatesTitle">自定义模板</h3>
+                <p data-i18n="customTemplatesDescription">内置模板不可直接编辑，可复制为自定义模板后维护平台专属差异。</p>
               </div>
             </div>
 
             <div class="button-row template-actions">
-              <button id="copy-template" type="button" class="secondary-button compact-button">复制当前模板</button>
-              <button id="new-template" type="button" class="secondary-button compact-button">新建模板</button>
-              <button id="delete-template" type="button" class="ghost-button compact-button">删除自定义模板</button>
-              <button id="export-templates" type="button" class="ghost-button compact-button">导出模板</button>
-              <button id="import-templates" type="button" class="ghost-button compact-button">导入模板</button>
+              <button id="copy-template" type="button" class="secondary-button compact-button" data-i18n="customTemplateCopy">复制当前模板</button>
+              <button id="new-template" type="button" class="secondary-button compact-button" data-i18n="customTemplateNew">新建模板</button>
+              <button id="delete-template" type="button" class="ghost-button compact-button" data-i18n="customTemplateDelete">删除自定义模板</button>
+              <button id="export-templates" type="button" class="ghost-button compact-button" data-i18n="customTemplateExport">导出模板</button>
+              <button id="import-templates" type="button" class="ghost-button compact-button" data-i18n="customTemplateImport">导入模板</button>
               <input id="template-import-file" type="file" accept="application/json,.json" hidden>
             </div>
 
             <label class="field-row">
-              <span class="field-label">模板名称</span>
-              <input id="template-name-input" type="text" maxlength="80" placeholder="Seedance 专用 / 即梦优化 / ComfyUI 工作流">
+              <span class="field-label" data-i18n="customTemplateNameLabel">模板名称</span>
+              <input id="template-name-input" type="text" maxlength="80" placeholder="Seedance 专用 / 即梦优化 / ComfyUI 工作流" data-i18n-placeholder="customTemplateNamePlaceholder">
             </label>
 
             <label class="field-row">
-              <span class="field-label">模板说明</span>
-              <input id="template-description-input" type="text" maxlength="160" placeholder="说明这个模板适合什么输出格式或平台差异">
+              <span class="field-label" data-i18n="customTemplateDescriptionLabel">模板说明</span>
+              <input id="template-description-input" type="text" maxlength="160" placeholder="说明这个模板适合什么输出格式或平台差异" data-i18n-placeholder="customTemplateDescriptionPlaceholder">
             </label>
 
             <label class="field-row">
-              <span class="field-label">Instruction</span>
-              <textarea id="template-instruction-input" maxlength="4000" rows="8" placeholder="只写模板差异指令；系统会固定追加 JSON 输出结构要求。"></textarea>
-              <span class="field-hint" id="template-editor-hint">自定义 instruction 上限 4000 字符，不能修改最终 JSON schema。</span>
+              <span class="field-label" data-i18n="customTemplateInstructionLabel">模板指令（Instruction）</span>
+              <textarea id="template-instruction-input" maxlength="4000" rows="8" placeholder="只写模板差异指令；系统会固定追加 JSON 输出结构要求。" data-i18n-placeholder="customTemplateInstructionPlaceholder"></textarea>
+              <span class="field-hint" id="template-editor-hint" data-i18n="customTemplateInstructionHint">自定义 Instruction 上限 4000 字符，不能修改最终 JSON Schema。</span>
             </label>
 
             <div class="button-row">
-              <button id="save-template" type="button" class="secondary-button compact-button">保存自定义模板</button>
+              <button id="save-template" type="button" class="secondary-button compact-button" data-i18n="customTemplateSave">保存自定义模板</button>
             </div>
           </div>
 
           <div class="button-row form-actions">
-            <button type="submit" class="primary-button">保存设置</button>
-            <button id="reset-form" type="button" class="ghost-button">清空</button>
+            <button type="submit" class="primary-button" data-i18n="optionsSaveSettings">保存设置</button>
+            <button id="reset-form" type="button" class="ghost-button" data-i18n="commonClear">清空</button>
           </div>
         </form>
 
         <details id="provider-recipes" class="settings-block provider-recipes">
           <summary>
-            <span>最小 Provider 示例</span>
-            <span class="field-hint">示例只帮助配置，不代表所有模型都支持图片。</span>
+            <span data-i18n="providerExamplesTitle">最小 Provider 示例</span>
+            <span class="field-hint" data-i18n="providerExamplesHint">示例只帮助配置，不代表所有模型都支持图片。</span>
           </summary>
           <div id="provider-recipes-list" class="provider-recipes-list"></div>
         </details>
@@ -227,33 +243,33 @@
         <div class="settings-block">
           <div class="section-heading compact-heading">
             <div>
-              <h3>本地历史记录</h3>
-              <p>默认关闭。开启后保存结果文本、来源域名、原始图片 URL 和页面 URL，不保存图片缩略图。</p>
+              <h3 data-i18n="historySettingsTitle">本地历史记录</h3>
+              <p data-i18n="historySettingsDescription">默认关闭。开启后保存结果文本、来源域名、原始图片 URL 和页面 URL，不保存图片缩略图。</p>
             </div>
           </div>
           <label class="checkbox-row">
             <input id="history-enabled" type="checkbox">
-            <span>保存本地历史记录（最多 200 条）</span>
+            <span data-i18n="historySettingsEnable">保存本地历史记录（最多 200 条）</span>
           </label>
           <div class="button-row">
-            <a class="secondary-button compact-button link-button" href="history.html" target="_blank" rel="noreferrer">打开历史记录</a>
-            <button id="clear-history" type="button" class="ghost-button compact-button">清空历史记录</button>
+            <a class="secondary-button compact-button link-button" href="history.html" target="_blank" rel="noreferrer" data-i18n="historySettingsOpen">打开历史记录</a>
+            <button id="clear-history" type="button" class="ghost-button compact-button" data-i18n="historySettingsClear">清空历史记录</button>
           </div>
         </div>
 
         <div class="settings-block">
           <div class="section-heading compact-heading">
             <div>
-              <h3>高级图片预处理</h3>
-              <p>仅在图片过大或输出质量不稳定时调整。</p>
+              <h3 data-i18n="imagePreprocessingTitle">高级图片预处理</h3>
+              <p data-i18n="imagePreprocessingDescription">仅在图片过大或输出质量不稳定时调整。</p>
             </div>
           </div>
           <label class="field-row">
-            <span class="field-label">最大边长</span>
+            <span class="field-label" data-i18n="maxImageSideLabel">最大边长</span>
             <input id="max-image-side" type="number" min="512" max="4096" step="128" placeholder="2048">
           </label>
           <label class="field-row">
-            <span class="field-label">JPEG 质量</span>
+            <span class="field-label" data-i18n="jpegQualityLabel">JPEG 质量</span>
             <input id="jpeg-quality" type="number" min="0.4" max="0.95" step="0.05" placeholder="0.85">
           </label>
         </div>
@@ -261,6 +277,7 @@
         <div id="config-status-banner" class="status-banner" hidden></div>
       </section>
     </main>
+    <script src="i18n.js"></script>
     <script src="templates.js"></script>
     <script src="history-store.js"></script>
     <script src="options.js"></script>

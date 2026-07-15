@@ -8,19 +8,20 @@
   'use strict';
 
   const VARIANT_ORDER = ['recreate', 'creative', 'commercial'];
+  const t = (key, params) => globalThis.PromptLensI18n ? globalThis.PromptLensI18n.t(key, params) : key;
 
   const DEFAULT_VARIANTS = {
     recreate: {
-      title: '复刻版',
-      intent: '尽量还原参考图的主体、构图、风格、光影和材质'
+      titleKey: 'variantRecreateTitle',
+      intentKey: 'variantRecreateIntent'
     },
     creative: {
-      title: '创意延展版',
-      intent: '保留核心视觉基因，探索新的视觉方向'
+      titleKey: 'variantCreativeTitle',
+      intentKey: 'variantCreativeIntent'
     },
     commercial: {
-      title: '商业强化版',
-      intent: '面向广告、产品图、海报和品牌视觉方向的 prompt 改写建议'
+      titleKey: 'variantCommercialTitle',
+      intentKey: 'variantCommercialIntent'
     }
   };
 
@@ -33,6 +34,15 @@
     return value
       .filter(item => typeof item === 'string' && item.trim())
       .map(item => item.trim());
+  }
+
+  function getVariantExplanation(variant) {
+    const useEnglish = globalThis.PromptLensI18n && globalThis.PromptLensI18n.getLanguage
+      ? globalThis.PromptLensI18n.getLanguage() === 'en'
+      : false;
+    return useEnglish
+      ? normalizeString(variant.intent) || normalizeString(variant.prompt_zh_summary)
+      : normalizeString(variant.prompt_zh_summary) || normalizeString(variant.intent);
   }
 
   function normalizePromptVariants(result) {
@@ -53,8 +63,8 @@
 
       byId.set(id, {
         id,
-        title: normalizeString(raw.title) || defaults.title,
-        intent: normalizeString(raw.intent) || defaults.intent,
+        title: t(defaults.titleKey),
+        intent: normalizeString(raw.intent) || t(defaults.intentKey),
         prompt_en: promptEn,
         prompt_zh_summary: normalizeString(raw.prompt_zh_summary),
         tags: normalizeStringArray(raw.tags),
@@ -74,19 +84,19 @@
     const sections = [
       normalizeString(variant.title),
       '',
-      '说明',
-      normalizeString(variant.prompt_zh_summary) || normalizeString(variant.intent),
+      t('variantExplanation'),
+      getVariantExplanation(variant),
       '',
-      'Prompt',
+      t('variantPrompt'),
       normalizeString(variant.prompt_en),
       '',
-      'Tags',
+      t('variantTags'),
       normalizeStringArray(variant.tags).join(', '),
       '',
-      'Negative Prompt',
+      t('variantNegativePrompt'),
       normalizeString(variant.negative_prompt),
       '',
-      '适用场景',
+      t('variantUseCases'),
       normalizeStringArray(variant.use_cases).join(', ')
     ];
     return sections.join('\n').trim();
@@ -96,20 +106,21 @@
     if (!variant || typeof variant !== 'object' || !variant.isComplete) return '';
     const tags = normalizeStringArray(variant.tags).join(', ');
     const useCases = normalizeStringArray(variant.use_cases).join(', ');
+    const separator = t('commonLabelSeparator');
     return [
       `### ${normalizeString(variant.title)}`,
       '',
-      `**说明：** ${normalizeString(variant.prompt_zh_summary) || normalizeString(variant.intent)}`,
+      `**${t('variantExplanation')}${separator}** ${getVariantExplanation(variant)}`,
       '',
-      '**Prompt：**',
+      `**${t('variantPrompt')}${separator}**`,
       '',
       normalizeString(variant.prompt_en),
       '',
-      `**Tags：** ${tags}`,
+      `**${t('variantTags')}${separator}** ${tags}`,
       '',
-      `**Negative Prompt：** ${normalizeString(variant.negative_prompt)}`,
+      `**${t('variantNegativePrompt')}${separator}** ${normalizeString(variant.negative_prompt)}`,
       '',
-      `**适用场景：** ${useCases}`,
+      `**${t('variantUseCases')}${separator}** ${useCases}`,
       ''
     ].join('\n');
   }
@@ -118,7 +129,7 @@
     const validVariants = Array.isArray(variants) ? variants.filter(variant => variant && variant.isComplete) : [];
     if (!validVariants.length) return '';
     return [
-      '## 专业用途 Prompt 候选',
+      `## ${t('variantsTitle')}`,
       '',
       ...validVariants.map(formatPromptVariantMarkdown)
     ].join('\n').trim();

@@ -35,6 +35,7 @@ PromptLens 是一个轻量级 Chrome MV3 图片反推提示词工具，也可以
 - **自定义模板**：支持复制内置模板、新建、编辑、删除、导入和导出自定义模板。
 - **ChatGPT Plus 辅助模式**：适合有 ChatGPT Plus / Pro 但没有 API Key 的用户；PromptLens 准备图片和指令，并可打开 ChatGPT、等待页面稳定后尝试附加图片并填入指令，供你确认后手动发送。
 - **Provider 预设**：提供 OpenAI、DeepSeek、Alibaba、SiliconFlow、Groq、OpenRouter、Ollama 和 Custom。
+- **界面语言**：默认简体中文，可在设置页切换英文，覆盖设置、结果、历史、右键菜单、框选提示、错误和导出文案。
 - **快捷键框选**：支持 `Alt+Shift+S` 触发框选截图，可在 `chrome://extensions/shortcuts` 修改。
 - **可选历史记录**：默认关闭；开启后保存文本结果、来源域名、原始图片 URL、页面 URL 和模板信息，不保存图片缩略图。
 - **结果导出**：支持复制单项、复制全部、下载 JSON 和下载 Markdown。
@@ -218,11 +219,11 @@ node --check result.js
 
 ## 路线图状态
 
-当前分支已落地到 v0.6.0：首次成功引导、更清晰的 Provider 设置说明、结果页下一步提示、营销业务背景示例、视觉营销诊断、Warm Studio 视觉升级、摘要式历史卡片、内置 / 自定义模板、Provider 预设、快捷键、结果导出、Token usage、可选本地历史记录、基础 i18n、Chrome Web Store 发布准备、面向无 API Key 工作流的 ChatGPT Plus 辅助模式，以及在用户按需授权后可打开 ChatGPT、等待页面稳定并尝试附加图片和填入指令的实验性 ChatGPT 交接。
+当前分支已落地到 v0.6.0：首次成功引导、更清晰的 Provider 设置说明、结果页下一步提示、营销业务背景示例、视觉营销诊断、Warm Studio 视觉升级、摘要式历史卡片、内置 / 自定义模板、Provider 预设、快捷键、结果导出、Token usage、可选本地历史记录、完整的简体中文 / 英文扩展界面、Chrome Web Store 发布准备、面向无 API Key 工作流的 ChatGPT Plus 辅助模式，以及在用户按需授权后可打开 ChatGPT、等待页面稳定并尝试附加图片和填入指令的实验性 ChatGPT 交接。
 
 后续仍保留为反馈驱动的方向：
 
-- 更完整的英文 / 繁体中文界面翻译。
+- 繁体中文界面翻译。
 - Firefox MV3 兼容性调研。
 - 根据真实反馈继续调整图片预处理默认值。
 

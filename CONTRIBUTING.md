@@ -50,8 +50,11 @@ manifest.json      Chrome MV3 manifest
 background.js      右键菜单、截图、临时 payload 中转
 content.js         页面内框选截图交互
 selection.css      注入网页的框选样式
+i18n.js            扩展运行时语言加载、切换和 DOM 文案应用
+_locales/          Manifest 与扩展运行时共用的语言目录
 options.html/js    设置页
 result.html/js     结果页与模型调用
+result-format.js   结果复制与 Markdown 导出格式化
 styles.css         设置页和结果页样式
 ```
 

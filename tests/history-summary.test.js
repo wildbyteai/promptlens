@@ -29,6 +29,22 @@ const sandbox = {
   window: {
     open: () => {},
     setTimeout: () => {},
+    PromptLensI18n: {
+      init: async () => 'zh-CN',
+      getLanguage: () => 'zh-CN',
+      t: key => ({
+        historyNoSummary: '暂无提示词摘要',
+        inputTypeImageUrl: '图片 URL',
+        inputTypeScreenshot: '框选截图',
+        inputTypeDataUrl: 'Data URL',
+        commonUnknownInput: '未知输入'
+      }[key] || key),
+      apply: () => {},
+      onChange: () => () => {}
+    },
+    PromptTemplates: {
+      getBuiltInTemplateById: () => null
+    },
     PromptHistory: {
       isHistoryEnabled: async () => false,
       listHistoryItems: async () => [],
@@ -37,7 +53,14 @@ const sandbox = {
     },
     PromptHistoryFormat: {
       buildHistoryCopyText: () => '',
-      getHistoryDisplayFields: () => []
+      getHistoryDisplayFields: () => [],
+      getInputTypeLabel: value => ({
+        image_url: '图片 URL',
+        screenshot_selection: '框选截图',
+        selection: '框选截图',
+        data_url: 'Data URL',
+        unknown: '未知输入'
+      }[value] || value)
     }
   },
   navigator: { clipboard: { writeText: async () => {} } },
@@ -78,10 +101,10 @@ assert.equal(helpers.getInputTypeLabel('image_url'), '图片 URL');
 assert.equal(helpers.getInputTypeLabel('screenshot_selection'), '框选截图');
 assert.equal(helpers.getInputTypeLabel('selection'), '框选截图');
 assert.equal(helpers.getInputTypeLabel('data_url'), 'Data URL');
-assert.equal(helpers.getInputTypeLabel('unknown'), 'unknown');
+assert.equal(helpers.getInputTypeLabel('unknown'), '未知输入');
 
 assert.match(source, /<details>|document\.createElement\('details'\)/);
 assert.match(source, /history-summary/);
-assert.match(source, /查看完整内容/);
+assert.match(source, /historyViewFull/);
 
 console.log('history summary tests passed');

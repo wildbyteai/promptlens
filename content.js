@@ -17,19 +17,24 @@
       return false;
     }
 
-    startSelection();
+    startSelection(message.copy || {});
     sendResponse({ ok: true });
     return false;
   });
 
-  function startSelection() {
+  function startSelection(copy) {
+    const labels = {
+      hint: String(copy.hint || ''),
+      cancel: String(copy.cancel || ''),
+      tooSmall: String(copy.tooSmall || '')
+    };
     const overlay = document.createElement('div');
     overlay.id = OVERLAY_ID;
     overlay.className = 'promptcard-selection-overlay';
 
     const hint = document.createElement('div');
     hint.className = 'promptcard-selection-hint';
-    hint.textContent = '拖拽选择要分析的区域，按 Esc 取消';
+    hint.textContent = labels.hint;
 
     const box = document.createElement('div');
     box.className = 'promptcard-selection-box';
@@ -37,7 +42,7 @@
     const cancelButton = document.createElement('button');
     cancelButton.type = 'button';
     cancelButton.className = 'promptcard-selection-cancel';
-    cancelButton.textContent = '取消';
+    cancelButton.textContent = labels.cancel;
 
     overlay.append(hint, box, cancelButton);
     document.documentElement.appendChild(overlay);
@@ -121,7 +126,7 @@
 
       const rect = currentRect;
       if (!rect || rect.width < MIN_SIZE || rect.height < MIN_SIZE) {
-        hint.textContent = '选区太小，请拖拽选择更大的区域，按 Esc 取消';
+        hint.textContent = labels.tooSmall;
         box.classList.remove('is-visible');
         currentRect = null;
         return;

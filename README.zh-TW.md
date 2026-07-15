@@ -35,6 +35,7 @@ PromptLens 是一個輕量級 Chrome MV3 圖片反推提示詞工具，也可以
 - **自訂模板**：支援複製內建模板、新建、編輯、刪除、匯入和匯出自訂模板。
 - **ChatGPT Plus 輔助模式**：適合有 ChatGPT Plus / Pro 但沒有 API Key 的使用者；PromptLens 準備圖片和指令，並可打開 ChatGPT、等待頁面穩定後嘗試附加圖片並填入指令，供你確認後手動送出。
 - **Provider 預設**：提供 OpenAI、DeepSeek、Alibaba、SiliconFlow、Groq、OpenRouter、Ollama 和 Custom。
+- **介面語言**：預設簡體中文，可在設定頁切換英文，涵蓋設定、結果、歷史、右鍵選單、框選提示、錯誤與匯出文案。
 - **快捷鍵框選**：支援 `Alt+Shift+S` 觸發框選截圖，可在 `chrome://extensions/shortcuts` 修改。
 - **可選本機歷史記錄**：預設關閉；開啟後儲存文字結果、來源網域、原始圖片 URL、頁面 URL 和模板資訊，不儲存圖片縮圖。
 - **結果匯出**：支援複製單項、複製全部、下載 JSON 和下載 Markdown。
@@ -222,7 +223,7 @@ node --check result.js
 
 後續仍保留為回饋驅動的方向：
 
-- 更完整的英文 / 繁體中文介面翻譯。
+- 繁體中文介面翻譯。
 - Firefox MV3 相容性調研。
 - 根據真實回饋繼續調整圖片預處理預設值。
 

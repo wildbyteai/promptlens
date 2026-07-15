@@ -1,4 +1,23 @@
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const zhCatalog = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../_locales/zh_CN/messages.json'), 'utf8'));
+globalThis.PromptLensI18n = {
+  t(key, params = {}) {
+    const message = zhCatalog[key] ? zhCatalog[key].message : key;
+    return message.replace(/\{\{([A-Z0-9_]+)\}\}/gi, (match, name) => {
+      const entry = Object.entries(params).find(([param]) => param.toLowerCase() === name.toLowerCase());
+      return entry ? String(entry[1]) : match;
+    });
+  },
+  createError(key, params = {}) {
+    const error = new Error(this.t(key, params));
+    error.i18nKey = key;
+    error.i18nParams = params;
+    return error;
+  }
+};
 
 const {
   normalizeMarketingDiagnosis,
@@ -72,13 +91,13 @@ assert.deepEqual(sections.map(section => section.title), ['老板先看', '营�
 assert.equal(sections[0].items[0].label, '商业意图');
 assert.equal(sections[0].items[0].value, '这张图在卖高端护肤品的精致生活感。');
 assert.equal(sections[1].items.some(item => item.label === '营销可用度'), true);
-assert.equal(sections[2].items.some(item => item.label === '低成本改编 brief'), true);
+assert.equal(sections[2].items.some(item => item.label === '低成本改编 Brief'), true);
 
 const copyText = buildMarketingDiagnosisCopyText(result);
 assert.match(copyText, /老板先看/);
 assert.match(copyText, /商业意图\n这张图在卖高端护肤品的精致生活感。/);
 assert.match(copyText, /营销可用度\n4\/5 - 吸引力强，但成交理由还需要更明确。/);
-assert.match(copyText, /低成本改编 brief/);
+assert.match(copyText, /低成本改编 Brief/);
 assert.match(copyText, /诊断仅用于营销创意参考，不代表真实投放效果。/);
 assert.doesNotMatch(copyText, /复制原图|抄图|recreate exactly/i);
 
@@ -98,7 +117,7 @@ assert.match(markdown, /## 7\. 可以延展成哪些内容角度/);
 assert.match(markdown, /敏感肌安心使用/);
 assert.match(markdown, /## 8\. 下一张图可以测试什么/);
 assert.match(markdown, /借鉴暖色生活方式产品图/);
-assert.match(markdown, /仅用于营销创意和视觉表达参考/);
+assert.match(markdown, /诊断仅用于营销创意参考，不代表真实投放效果/);
 
 assert.equal(normalizeSafeMarketingText('请完全复刻并 copy exactly'), '请参考视觉结构并 adapt safely');
 assert.doesNotThrow(() => validateMarketingDiagnosisResult(result));

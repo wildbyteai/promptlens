@@ -4,6 +4,7 @@ const historySearch = document.getElementById('history-search');
 const historyList = document.getElementById('history-list');
 const refreshHistoryButton = document.getElementById('refresh-history');
 const clearHistoryButton = document.getElementById('clear-history-page');
+const t = (key, params) => window.PromptLensI18n.t(key, params);
 
 let allItems = [];
 
@@ -19,12 +20,12 @@ function truncateText(value, maxLength = 140) {
 
 function getHistoryPromptSummary(item) {
   const result = item && item.result && typeof item.result === 'object' ? item.result : {};
+  const prefersEnglish = window.PromptLensI18n && window.PromptLensI18n.getLanguage() === 'en';
+  const preferred = prefersEnglish
+    ? [normalizeString(item && item.promptEn), normalizeString(result.prompt_en), normalizeString(item && item.promptZh), normalizeString(result.prompt_zh)]
+    : [normalizeString(item && item.promptZh), normalizeString(result.prompt_zh), normalizeString(item && item.promptEn), normalizeString(result.prompt_en)];
   return truncateText(
-    normalizeString(item && item.promptZh) ||
-    normalizeString(result.prompt_zh) ||
-    normalizeString(item && item.promptEn) ||
-    normalizeString(result.prompt_en) ||
-    '暂无提示词摘要'
+    preferred.find(Boolean) || t('historyNoSummary')
   );
 }
 
@@ -35,13 +36,18 @@ function getHistoryVisibleTags(item, limit = 5) {
 }
 
 function getInputTypeLabel(inputType) {
-  const labels = {
-    image_url: '图片 URL',
-    screenshot_selection: '框选截图',
-    selection: '框选截图',
-    data_url: 'Data URL'
-  };
-  return labels[inputType] || inputType || '未知输入';
+  if (window.PromptHistoryFormat && window.PromptHistoryFormat.getInputTypeLabel) {
+    return window.PromptHistoryFormat.getInputTypeLabel(inputType) || t('commonUnknownInput');
+  }
+  return inputType || t('commonUnknownInput');
+}
+
+function getTemplateLabel(item) {
+  if (item && item.templateId && window.PromptTemplates) {
+    const builtIn = window.PromptTemplates.getBuiltInTemplateById(item.templateId);
+    if (builtIn) return builtIn.name;
+  }
+  return normalizeString(item && item.templateName) || t('commonUnknownTemplate');
 }
 
 function setStatus(text, tone = 'neutral') {
@@ -54,7 +60,7 @@ function itemMatches(item, query) {
   const tags = Array.isArray(item.promptTags) ? item.promptTags.join(' ') : '';
   const haystack = [
     item.sourceDomain,
-    item.templateName,
+    getTemplateLabel(item),
     item.promptEn,
     item.imageUrl,
     item.pageUrl,
@@ -76,9 +82,9 @@ function createCopyButton(label, getText, className = 'copy-button') {
     const oldText = button.textContent;
     try {
       await navigator.clipboard.writeText(getText());
-      button.textContent = '已复制';
+      button.textContent = t('commonCopied');
     } catch {
-      button.textContent = '复制失败';
+      button.textContent = t('commonCopyFailed');
     }
     window.setTimeout(() => { button.textContent = oldText; }, 1200);
   });
@@ -123,7 +129,7 @@ function createFieldHeader(label, copyText) {
   header.appendChild(title);
 
   if (copyText) {
-    header.appendChild(createCopyButton('复制', () => copyText));
+    header.appendChild(createCopyButton(t('commonCopy'), () => copyText));
   }
 
   return header;
@@ -136,7 +142,7 @@ function createPromptField(field) {
 
   const kicker = document.createElement('span');
   kicker.className = 'card-kicker';
-  kicker.textContent = isPrimary ? '主要输出' : '提示词详情';
+  kicker.textContent = isPrimary ? t('commonMainOutput') : t('commonPromptDetails');
 
   const titleWrap = document.createElement('div');
   titleWrap.append(kicker, createFieldHeader(field.label, field.value));
@@ -167,7 +173,7 @@ function createTagsField(field) {
   if (!tags.length) {
     const empty = document.createElement('p');
     empty.className = 'history-empty-field';
-    empty.textContent = '暂无标签';
+    empty.textContent = t('historyNoTags');
     section.appendChild(empty);
   } else {
     section.appendChild(tagList);
@@ -195,14 +201,14 @@ function createUrlField(field) {
   const openButton = document.createElement('button');
   openButton.type = 'button';
   openButton.className = 'copy-button';
-  openButton.textContent = isPage ? '打开页面' : '打开图片';
+  openButton.textContent = isPage ? t('commonOpenPage') : t('commonOpenImage');
   openButton.addEventListener('click', event => {
     event.preventDefault();
     event.stopPropagation();
     openUrl(field.value);
   });
 
-  actions.append(openButton, createCopyButton('复制 URL', () => field.value));
+  actions.append(openButton, createCopyButton(t('commonCopyUrl'), () => field.value));
   header.append(title, actions);
 
   const urlText = document.createElement('p');
@@ -220,7 +226,7 @@ function createCollapsedField(field) {
     const summary = document.createElement('summary');
     const title = document.createElement('span');
     title.textContent = field.label;
-    summary.append(title, createCopyButton('复制 URL', () => field.value));
+    summary.append(title, createCopyButton(t('commonCopyUrl'), () => field.value));
     details.append(summary, createUrlField(field));
     return details;
   }
@@ -231,7 +237,7 @@ function createCollapsedField(field) {
   const summary = document.createElement('summary');
   const title = document.createElement('span');
   title.textContent = field.label;
-  summary.append(title, createCopyButton('复制', () => field.value));
+  summary.append(title, createCopyButton(t('commonCopy'), () => field.value));
 
   const value = document.createElement('pre');
   value.textContent = field.value;
@@ -290,9 +296,9 @@ function renderItems() {
   if (!items.length) {
     const empty = document.createElement('article');
     empty.className = 'surface-card';
-    empty.textContent = query ? '没有匹配的历史记录。' : '暂无历史记录。请先在设置中开启本地历史记录。';
+    empty.textContent = query ? t('historyNoMatch') : t('historyEmpty');
     historyList.appendChild(empty);
-    setStatus(`${items.length} 条记录`, 'neutral');
+    setStatus(t('historyRecordCount', { count: items.length }), 'neutral');
     return;
   }
 
@@ -306,23 +312,23 @@ function renderItems() {
     const titleBox = document.createElement('div');
     const kicker = document.createElement('span');
     kicker.className = 'card-kicker';
-    kicker.textContent = item.templateName || '未知模板';
+    kicker.textContent = getTemplateLabel(item);
     const title = document.createElement('h2');
-    title.textContent = item.sourceDomain || '未知来源';
+    title.textContent = item.sourceDomain || t('commonUnknownSource');
     const meta = document.createElement('p');
     meta.className = 'history-meta';
     const inputType = item.inputType ? ` · ${getInputTypeLabel(item.inputType)}` : '';
-    meta.textContent = `${new Date(item.createdAt).toLocaleString()}${inputType}`;
+    meta.textContent = `${new Date(item.createdAt).toLocaleString(window.PromptLensI18n.getLanguage())}${inputType}`;
     titleBox.append(kicker, title, meta);
 
     const actions = document.createElement('div');
     actions.className = 'button-row history-actions';
-    const copyButton = createCopyButton('复制全部', () => window.PromptHistoryFormat.buildHistoryCopyText(item));
+    const copyButton = createCopyButton(t('commonCopyAll'), () => window.PromptHistoryFormat.buildHistoryCopyText({ ...item, templateName: getTemplateLabel(item) }));
 
     const deleteButton = document.createElement('button');
     deleteButton.type = 'button';
     deleteButton.className = 'copy-button history-delete';
-    deleteButton.textContent = '删除';
+    deleteButton.textContent = t('commonDelete');
     deleteButton.addEventListener('click', async () => {
       await window.PromptHistory.deleteHistoryItem(item.id);
       await loadHistory();
@@ -336,7 +342,7 @@ function renderItems() {
     const details = document.createElement('details');
     details.className = 'history-detail-toggle';
     const detailSummary = document.createElement('summary');
-    detailSummary.textContent = '查看完整内容';
+    detailSummary.textContent = t('historyViewFull');
     details.appendChild(detailSummary);
 
     const body = document.createElement('div');
@@ -348,7 +354,7 @@ function renderItems() {
     historyList.appendChild(article);
   });
 
-  setStatus(`${items.length} / ${allItems.length} 条记录`, 'success');
+  setStatus(t('historyRecordCountShown', { shown: items.length, total: allItems.length }), 'success');
 }
 
 async function loadHistory() {
@@ -359,13 +365,22 @@ async function loadHistory() {
 
 historySearch.addEventListener('input', renderItems);
 refreshHistoryButton.addEventListener('click', () => {
-  loadHistory().catch(error => setStatus(`读取失败：${error.message}`, 'error'));
+  loadHistory().catch(error => setStatus(t('historyReadFailed', { detail: error.message }), 'error'));
 });
 clearHistoryButton.addEventListener('click', () => {
-  window.PromptHistory.clearHistory().then(loadHistory).catch(error => setStatus(`清空失败：${error.message}`, 'error'));
+  window.PromptHistory.clearHistory().then(loadHistory).catch(error => setStatus(t('historyClearFailed', { detail: error.message }), 'error'));
 });
 
-loadHistory().catch(error => setStatus(`读取失败：${error.message}`, 'error'));
+async function main() {
+  await window.PromptLensI18n.init();
+  await loadHistory();
+  window.PromptLensI18n.onChange(() => {
+    window.PromptLensI18n.apply(document);
+    renderItems();
+  });
+}
+
+main().catch(error => setStatus(t('historyReadFailed', { detail: error.message }), 'error'));
 
 if (typeof module === 'object' && module.exports) {
   module.exports = {

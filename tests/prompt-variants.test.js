@@ -1,4 +1,11 @@
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const zhCatalog = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../_locales/zh_CN/messages.json'), 'utf8'));
+globalThis.PromptLensI18n = {
+  t: key => zhCatalog[key] ? zhCatalog[key].message : key
+};
 
 const {
   VARIANT_ORDER,
@@ -48,7 +55,7 @@ assert.equal(normalized[0].title, '复刻版');
 assert.equal(normalized[0].intent, '尽量还原参考图的主体、构图、风格、光影和材质');
 assert.equal(normalized[0].prompt_en, 'Recreate the reference image');
 assert.deepEqual(normalized[2].tags, ['campaign', 'product']);
-assert.equal(normalized[2].title, 'Commercial custom title');
+assert.equal(normalized[2].title, '商业强化版');
 assert.equal(normalized[2].isComplete, true);
 
 assert.deepEqual(normalizePromptVariants({ prompt_variants: null }), []);
@@ -89,11 +96,11 @@ assert.match(cardText, /Negative Prompt\nblur/);
 assert.match(cardText, /适用场景\nstyle study/);
 
 const markdown = formatPromptVariantsMarkdown(normalized);
-assert.match(markdown, /^## 专业用途 Prompt 候选/);
+assert.match(markdown, /^## 专业用途提示词候选/);
 assert.match(markdown, /### 复刻版/);
 assert.match(markdown, /\*\*Prompt：\*\*\n\nRecreate the reference image/);
 assert.match(markdown, /### 创意延展版/);
-assert.match(markdown, /### Commercial custom title/);
+assert.match(markdown, /### 商业强化版/);
 assert.equal(formatPromptVariantsMarkdown([]), '');
 
 const specialMarkdown = formatPromptVariantsMarkdown(normalizePromptVariants({

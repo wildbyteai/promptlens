@@ -7,6 +7,8 @@
   const MARKETING_TEMPLATE_ID = 'visual_marketing';
   const CUSTOM_TEMPLATE_LIMIT = 50;
   const INSTRUCTION_MAX_LENGTH = 4000;
+  const t = (key, params) => window.PromptLensI18n ? window.PromptLensI18n.t(key, params) : key;
+  const localizedError = (key, params = {}) => window.PromptLensI18n.createError(key, params);
 
   const JSON_SCHEMA_SUFFIX = [
     'Return valid JSON only. Do not use markdown fences. Do not include analysis outside the JSON.',
@@ -38,33 +40,33 @@
     '  "prompt_variants": [',
     '    {',
     '      "id": "recreate",',
-    '      "title": "复刻版",',
-    '      "intent": "尽量还原参考图的主体、构图、风格、光影和材质",',
+    '      "title": "<localized recreate title>",',
+    '      "intent": "<localized intent to reproduce the visible reference faithfully>",',
     '      "prompt_en": "English final prompt for faithfully recreating the visible reference image.",',
-    '      "prompt_zh_summary": "简短说明这个版本如何复刻参考图。",',
+    '      "prompt_zh_summary": "<localized short explanation of how this version recreates the reference>",',
     '      "tags": ["recreation", "composition", "lighting"],',
     '      "negative_prompt": "English negative prompt for this version.",',
-    '      "use_cases": ["style study", "client reference recreation"]',
+    '      "use_cases": ["<localized use case>", "<localized use case>"]',
     '    },',
     '    {',
     '      "id": "creative",',
-    '      "title": "创意延展版",',
-    '      "intent": "保留核心视觉基因，探索新的视觉方向",',
+    '      "title": "<localized creative extension title>",',
+    '      "intent": "<localized intent to extend the core visual language creatively>",',
     '      "prompt_en": "English final prompt that extends the reference into a fresh creative direction.",',
-    '      "prompt_zh_summary": "简短说明这个版本的创意延展方向。",',
+    '      "prompt_zh_summary": "<localized short explanation of this version\'s creative direction>",',
     '      "tags": ["creative direction", "moodboard", "visual exploration"],',
     '      "negative_prompt": "English negative prompt for this version.",',
-    '      "use_cases": ["concept exploration", "moodboard expansion"]',
+    '      "use_cases": ["<localized use case>", "<localized use case>"]',
     '    },',
     '    {',
     '      "id": "commercial",',
-    '      "title": "商业强化版",',
-    '      "intent": "面向广告、产品图、海报和品牌视觉方向的 prompt 改写建议",',
+    '      "title": "<localized commercial enhancement title>",',
+    '      "intent": "<localized intent for advertising, product, poster, or brand visual use>",',
     '      "prompt_en": "English final prompt adapted for campaign, product, poster, or brand visual use without promising commercial performance.",',
-    '      "prompt_zh_summary": "简短说明这个版本的商业视觉强化方向。",',
+    '      "prompt_zh_summary": "<localized short explanation of this version\'s commercial visual direction>",',
     '      "tags": ["commercial visual", "brand", "campaign"],',
     '      "negative_prompt": "English negative prompt for this version.",',
-    '      "use_cases": ["advertising visual", "product poster", "brand presentation"]',
+    '      "use_cases": ["<localized use case>", "<localized use case>", "<localized use case>"]',
     '    }',
     '  ]',
     '}',
@@ -95,20 +97,20 @@
     '  },',
     '  "marketing_diagnosis": {',
     '    "business_snapshot": {',
-    '      "business_summary": "一句话说明这张图的商业意图。",',
-    '      "target_customer": "它最可能打动的人群。",',
-    '      "core_offer": "图中表达或暗示的核心卖点。",',
-    '      "conversion_hook": "吸引用户停留、点击、咨询或购买的关键钩子。",',
-    '      "quick_judgement": "一句话判断这张图最大的优点和最大风险。"',
+    '      "business_summary": "<localized one-sentence business intent>",',
+    '      "target_customer": "<localized likely target customer>",',
+    '      "core_offer": "<localized core offer visible or implied in the image>",',
+    '      "conversion_hook": "<localized attention or conversion hook>",',
+    '      "quick_judgement": "<localized one-sentence strength and risk judgment>"',
     '    },',
     '    "marketing_diagnosis": {',
-    '      "visual_strategy": "构图、色彩、主体、场景如何服务卖点。",',
-    '      "trust_signals": "哪些元素建立可信度、品质感或专业感。",',
-    '      "emotional_driver": "它调动了什么情绪。",',
-    '      "friction_points": "可能影响转化的问题。",',
+    '      "visual_strategy": "<localized explanation of how composition, color, subject, and setting support the offer>",',
+    '      "trust_signals": "<localized visible trust, quality, or professionalism signals>",',
+    '      "emotional_driver": "<localized emotional driver>",',
+    '      "friction_points": "<localized possible conversion friction>",',
     '      "marketing_readiness_score": {',
     '        "overall": 4,',
-    '        "summary": "一句话解释评分原因。",',
+    '        "summary": "<localized one-sentence score explanation>",',
     '        "dimensions": {',
     '          "attention": 4,',
     '          "clarity": 3,',
@@ -119,13 +121,13 @@
     '      }',
     '    },',
     '    "next_actions": {',
-    '      "improvement_suggestions": ["具体改进建议 1", "具体改进建议 2", "具体改进建议 3"],',
-    '      "ai_adaptation_brief": "给 AI 生成工具的低成本改编 brief，不要求复制原图，而是复用视觉策略。",',
-    '      "designer_execution_brief": "给设计师或运营的执行 brief。",',
-    '      "content_angles": ["内容角度 1", "内容角度 2", "内容角度 3"],',
-    '      "next_tests": ["下一轮测试方向 1", "下一轮测试方向 2"]',
+    '      "improvement_suggestions": ["<localized suggestion 1>", "<localized suggestion 2>", "<localized suggestion 3>"],',
+    '      "ai_adaptation_brief": "<localized low-cost adaptation brief for an AI generation tool>",',
+    '      "designer_execution_brief": "<localized execution brief for a designer or operator>",',
+    '      "content_angles": ["<localized content angle 1>", "<localized content angle 2>", "<localized content angle 3>"],',
+    '      "next_tests": ["<localized next test 1>", "<localized next test 2>"]',
     '    },',
-    '    "disclaimer": "诊断结果基于图片内容和用户提供的业务背景生成，仅用于营销创意和视觉表达参考，不代表真实投放效果、商业结果或专业广告投放建议。"',
+    '    "disclaimer": "<localized disclaimer that this is creative reference, not a performance prediction>"',
     '  }',
     '}',
     'Scores must be integers from 1 to 5. A score is a heuristic marketing-readiness judgment, not a performance prediction.'
@@ -134,8 +136,8 @@
   const BUILTIN_TEMPLATES = [
     {
       id: 'detailed',
-      name: '详细分析',
-      description: '完整结构化输出，适合通用分析和二次编辑。',
+      nameKey: 'templateDetailedName',
+      descriptionKey: 'templateDetailedDescription',
       builtIn: true,
       version: 1,
       instruction: [
@@ -153,8 +155,8 @@
     },
     {
       id: 'natural',
-      name: '自然语言',
-      description: '流畅英文描述 prompt，适合自然语言提示词平台。',
+      nameKey: 'templateNaturalName',
+      descriptionKey: 'templateNaturalDescription',
       builtIn: true,
       version: 1,
       instruction: [
@@ -172,8 +174,8 @@
     },
     {
       id: 'tags',
-      name: '标签加权',
-      description: '带权重倾向的正向 / 反向标签，适合标签驱动工作流。',
+      nameKey: 'templateTagsName',
+      descriptionKey: 'templateTagsDescription',
       builtIn: true,
       version: 1,
       instruction: [
@@ -190,8 +192,8 @@
     },
     {
       id: 'concise',
-      name: '快速复制',
-      description: '一句话概括，适合快速复制试跑。',
+      nameKey: 'templateConciseName',
+      descriptionKey: 'templateConciseDescription',
       builtIn: true,
       version: 1,
       instruction: [
@@ -208,38 +210,43 @@
     },
     {
       id: MARKETING_TEMPLATE_ID,
-      name: '视觉营销诊断',
-      description: '把商业视觉图拆解成老板能判断价值、团队能安排执行、AI 能低成本改编的营销诊断。',
+      nameKey: 'templateMarketingName',
+      descriptionKey: 'templateMarketingDescription',
       builtIn: true,
       version: 1,
       instruction: [
-        '你是一个懂中小企业增长、营销素材和 AI 视觉生成的商业视觉诊断顾问。',
-        '你的任务不是评价图片好不好看，也不是教用户复制原图，而是把图片中可见的视觉策略翻译成老板和业务团队能理解的营销判断。',
-        '请用简体中文输出 business_snapshot、marketing_diagnosis 和 next_actions 中的主要业务判断。prompt_en 和 negative_prompt 仍使用英文，方便复制到图像生成工具。',
-        '优先回答：这张图在卖什么、打动谁、靠什么让用户停下来、哪里可能影响成交、中小企业如何低成本改编这套视觉思路。',
-        '如果用户提供了业务背景，请结合背景；如果没有提供，请只基于图片可见内容谨慎判断。',
-        '不要承诺真实转化效果，不要给预算、投放出价或广告账户优化建议。',
-        '避免“抄图”“复制原图”“完全复刻”等表达，使用“低成本改编”“借鉴视觉策略”“参考视觉结构”。'
+        'You are a commercial visual diagnosis consultant familiar with small-business growth, marketing creative, and AI image generation.',
+        'Do not merely judge whether an image looks good or teach exact copying. Translate visible visual strategy into practical marketing judgments for owners and business teams.',
+        'Use the requested output language for business_snapshot, marketing_diagnosis, next_actions, and the disclaimer. Keep prompt_en and negative_prompt in English for direct use in image-generation tools.',
+        'Prioritize what the image appears to sell, who it may appeal to, what stops attention, what may reduce conversion, and how a small business can adapt the visual strategy at low cost.',
+        'Use user-provided business context when available. Otherwise make cautious judgments based only on visible image evidence.',
+        'Do not promise conversion performance or advise on budgets, bids, or advertising-account optimization.',
+        'Avoid exact-copy language. Prefer low-cost adaptation, visual strategy borrowing, and visual structure reference.'
       ].join('\n')
     }
   ];
 
   function cloneTemplate(template) {
-    return { ...template };
+    const cloned = { ...template };
+    if (cloned.builtIn) {
+      cloned.name = t(cloned.nameKey);
+      cloned.description = t(cloned.descriptionKey);
+    }
+    return cloned;
   }
 
   function normalizeTemplate(raw, fallbackId) {
     const now = Date.now();
     const id = String(raw && raw.id || fallbackId || makeCustomId()).trim();
-    const name = String(raw && raw.name || '未命名模板').trim().slice(0, 80);
-    const description = String(raw && raw.description || '用户自定义模板。').trim().slice(0, 160);
+    const name = String(raw && raw.name || t('templateUnnamed')).trim().slice(0, 80);
+    const description = String(raw && raw.description || t('templateUserDefined')).trim().slice(0, 160);
     const instruction = String(raw && raw.instruction || '').trim();
 
-    if (!id) throw new Error('模板 ID 无效。');
-    if (!name) throw new Error('模板名称不能为空。');
-    if (!instruction) throw new Error('模板 instruction 不能为空。');
+    if (!id) throw localizedError('errorTemplateId');
+    if (!name) throw localizedError('errorTemplateName');
+    if (!instruction) throw localizedError('errorTemplateInstruction');
     if (instruction.length > INSTRUCTION_MAX_LENGTH) {
-      throw new Error(`模板 instruction 不能超过 ${INSTRUCTION_MAX_LENGTH} 字符。`);
+      throw localizedError('errorTemplateInstructionLength', { limit: INSTRUCTION_MAX_LENGTH });
     }
 
     return {
@@ -263,7 +270,8 @@
   }
 
   function getBuiltInTemplateById(templateId) {
-    return BUILTIN_TEMPLATES.find(template => template.id === templateId) || null;
+    const template = BUILTIN_TEMPLATES.find(item => item.id === templateId);
+    return template ? cloneTemplate(template) : null;
   }
 
   async function getCustomTemplates() {
@@ -274,7 +282,7 @@
 
   async function saveCustomTemplates(templates) {
     if (templates.length > CUSTOM_TEMPLATE_LIMIT) {
-      throw new Error(`最多保存 ${CUSTOM_TEMPLATE_LIMIT} 个自定义模板。`);
+      throw localizedError('errorTemplateLimit', { limit: CUSTOM_TEMPLATE_LIMIT });
     }
     await chrome.storage.local.set({ [CUSTOM_TEMPLATES_KEY]: templates });
   }
@@ -306,7 +314,7 @@
   async function createCustomTemplate(input) {
     const customTemplates = await getCustomTemplates();
     if (customTemplates.length >= CUSTOM_TEMPLATE_LIMIT) {
-      throw new Error(`最多保存 ${CUSTOM_TEMPLATE_LIMIT} 个自定义模板。`);
+      throw localizedError('errorTemplateLimit', { limit: CUSTOM_TEMPLATE_LIMIT });
     }
     const template = normalizeTemplate({ ...input, id: makeCustomId() });
     customTemplates.push(template);
@@ -318,7 +326,7 @@
   async function updateCustomTemplate(templateId, input) {
     const customTemplates = await getCustomTemplates();
     const index = customTemplates.findIndex(template => template.id === templateId);
-    if (index === -1) throw new Error('只能编辑自定义模板。');
+    if (index === -1) throw localizedError('errorTemplateCustomOnlyEdit');
 
     const updated = normalizeTemplate({
       ...customTemplates[index],
@@ -335,7 +343,7 @@
   async function deleteCustomTemplate(templateId) {
     const customTemplates = await getCustomTemplates();
     const kept = customTemplates.filter(template => template.id !== templateId);
-    if (kept.length === customTemplates.length) throw new Error('只能删除自定义模板。');
+    if (kept.length === customTemplates.length) throw localizedError('errorTemplateCustomOnlyDelete');
     await saveCustomTemplates(kept);
 
     const stored = await chrome.storage.local.get({ [ACTIVE_TEMPLATE_KEY]: DEFAULT_TEMPLATE_ID });
@@ -347,7 +355,7 @@
   async function duplicateTemplate(templateId) {
     const source = await getTemplateById(templateId);
     return createCustomTemplate({
-      name: `${source.name} 副本`,
+      name: t('templateCopySuffix', { name: source.name }),
       description: source.description,
       instruction: source.instruction
     });
@@ -366,7 +374,7 @@
 
   async function importCustomTemplates(payload) {
     if (!payload || payload.type !== 'promptlens-custom-templates' || payload.version !== 1 || !Array.isArray(payload.templates)) {
-      throw new Error('模板文件格式不正确或版本不兼容。');
+      throw localizedError('errorTemplateImportFormat');
     }
     const existing = await getCustomTemplates();
     const existingKeys = new Set(existing.map(template => `${template.name}\n${template.instruction}`));
@@ -415,12 +423,34 @@
     ].join('\n');
   }
 
+  function normalizeOutputLanguage(value) {
+    if (window.PromptLensI18n && typeof window.PromptLensI18n.normalizeLanguage === 'function') {
+      return window.PromptLensI18n.normalizeLanguage(value);
+    }
+    return value === 'en' ? 'en' : 'zh-CN';
+  }
+
+  function buildOutputLanguageRules(value) {
+    const language = normalizeOutputLanguage(value);
+    const explanatoryRule = language === 'en'
+      ? 'Write explanatory content in English, including prompt variant titles, intents, use cases, and all marketing diagnosis fields.'
+      : 'Write explanatory content in Simplified Chinese, including prompt variant titles, intents, use cases, and all marketing diagnosis fields.';
+    return [
+      `Requested explanatory output language: ${language}.`,
+      explanatoryRule,
+      'prompt_zh must remain Simplified Chinese.',
+      'prompt_en, prompt_tags, negative_prompt, and json_prompt must remain English.',
+      'Stable JSON field names and prompt variant ids must not be translated.'
+    ].join('\n');
+  }
+
   function buildFinalPrompt(template, options = {}) {
     const selected = template && template.instruction ? template : BUILTIN_TEMPLATES[0];
+    const languageRules = buildOutputLanguageRules(options.outputLanguage);
     if (isMarketingDiagnosisTemplate(selected)) {
-      return [selected.instruction, buildBusinessContextBlock(options.businessContext), MARKETING_JSON_SCHEMA_SUFFIX].join('\n\n');
+      return [selected.instruction, languageRules, buildBusinessContextBlock(options.businessContext), MARKETING_JSON_SCHEMA_SUFFIX].join('\n\n');
     }
-    return [selected.instruction, JSON_SCHEMA_SUFFIX].join('\n\n');
+    return [selected.instruction, languageRules, JSON_SCHEMA_SUFFIX].join('\n\n');
   }
 
   window.PromptTemplates = {
@@ -444,6 +474,7 @@
     duplicateTemplate,
     exportCustomTemplates,
     importCustomTemplates,
+    buildOutputLanguageRules,
     buildFinalPrompt
   };
 }());

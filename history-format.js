@@ -7,6 +7,14 @@
   root.PromptHistoryFormat = api;
 }(typeof globalThis !== 'undefined' ? globalThis : window, function (PromptVariants) {
   'use strict';
+  const t = (key, params) => globalThis.PromptLensI18n ? globalThis.PromptLensI18n.t(key, params) : key;
+  const INPUT_TYPE_KEYS = Object.freeze({
+    image_url: 'inputTypeImageUrl',
+    screenshot_selection: 'inputTypeScreenshot',
+    selection: 'inputTypeScreenshot',
+    data_url: 'inputTypeDataUrl',
+    unknown: 'commonUnknownInput'
+  });
 
   function normalizeString(value) {
     return typeof value === 'string' ? value.trim() : '';
@@ -19,6 +27,10 @@
   function stringifyJsonPrompt(value) {
     if (!value || typeof value !== 'object') return '';
     return JSON.stringify(value, null, 2);
+  }
+
+  function getInputTypeLabel(value) {
+    return INPUT_TYPE_KEYS[value] ? t(INPUT_TYPE_KEYS[value]) : value;
   }
 
   function getPromptVariantsMarkdown(result) {
@@ -42,20 +54,20 @@
     const pageUrl = normalizeString(item && item.pageUrl);
 
     const fields = [
-      { key: 'imageUrl', label: '来源图片 URL', value: imageUrl, kind: 'url', collapsed: false, emphasis: 'source' },
-      { key: 'pageUrl', label: '来源页面 URL', value: pageUrl, kind: 'url', collapsed: true, emphasis: 'source' },
-      { key: 'promptEn', label: '英文提示词', value: promptEn, kind: 'text', collapsed: false, emphasis: 'primary' },
-      { key: 'promptZh', label: '中文提示词', value: promptZh, kind: 'text', collapsed: false, emphasis: 'normal' },
-      { key: 'tags', label: '标签', value: tags.join(', '), kind: 'tags', collapsed: false, emphasis: 'normal' },
-      { key: 'negativePrompt', label: '反向提示词', value: negativePrompt, kind: 'text', collapsed: false, emphasis: 'normal' },
-      { key: 'jsonPrompt', label: '结构化提示词', value: jsonPrompt, kind: 'code', collapsed: true, emphasis: 'debug' }
+      { key: 'imageUrl', label: t('fieldSourceImageUrl'), value: imageUrl, kind: 'url', collapsed: false, emphasis: 'source' },
+      { key: 'pageUrl', label: t('fieldSourcePageUrl'), value: pageUrl, kind: 'url', collapsed: true, emphasis: 'source' },
+      { key: 'promptEn', label: t('fieldEnglishPrompt'), value: promptEn, kind: 'text', collapsed: false, emphasis: 'primary' },
+      { key: 'promptZh', label: t('fieldChinesePrompt'), value: promptZh, kind: 'text', collapsed: false, emphasis: 'normal' },
+      { key: 'tags', label: t('fieldTags'), value: tags.join(', '), kind: 'tags', collapsed: false, emphasis: 'normal' },
+      { key: 'negativePrompt', label: t('fieldNegativePrompt'), value: negativePrompt, kind: 'text', collapsed: false, emphasis: 'normal' },
+      { key: 'jsonPrompt', label: t('fieldJsonPrompt'), value: jsonPrompt, kind: 'code', collapsed: true, emphasis: 'debug' }
     ];
 
     if (variantsMarkdown) {
-      fields.push({ key: 'promptVariants', label: '专业用途 Prompt 候选', value: variantsMarkdown, kind: 'variant-card', collapsed: false, emphasis: 'normal' });
+      fields.push({ key: 'promptVariants', label: t('variantsTitle'), value: variantsMarkdown, kind: 'variant-card', collapsed: false, emphasis: 'normal' });
     }
 
-    fields.push({ key: 'rawText', label: '原始 JSON', value: rawText, kind: 'code', collapsed: true, emphasis: 'debug' });
+    fields.push({ key: 'rawText', label: t('fieldRawJson'), value: rawText, kind: 'code', collapsed: true, emphasis: 'debug' });
     return fields;
   }
 
@@ -65,9 +77,9 @@
     const inputType = normalizeString(item && item.inputType);
     const templateName = normalizeString(item && item.templateName);
 
-    if (sourceDomain) meta.push(`来源：${sourceDomain}`);
-    if (inputType) meta.push(`输入类型：${inputType}`);
-    if (templateName) meta.push(`模板：${templateName}`);
+    if (sourceDomain) meta.push(t('historySourceMeta', { value: sourceDomain }));
+    if (inputType) meta.push(t('historyInputTypeMeta', { value: getInputTypeLabel(inputType) }));
+    if (templateName) meta.push(t('historyTemplateMeta', { value: templateName }));
 
     const sections = getHistoryDisplayFields(item)
       .filter(field => field.value)
@@ -77,6 +89,8 @@
   }
 
   return {
+    INPUT_TYPE_KEYS,
+    getInputTypeLabel,
     getHistoryDisplayFields,
     buildHistoryCopyText
   };

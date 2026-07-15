@@ -5,62 +5,25 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const resultHtml = fs.readFileSync(path.join(root, 'result.html'), 'utf8');
 const resultJs = fs.readFileSync(path.join(root, 'result.js'), 'utf8');
-const marketingDiagnosisJs = fs.readFileSync(path.join(root, 'marketing-diagnosis.js'), 'utf8');
+const zhCatalog = JSON.parse(fs.readFileSync(path.join(root, '_locales/zh_CN/messages.json'), 'utf8'));
+const enCatalog = JSON.parse(fs.readFileSync(path.join(root, '_locales/en/messages.json'), 'utf8'));
 
-const forbiddenResultHtml = [
-  'Business context',
-  'Output template',
-  'Export',
-  'Marketing diagnosis',
-  'Main output',
-  'English Prompt</h2>',
-  'Copy English Prompt',
-  'Professional variants',
-  '<h2>Tags</h2>',
-  'Negative Prompt</h2>',
-  'JSON Prompt</h2>',
-  'Prompt tokens',
-  'Completion tokens',
-  'Total tokens',
-  'Response time',
-  '<span>Raw JSON</span>'
-];
-
-for (const text of forbiddenResultHtml) {
-  assert.equal(resultHtml.includes(text), false, `result.html should not contain mixed English UI text: ${text}`);
+const keys = [...resultHtml.matchAll(/data-i18n(?:-[a-z-]+)?="([^"]+)"/g)].map(match => match[1]);
+assert.ok(keys.length > 40, 'result page should mark its user-facing copy with data-i18n attributes');
+for (const key of keys) {
+  assert.ok(zhCatalog[key], `result.html references missing Chinese message: ${key}`);
+  assert.ok(enCatalog[key], `result.html references missing English message: ${key}`);
 }
 
-const forbiddenResultJs = [
-  "textContent = 'Copy Prompt'",
-  "textContent = 'Copy Card'",
-  "['Tags'",
-  "['Negative Prompt'",
-  "'# Image Prompt Analysis Result'",
-  "'## English Prompt'",
-  "'## Tags'",
-  "'## Negative Prompt'",
-  "'## JSON Prompt'",
-  "'English Prompt'",
-  "'Tags'",
-  "'Negative Prompt'",
-  "'JSON Prompt'"
-];
-
-for (const text of forbiddenResultJs) {
-  assert.equal(resultJs.includes(text), false, `result.js should not contain mixed English UI text: ${text}`);
-}
-
-const forbiddenMarketingText = [
-  "kicker: 'Business Snapshot'",
-  "kicker: 'Marketing Diagnosis'",
-  "kicker: 'Next Actions'",
-  '`- App:',
-  '`- Exported At:',
-  '`- Template:'
-];
-
-for (const text of forbiddenMarketingText) {
-  assert.equal(marketingDiagnosisJs.includes(text), false, `marketing-diagnosis.js should not contain mixed English UI text: ${text}`);
-}
+assert.ok(
+  resultHtml.indexOf('<script src="i18n.js"></script>') < resultHtml.indexOf('<script src="result.js"></script>'),
+  'result page must load i18n.js before result.js'
+);
+assert.match(resultJs, /await window\.PromptLensI18n\.init\(\)/);
+assert.match(resultJs, /PromptLensI18n\.onChange/);
+assert.match(resultJs, /buildReversePromptInstruction\(template, businessContext = '', outputLanguage = window\.PromptLensI18n\.getLanguage\(\)\)/);
+assert.match(resultJs, /buildFinalPrompt\(template, \{\s*businessContext,\s*outputLanguage\s*\}\)/s);
+assert.doesNotMatch(resultJs, /showAssistStatus\(['"`][^'"`]+['"`]/, 'assist status copy must come from the locale catalog');
+assert.doesNotMatch(resultJs, /textContent\s*=\s*['"`][\u4e00-\u9fff][^'"`]*['"`]/, 'dynamic Chinese UI copy must not be hardcoded');
 
 console.log('result language tests passed');

@@ -36,6 +36,7 @@ Its goal is to stay simple, transparent, and self-hosting-friendly: no login, no
 - **Custom templates**: copy built-ins, create, edit, delete, import, and export custom templates.
 - **ChatGPT Plus Assist mode**: for users with ChatGPT Plus / Pro but no API key; PromptLens prepares the image and instruction, then can open ChatGPT, wait for the page to settle, and attempt to attach the image and fill the instruction for you to review and send manually.
 - **Provider presets**: OpenAI, DeepSeek, Alibaba, SiliconFlow, Groq, OpenRouter, Ollama, and Custom.
+- **Interface language**: Simplified Chinese by default, with an English switch covering settings, results, history, context menus, selection hints, errors, and exports.
 - **Keyboard selection shortcut**: `Alt+Shift+S` starts screenshot selection; users can change it at `chrome://extensions/shortcuts`.
 - **Optional local history**: off by default; stores text results, source domain, original image URL, page URL, and template metadata. No image thumbnails are saved.
 - **Result export**: copy individual fields, copy all, download JSON, and download Markdown.
@@ -221,11 +222,11 @@ Development principles:
 
 ## Roadmap status
 
-The current branch has implemented v0.6.0: First Success onboarding, clearer provider setup guidance, contextual result next steps, marketing context examples, visual marketing diagnosis, Warm Studio UI refresh, summarized history cards, built-in / custom templates, provider presets, keyboard shortcut, result export, token usage, optional local history, basic i18n, Chrome Web Store preparation, ChatGPT Plus Assist mode for no-API-key workflows, and experimental ChatGPT handoff that can open ChatGPT, wait for the page to settle, and attempt to attach the prepared image and fill the instruction after optional user permission.
+The current branch has implemented v0.6.0: First Success onboarding, clearer provider setup guidance, contextual result next steps, marketing context examples, visual marketing diagnosis, Warm Studio UI refresh, summarized history cards, built-in / custom templates, provider presets, keyboard shortcut, result export, token usage, optional local history, complete Simplified Chinese / English extension UI, Chrome Web Store preparation, ChatGPT Plus Assist mode for no-API-key workflows, and experimental ChatGPT handoff that can open ChatGPT, wait for the page to settle, and attempt to attach the prepared image and fill the instruction after optional user permission.
 
 Future feedback-driven directions:
 
-- More complete English / Traditional Chinese UI translation.
+- Traditional Chinese UI translation.
 - Firefox MV3 compatibility research.
 - Continue tuning image preprocessing defaults based on real feedback.
 

@@ -1,3 +1,5 @@
+importScripts('i18n.js');
+
 const MENU_ANALYZE_IMAGE = 'analyze-image';
 const MENU_CAPTURE_SELECTION = 'capture-selection';
 const PENDING_INPUT_KEY = 'pendingInput';
@@ -8,6 +10,13 @@ const MAX_DECODED_IMAGE_BYTES = 20 * 1024 * 1024; // 20MB
 const CHATGPT_PAYLOAD_PREFIX = 'chatgpt-transfer:';
 const CHATGPT_STATUS_PREFIX = 'chatgpt-status:';
 const CHATGPT_PAYLOAD_TTL_MS = 15 * 60 * 1000;
+const t = (key, params) => self.PromptLensI18n.t(key, params);
+const localizedError = (key, params = {}) => self.PromptLensI18n.createError(key, params);
+const i18nReady = self.PromptLensI18n.init();
+
+self.PromptLensI18n.onChange(() => {
+  registerContextMenus().catch(() => {});
+});
 
 /* ── IndexedDB helpers ────────────────────────────────── */
 
@@ -61,7 +70,7 @@ async function saveChatGptPayload(payload) {
     createdAt: Date.now()
   };
   if (!record.imageBase64 || !record.instruction) {
-    throw new Error('ChatGPT payload 缺少图片或指令。');
+    throw localizedError('errorChatgptPayloadMissing');
   }
   await chrome.storage.session.set({ [chatGptPayloadKey(jobId)]: record });
   return jobId;
@@ -97,18 +106,18 @@ async function cleanupExpiredChatGptPayloads() {
 function validateDataUrlStrict(dataUrl) {
   const match = String(dataUrl).match(/^data:(image\/(?:png|jpeg|jpg|webp));base64,(.+)$/s);
   if (!match) {
-    throw new Error('不支持的图片格式。仅支持 PNG、JPEG、WebP data URL。');
+    throw localizedError('errorUnsupportedDataImage');
   }
   const base64 = match[2];
   // base64 每 4 字符编码 3 原始字节
   const estimatedBytes = Math.floor(base64.length * 3 / 4);
   if (estimatedBytes > MAX_DECODED_IMAGE_BYTES) {
-    throw new Error('图片文件过大（超过 20MB）。请使用更小的图片。');
+    throw localizedError('errorImageTooLarge');
   }
   // 总 dataUrl 长度不应远超 base64 部分加上前缀开销
   const maxTotalLength = base64.length + 64; // "data:image/jpeg;base64," ≈ 23 字符
   if (dataUrl.length > maxTotalLength) {
-    throw new Error('data URL 格式异常。');
+    throw localizedError('errorDataUrlMalformed');
   }
 }
 
@@ -140,24 +149,28 @@ async function hasOriginPermission(urlString) {
 /* ── Context menus ────────────────────────────────────── */
 
 chrome.runtime.onInstalled.addListener(() => {
-  registerContextMenus();
+  registerContextMenus().catch(() => {});
 });
 
 chrome.runtime.onStartup.addListener(() => {
-  registerContextMenus();
+  registerContextMenus().catch(() => {});
 });
 
-function registerContextMenus() {
-  chrome.contextMenus.removeAll(() => {
-    chrome.contextMenus.create({
-      id: MENU_ANALYZE_IMAGE,
-      title: '分析这张图片',
-      contexts: ['image']
-    });
-    chrome.contextMenus.create({
-      id: MENU_CAPTURE_SELECTION,
-      title: '框选截图并分析',
-      contexts: ['page', 'image']
+async function registerContextMenus() {
+  await i18nReady;
+  return new Promise(resolve => {
+    chrome.contextMenus.removeAll(() => {
+      chrome.contextMenus.create({
+        id: MENU_ANALYZE_IMAGE,
+        title: t('menuAnalyzeImage'),
+        contexts: ['image']
+      });
+      chrome.contextMenus.create({
+        id: MENU_CAPTURE_SELECTION,
+        title: t('menuCaptureSelection'),
+        contexts: ['page', 'image']
+      });
+      resolve();
     });
   });
 }
@@ -166,11 +179,11 @@ function registerContextMenus() {
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === MENU_ANALYZE_IMAGE) {
-    handleAnalyzeImage(info, tab).catch(error => openErrorResult(error.message));
+    i18nReady.then(() => handleAnalyzeImage(info, tab)).catch(error => openErrorResult(error));
     return;
   }
   if (info.menuItemId === MENU_CAPTURE_SELECTION) {
-    startSelection(tab).catch(error => openErrorResult(error.message));
+    i18nReady.then(() => startSelection(tab)).catch(error => openErrorResult(error));
   }
 });
 
@@ -178,7 +191,7 @@ chrome.commands.onCommand.addListener(command => {
   if (command !== MENU_CAPTURE_SELECTION) return;
   chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
     const tab = tabs && tabs[0];
-    startSelection(tab).catch(error => openErrorResult(error.message));
+    i18nReady.then(() => startSelection(tab)).catch(error => openErrorResult(error));
   });
 });
 
@@ -186,12 +199,13 @@ chrome.commands.onCommand.addListener(command => {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message && message.type === 'SELECTION_COMPLETE') {
-    handleSelectionComplete(message, sender).catch(error => openErrorResult(error.message));
+    i18nReady.then(() => handleSelectionComplete(message, sender)).catch(error => openErrorResult(error));
     return undefined;
   }
 
   if (message && message.type === 'PROMPTLENS_CHATGPT_PAYLOAD_SAVE') {
     (async () => {
+      await i18nReady;
       await cleanupExpiredChatGptPayloads();
       const jobId = await saveChatGptPayload(message.payload || {});
       await openChatGptTransfer(jobId);
@@ -240,7 +254,7 @@ async function handleAnalyzeImage(info, tab) {
   if (!srcUrl) {
     await setPendingInput({
       type: 'error',
-      message: '没有找到可分析的图片地址。请尝试框选截图并分析。'
+      messageKey: 'errorNoImageAddress'
     });
     await openResultPage();
     return;
@@ -249,7 +263,7 @@ async function handleAnalyzeImage(info, tab) {
   if (srcUrl.startsWith('blob:')) {
     await setPendingInput({
       type: 'error',
-      message: '暂不支持直接读取 blob 图片。请返回页面，使用"框选截图并分析"截取图片区域。'
+      messageKey: 'errorBlobImage'
     });
     await openResultPage();
     return;
@@ -276,7 +290,7 @@ async function handleAnalyzeImage(info, tab) {
   if (!granted) {
     await setPendingInput({
       type: 'error',
-      message: '需要先在扩展设置页点击"授权图片读取权限（所有网站）"，或使用"框选截图并分析"作为替代方案。'
+      messageKey: 'errorImagePermissionRequired'
     });
     await openResultPage();
     return;
@@ -292,7 +306,7 @@ async function handleAnalyzeImage(info, tab) {
 
 async function startSelection(tab) {
   if (!tab || typeof tab.id !== 'number') {
-    throw new Error('无法访问当前标签页。');
+    throw localizedError('errorCannotAccessTab');
   }
 
   // 注入 selection.css，确保框选遮罩有样式
@@ -307,19 +321,24 @@ async function startSelection(tab) {
   });
 
   await chrome.tabs.sendMessage(tab.id, {
-    type: 'START_SELECTION'
+    type: 'START_SELECTION',
+    copy: {
+      hint: t('selectionHint'),
+      cancel: t('selectionCancel'),
+      tooSmall: t('selectionTooSmall')
+    }
   });
 }
 
 async function handleSelectionComplete(message, sender) {
   const tab = sender.tab;
   if (!tab || typeof tab.windowId !== 'number') {
-    throw new Error('无法获取当前窗口用于截图。');
+    throw localizedError('errorCannotAccessWindow');
   }
 
   const rect = message.rect;
   if (!rect || rect.width < 20 || rect.height < 20) {
-    throw new Error('选区太小，请重新选择更大的区域。');
+    throw localizedError('errorSelectionTooSmall');
   }
 
   const screenshotDataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, {
@@ -357,11 +376,19 @@ async function openResultPage() {
   });
 }
 
-async function openErrorResult(message) {
-  await setPendingInput({
-    type: 'error',
-    message: message || '操作失败。'
-  });
+async function openErrorResult(error) {
+  const input = { type: 'error' };
+  if (error && error.i18nKey) {
+    input.messageKey = error.i18nKey;
+    input.messageParams = error.i18nParams || {};
+  } else if (typeof error === 'string' && error) {
+    input.message = error;
+  } else if (error && error.message) {
+    input.message = error.message;
+  } else {
+    input.messageKey = 'errorOperationFailed';
+  }
+  await setPendingInput(input);
   await openResultPage();
 }
 
@@ -377,7 +404,7 @@ async function injectChatGptBridge(tabId) {
 async function openChatGptTransfer(jobId) {
   const tab = await chrome.tabs.create({ url: `https://chatgpt.com/?promptlensJob=${encodeURIComponent(jobId)}` });
   if (!tab || typeof tab.id !== 'number') {
-    throw new Error('无法打开 ChatGPT 标签页。');
+    throw localizedError('errorCannotOpenChatgpt');
   }
 
   const listener = (tabId, changeInfo) => {

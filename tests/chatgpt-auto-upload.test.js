@@ -13,6 +13,8 @@ function readJson(file) {
 }
 
 const manifest = readJson('manifest.json');
+const zhCatalog = readJson('_locales/zh_CN/messages.json');
+const enCatalog = readJson('_locales/en/messages.json');
 const resultHtml = read('result.html');
 const resultJs = read('result.js');
 const backgroundJs = read('background.js');
@@ -88,24 +90,31 @@ for (const source of [privacy, security]) {
 }
 
 // Task 5: result.js status mapping for fallback behavior
-for (const status of [
-  'permission_denied',
-  'payload_missing',
-  'tab_open_failed',
-  'script_injection_failed',
-  'input_not_found',
-  'instruction_failed',
-  'image_input_not_found',
-  'image_attach_failed',
-  'partial_success_instruction_only',
-  'success_instruction_only',
-  'success_instruction_and_image'
-]) {
+const statusMessageKeys = {
+  permission_denied: 'chatgptAssistPermissionDenied',
+  payload_missing: 'chatgptAssistPayloadExpired',
+  tab_open_failed: 'chatgptAssistTabOpenFailed',
+  script_injection_failed: 'chatgptAssistConnectFailed',
+  input_not_found: 'chatgptAssistInputNotFound',
+  instruction_failed: 'chatgptAssistInstructionFailed',
+  image_input_not_found: 'chatgptAssistImageInputNotFound',
+  image_attach_failed: 'chatgptAssistImageAttachFailed',
+  partial_success_instruction_only: 'chatgptAssistImageAttachFailed',
+  success_instruction_only: 'chatgptAssistInstructionOnly',
+  success_instruction_and_image: 'chatgptAssistSuccess'
+};
+
+for (const [status, key] of Object.entries(statusMessageKeys)) {
   assert.match(resultJs, new RegExp(status), `result.js missing user-facing mapping for ${status}`);
+  assert.match(resultJs, new RegExp(`${status}: \\{ tone: '[^']+', key: '${key}' \\}`), `result.js maps ${status} to the wrong locale key`);
+  assert.ok(zhCatalog[key], `Chinese catalog missing ChatGPT status key: ${key}`);
+  assert.ok(enCatalog[key], `English catalog missing ChatGPT status key: ${key}`);
 }
 
-assert.match(resultJs, /不[会]?自动发送/);
-assert.match(resultJs, /手动上传/);
+for (const catalog of [zhCatalog, enCatalog]) {
+  assert.match(catalog.chatgptAssistPermissionNeeded.message, /不会自动发送|does not read responses or send automatically/i);
+  assert.match(catalog.chatgptAssistAutoFailed.message, /手动上传|manual upload/i);
+}
 
 // Task 6: result.js must consume chatgpt-status:* from session storage after sendToChatGpt
 assert.match(
@@ -125,8 +134,8 @@ assert.match(
 );
 assert.match(
   resultJs,
-  /showAssistStatus\([^)]*getChatGptStatusMessage|getChatGptStatusMessage[\s\S]{0,120}showAssistStatus/,
-  'result.js must pipe getChatGptStatusMessage result into showAssistStatus'
+  /getChatGptStatusMessage[\s\S]{0,160}showLocalizedAssistStatus\(msg\.key, msg\.tone\)/,
+  'result.js must pipe the localized ChatGPT status key into showLocalizedAssistStatus'
 );
 
 console.log('chatgpt auto-upload static tests passed');

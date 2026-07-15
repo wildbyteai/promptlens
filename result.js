@@ -10,9 +10,16 @@ const ALLOWED_IMAGE_MIMES = new Set(['image/png', 'image/jpeg', 'image/jpg', 'im
 const DB_NAME = 'promptlens';
 const DB_VERSION = 2;
 const STORE_NAME = 'pending-payloads';
+const t = (key, params) => window.PromptLensI18n.t(key, params);
+const localizedError = (key, params = {}) => window.PromptLensI18n.createError(key, params);
 
 let maxImageSide = 2048;
 let jpegQuality = 0.85;
+
+function localizedErrorMessage(error) {
+  if (error && error.i18nKey) return t(error.i18nKey, error.i18nParams || {});
+  return error instanceof Error ? error.message : String(error);
+}
 
 /* ── IndexedDB helpers ────────────────────────────────── */
 
@@ -171,7 +178,7 @@ function showMarketingContextCard() {
   resultContent.hidden = true;
   elements.marketingContextCard.hidden = false;
   if (resultStatus) {
-    resultStatus.textContent = '可选填写业务背景。';
+    resultStatus.textContent = t('resultStatusOptionalBusiness');
     resultStatus.dataset.tone = 'neutral';
   }
 }
@@ -187,7 +194,7 @@ function showResult() {
   if (elements.chatgptAssistCard) elements.chatgptAssistCard.hidden = true;
   hideMarketingContextCard();
   if (resultStatus) {
-    resultStatus.textContent = '分析完成。';
+    resultStatus.textContent = t('resultStatusComplete');
     resultStatus.dataset.tone = 'success';
   }
 }
@@ -216,6 +223,14 @@ let currentResponseTimeMs = null;
 let currentBusinessContext = null;
 let currentAssistImage = null;
 let currentAssistInstruction = '';
+let currentError = null;
+let currentLoadingState = null;
+let currentAssistStatus = null;
+
+function setLocalizedLoading(key, activeStep, params = {}) {
+  currentLoadingState = { key, activeStep, params };
+  setLoading(t(key, params), activeStep);
+}
 
 function renderUsage(usage, responseTimeMs) {
   if (!usage && !responseTimeMs) {
@@ -240,13 +255,13 @@ async function copyTextWithFeedback(button, text) {
   const oldText = button.textContent;
   try {
     await navigator.clipboard.writeText(text || '');
-    button.textContent = '已复制';
+    button.textContent = t('commonCopied');
     window.setTimeout(() => {
       button.textContent = oldText;
     }, 1200);
     return true;
   } catch {
-    button.textContent = '复制失败';
+    button.textContent = t('commonCopyFailed');
     window.setTimeout(() => {
       button.textContent = oldText;
     }, 1200);
@@ -272,9 +287,12 @@ function renderPromptVariants(result) {
     header.className = 'prompt-variant-header';
 
     const titleBox = document.createElement('div');
+    const variantExplanation = window.PromptLensI18n.getLanguage() === 'en'
+      ? variant.intent || variant.prompt_zh_summary
+      : variant.prompt_zh_summary || variant.intent;
     titleBox.append(
       createTextElement('h3', '', variant.title),
-      createTextElement('p', 'prompt-variant-intent', variant.prompt_zh_summary || variant.intent)
+      createTextElement('p', 'prompt-variant-intent', variantExplanation)
     );
 
     const actions = document.createElement('div');
@@ -283,13 +301,13 @@ function renderPromptVariants(result) {
     const copyPromptButton = document.createElement('button');
     copyPromptButton.type = 'button';
     copyPromptButton.className = 'copy-button';
-    copyPromptButton.textContent = '复制提示词';
+    copyPromptButton.textContent = t('copyPrompt');
     copyPromptButton.addEventListener('click', () => copyTextWithFeedback(copyPromptButton, variant.prompt_en));
 
     const copyCardButton = document.createElement('button');
     copyCardButton.type = 'button';
     copyCardButton.className = 'copy-button';
-    copyCardButton.textContent = '复制卡片';
+    copyCardButton.textContent = t('copyCard');
     copyCardButton.addEventListener('click', () => {
       copyTextWithFeedback(copyCardButton, window.PromptVariants.formatPromptVariantCard(variant));
     });
@@ -303,9 +321,9 @@ function renderPromptVariants(result) {
     meta.className = 'prompt-variant-meta';
 
     const metaRows = [
-      ['标签', variant.tags.join(', ')],
-      ['反向提示词', variant.negative_prompt],
-      ['适用场景', variant.use_cases.join(', ')]
+      [t('fieldTags'), variant.tags.join(', ')],
+      [t('fieldNegativePrompt'), variant.negative_prompt],
+      [t('variantUseCases'), variant.use_cases.join(', ')]
     ];
 
     metaRows.forEach(([labelText, valueText]) => {
@@ -360,7 +378,7 @@ function renderMarketingDiagnosis(result, template) {
 
     if (index === 0 && readinessScore) {
       const scoreRing = createTextElement('div', 'marketing-diagnosis-score-ring', readinessScore.toFixed(1));
-      scoreRing.setAttribute('aria-label', `营销准备度评分 ${readinessScore.toFixed(1)} / 5`);
+      scoreRing.setAttribute('aria-label', t('marketingScoreAria', { score: readinessScore.toFixed(1) }));
       header.appendChild(scoreRing);
     }
 
@@ -373,7 +391,7 @@ function renderMarketingDiagnosis(result, template) {
       row.appendChild(createTextElement('dt', '', item.label));
       const value = createTextElement(
         'dd',
-        item.label === '快速判断' ? 'marketing-diagnosis-quick-judgement' : '',
+        item.label === t('marketingQuickJudgement') ? 'marketing-diagnosis-quick-judgement' : '',
         item.value
       );
       row.appendChild(value);
@@ -417,21 +435,21 @@ function renderResult(result, rawText, template) {
 }
 
 function renderError(error) {
-  const message = error instanceof Error ? error.message : String(error);
-  showError('分析失败', message);
+  currentError = error;
+  showError(t('errorAnalysisFailed'), localizedErrorMessage(error));
 }
 
 function renderNextStepHint(template) {
   if (!elements.nextStepTitle || !elements.nextStepDescription || !elements.nextStepList) return;
   const isMarketing = template && window.PromptTemplates.isMarketingDiagnosisTemplate(template.id);
   const content = isMarketing ? {
-    title: '把诊断变成团队 Brief',
-    description: '这份结果适合发给老板、设计师、投放同事或客户，用来决定下一轮低成本改图方向。',
-    steps: ['下载 Markdown Brief 作为沟通材料。', '复制低成本改图建议进入下一轮素材调整。', '如果业务背景不完整，返回上一页重新分析并补充更多上下文。']
+    title: t('resultNextStepMarketingTitle'),
+    description: t('resultNextStepMarketingDescription'),
+    steps: [t('resultNextStepMarketing1'), t('resultNextStepMarketing2'), t('resultNextStepMarketing3')]
   } : {
-    title: '把图片变成可复用 Prompt',
-    description: '这份结果适合复制到 Midjourney、即梦、可灵、Stable Diffusion、Flux 或其他图像生成工具继续试跑。',
-    steps: ['优先复制英文 Prompt。', '复制 Tags 做风格参考。', '使用 Recreate 或 Creative variants 做复刻和扩写。']
+    title: t('resultNextStepPromptTitle'),
+    description: t('resultNextStepPromptDescription'),
+    steps: [t('resultNextStepPrompt1'), t('resultNextStepPrompt2'), t('resultNextStepPrompt3')]
   };
   elements.nextStepTitle.textContent = content.title;
   elements.nextStepDescription.textContent = content.description;
@@ -463,7 +481,7 @@ function setupCopyButtons() {
 
 function buildExportData() {
   if (!currentResult) {
-    throw new Error('当前没有可导出的结果。');
+    throw localizedError('errorNoExportResult');
   }
   return {
     app: 'PromptLens',
@@ -479,82 +497,11 @@ function buildExportData() {
 
 function buildMarkdownExport() {
   const data = buildExportData();
-  const result = data.result;
-  if (data.template && window.PromptTemplates.isMarketingDiagnosisTemplate(data.template.id)) {
-    return window.PromptMarketingDiagnosis.buildMarketingDiagnosisMarkdown(result, {
-      app: data.app,
-      exportedAt: data.exportedAt,
-      templateName: data.template.name,
-      businessContext: currentBusinessContext || ''
-    });
-  }
-  const tags = Array.isArray(result.prompt_tags) ? result.prompt_tags.join(', ') : '';
-  const variants = window.PromptVariants.normalizePromptVariants(result);
-  const variantsMarkdown = window.PromptVariants.formatPromptVariantsMarkdown(variants);
-  const sections = [
-    '# 图片提示词分析结果',
-    '',
-    `- 应用：${data.app}`,
-    `- 导出时间：${data.exportedAt}`,
-    `- 模板：${data.template ? data.template.name : '未知'}`,
-    '',
-    '## 英文提示词',
-    '',
-    result.prompt_en || '',
-    '',
-    '## 中文提示词',
-    '',
-    result.prompt_zh || '',
-    '',
-    '## 标签',
-    '',
-    tags,
-    '',
-    '## 反向提示词',
-    '',
-    result.negative_prompt || '',
-    '',
-    '## 结构化提示词',
-    '',
-    '```json',
-    JSON.stringify(result.json_prompt || {}, null, 2),
-    '```',
-    ''
-  ];
-  if (variantsMarkdown) {
-    sections.push(variantsMarkdown, '');
-  }
-  return sections.join('\n');
+  return window.PromptResultFormat.buildMarkdown(data, { businessContext: currentBusinessContext || '' });
 }
 
 function buildCopyAllText() {
-  const result = buildExportData().result;
-  if (currentTemplate && window.PromptTemplates.isMarketingDiagnosisTemplate(currentTemplate.id)) {
-    return window.PromptMarketingDiagnosis.buildMarketingDiagnosisCopyText(result);
-  }
-  const tags = Array.isArray(result.prompt_tags) ? result.prompt_tags.join(', ') : '';
-  const variants = window.PromptVariants.normalizePromptVariants(result);
-  const variantsMarkdown = window.PromptVariants.formatPromptVariantsMarkdown(variants);
-  const sections = [
-    '英文提示词',
-    result.prompt_en || '',
-    '',
-    '中文提示词',
-    result.prompt_zh || '',
-    '',
-    '标签',
-    tags,
-    '',
-    '反向提示词',
-    result.negative_prompt || '',
-    '',
-    '结构化提示词',
-    JSON.stringify(result.json_prompt || {}, null, 2)
-  ];
-  if (variantsMarkdown) {
-    sections.push('', variantsMarkdown);
-  }
-  return sections.join('\n');
+  return window.PromptResultFormat.buildCopyText(buildExportData());
 }
 
 function makeExportFilename(extension) {
@@ -578,9 +525,9 @@ async function withButtonFeedback(button, action) {
   const oldText = button.textContent;
   try {
     await action();
-    button.textContent = '已完成';
+    button.textContent = t('commonCompleted');
   } catch {
-    button.textContent = '失败';
+    button.textContent = t('commonFailed');
   }
   window.setTimeout(() => {
     button.textContent = oldText;
@@ -612,7 +559,7 @@ async function loadPendingInput() {
   await chrome.storage.session.remove(PENDING_INPUT_KEY);
   const input = stored[PENDING_INPUT_KEY];
   if (!input) {
-    throw new Error('没有找到待分析输入。请回到网页右键图片或框选截图。');
+    throw localizedError('errorNoPendingInput');
   }
   return input;
 }
@@ -627,18 +574,18 @@ async function loadJobPayload(jobId) {
 
 function validateDataUrlMime(dataUrl) {
   if (!dataUrl.startsWith('data:')) {
-    throw new Error('不是有效的 data URL。');
+    throw localizedError('errorInvalidDataUrl');
   }
   const match = dataUrl.match(/^data:([^;]+);/);
   if (!match) {
-    throw new Error('无法解析 data URL 的 MIME 类型。');
+    throw localizedError('errorCannotParseMime');
   }
   const mime = match[1].toLowerCase();
   if (mime === 'image/svg+xml') {
-    throw new Error('不支持 SVG 图片。请使用"框选截图并分析"截取图片区域。');
+    throw localizedError('errorSvgUnsupportedSelection');
   }
   if (!ALLOWED_IMAGE_MIMES.has(mime)) {
-    throw new Error(`不支持的图片类型（${mime}）。仅支持 PNG、JPEG、WebP。`);
+    throw localizedError('errorUnsupportedImageType', { type: mime });
   }
 }
 
@@ -646,16 +593,16 @@ function validateDataUrl(dataUrl) {
   validateDataUrlMime(dataUrl);
   const parsed = dataUrl.match(/^data:[^;]+;base64,(.+)$/s);
   if (!parsed) {
-    throw new Error('data URL 不是 base64 编码。');
+    throw localizedError('errorDataUrlNotBase64');
   }
   const base64 = parsed[1];
   const estimatedBytes = Math.floor(base64.length * 3 / 4);
   if (estimatedBytes > MAX_REMOTE_IMAGE_BYTES) {
-    throw new Error('图片文件过大（超过 20MB）。请使用更小的图片。');
+    throw localizedError('errorImageTooLarge');
   }
   const maxTotalLength = base64.length + 64;
   if (dataUrl.length > maxTotalLength) {
-    throw new Error('data URL 格式异常。');
+    throw localizedError('errorDataUrlMalformed');
   }
 }
 
@@ -664,29 +611,29 @@ function validateRemoteResponse(response) {
   if (contentType) {
     const mime = contentType.split(';')[0].trim().toLowerCase();
     if (mime === 'image/svg+xml') {
-      throw new Error('不支持 SVG 图片。请使用"框选截图并分析"截取图片区域。');
+      throw localizedError('errorSvgUnsupportedSelection');
     }
     if (mime.startsWith('image/') && !ALLOWED_IMAGE_MIMES.has(mime)) {
-      throw new Error(`不支持的图片类型（${mime}）。仅支持 PNG、JPEG、WebP。`);
+      throw localizedError('errorUnsupportedImageType', { type: mime });
     }
   }
   const contentLength = response.headers.get('content-length');
   if (contentLength && parseInt(contentLength, 10) > MAX_REMOTE_IMAGE_BYTES) {
-    throw new Error('图片文件过大（超过 20MB）。请使用更小的图片。');
+    throw localizedError('errorImageTooLarge');
   }
 }
 
 function validateBlob(blob) {
   if (blob.size > MAX_REMOTE_IMAGE_BYTES) {
-    throw new Error('图片文件过大（超过 20MB）。请使用更小的图片。');
+    throw localizedError('errorImageTooLarge');
   }
   if (blob.type) {
     const mime = blob.type.split(';')[0].trim().toLowerCase();
     if (mime === 'image/svg+xml') {
-      throw new Error('不支持 SVG 图片。');
+      throw localizedError('errorSvgUnsupportedSelection');
     }
     if (mime.startsWith('image/') && !ALLOWED_IMAGE_MIMES.has(mime)) {
-      throw new Error(`不支持的图片类型（${mime}）。仅支持 PNG、JPEG、WebP。`);
+      throw localizedError('errorUnsupportedImageType', { type: mime });
     }
   }
 }
@@ -695,18 +642,19 @@ function validateBlob(blob) {
 
 async function prepareImage(input) {
   if (input.type === 'error') {
-    throw new Error(input.message || '输入无效。');
+    if (input.messageKey) throw localizedError(input.messageKey, input.messageParams || {});
+    throw new Error(input.message || t('errorOperationFailed'));
   }
 
   if (input.type === 'image_url') {
-    setLoading('正在读取图片...', stepImage);
+    setLocalizedLoading('resultLoadingReadImage', stepImage);
     const url = new URL(input.srcUrl);
     if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-      throw new Error('不支持的图片 URL 协议。');
+      throw localizedError('errorRemoteImageProtocol');
     }
     const response = await fetch(input.srcUrl);
     if (!response.ok) {
-      throw new Error('无法读取此图片，可能受防盗链、登录态或权限限制。请返回页面，使用"框选截图并分析"截取图片区域。');
+      throw localizedError('errorRemoteImageRead');
     }
     validateRemoteResponse(response);
     const blob = await response.blob();
@@ -715,17 +663,17 @@ async function prepareImage(input) {
   }
 
   if (input.type === 'data_url') {
-    setLoading('正在解析图片...', stepImage);
+    setLocalizedLoading('resultLoadingParseImage', stepImage);
     validateDataUrl(input.dataUrl);
     return normalizeImageDataUrl(input.dataUrl);
   }
 
   if (input.type === 'screenshot_selection') {
-    setLoading('正在裁剪截图...', stepImage);
+    setLocalizedLoading('resultLoadingCropScreenshot', stepImage);
     return cropScreenshot(input.screenshotDataUrl, input.rect);
   }
 
-  throw new Error(`不支持的输入类型：${input.type}`);
+  throw localizedError('errorUnsupportedInputType', { type: input.type });
 }
 
 async function blobToPreparedImage(blob) {
@@ -743,7 +691,7 @@ async function cropScreenshot(screenshotDataUrl, rect) {
   const sh = Math.min(image.naturalHeight - sy, Math.round(rect.height * dpr));
 
   if (sw < 1 || sh < 1) {
-    throw new Error('选区无效，请重新框选截图。');
+    throw localizedError('errorInvalidSelection');
   }
 
   const canvas = document.createElement('canvas');
@@ -770,7 +718,7 @@ async function normalizeImageDataUrl(dataUrl) {
     };
   }
 
-  setLoading('正在压缩图片...', stepImage);
+  setLocalizedLoading('resultLoadingCompressImage', stepImage);
 
   let scale = Math.min(1, maxImageSide / Math.max(image.naturalWidth, image.naturalHeight));
   let quality = jpegQuality;
@@ -800,7 +748,7 @@ async function normalizeImageDataUrl(dataUrl) {
     quality = Math.max(0.3, quality * 0.8);
   }
 
-  throw new Error('图片压缩后仍然超过大小限制，请使用更小的图片或更小的选区。');
+  throw localizedError('errorCompressedImageTooLarge');
 }
 
 /* ── Low-level helpers ────────────────────────────────── */
@@ -808,7 +756,7 @@ async function normalizeImageDataUrl(dataUrl) {
 function parseDataUrl(dataUrl) {
   const match = String(dataUrl).match(/^data:([^;]+);base64,(.*)$/);
   if (!match) {
-    throw new Error('图片 data URL 格式无效。');
+    throw localizedError('errorInvalidImageDataUrl');
   }
   return {
     mimeType: match[1],
@@ -820,7 +768,7 @@ function blobToDataUrl(blob) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error('读取图片失败。'));
+    reader.onerror = () => reject(localizedError('errorReadImage'));
     reader.readAsDataURL(blob);
   });
 }
@@ -829,7 +777,7 @@ function loadImage(src) {
   return new Promise((resolve, reject) => {
     const image = new Image();
     image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error('图片加载失败。'));
+    image.onerror = () => reject(localizedError('errorLoadImage'));
     image.src = src;
   });
 }
@@ -853,18 +801,18 @@ async function loadConfig() {
   }
 
   if (!apiBaseUrl || !apiKey || !apiModel) {
-    throw new Error('请先在设置页选择 API 自动分析，并填写 AI Base URL、API Key 和 Model。');
+    throw localizedError('errorApiConfigMissing');
   }
 
   try {
     const url = new URL(apiBaseUrl);
     if (url.protocol !== 'https:' &&
         !(url.protocol === 'http:' && (url.hostname === 'localhost' || url.hostname === '127.0.0.1'))) {
-      throw new Error('AI Base URL 必须使用 https（本地开发可使用 http://localhost 或 http://127.0.0.1）。');
+      throw localizedError('errorApiHttpsRequired');
     }
   } catch (error) {
-    if (error.message.includes('AI Base URL')) throw error;
-    throw new Error('AI Base URL 格式无效。');
+    if (error && error.i18nKey === 'errorApiHttpsRequired') throw error;
+    throw localizedError('errorApiUrlInvalid');
   }
 
   return { analysisMode, apiBaseUrl, apiKey, apiModel };
@@ -884,15 +832,38 @@ function isMarketingTemplate(template) {
   return window.PromptTemplates.isMarketingDiagnosisTemplate(template);
 }
 
-function buildChatGptAssistInstruction(template, businessContext = '') {
+function buildChatGptAssistInstruction(template, businessContext = '', outputLanguage = window.PromptLensI18n.getLanguage()) {
   const context = String(businessContext || '').trim();
-  const sharedEvidenceRules = [
+  const useEnglish = outputLanguage === 'en';
+  const sharedEvidenceRules = useEnglish ? [
+    'If no image is actually attached to the conversation, ask me to upload it before analyzing anything.',
+    'Base every answer strictly on visible image evidence. Do not identify real people or infer sensitive attributes such as age, ethnicity, health, politics, religion, or financial status.',
+    'Describe text only when it is clearly readable. Mark blurred, obscured, or uncertain text as uncertain instead of guessing.'
+  ] : [
     '如果当前对话中没有实际附加图片，请先提醒我上传图片，不要凭空分析。',
     '请严格基于图片可见内容回答；不要识别真实人物身份，不要推断年龄、种族、健康、政治、宗教、财务状况等敏感属性。',
     '如果图片中有文字，只描述清晰可读的文字；模糊、被遮挡或无法确认的文字请标为“不确定”，不要猜测。'
   ];
   if (isMarketingTemplate(template)) {
-    return [
+    return (useEnglish ? [
+      'Analyze the commercial visual I uploaded using only visible evidence and the business context below.',
+      ...sharedEvidenceRules,
+      '',
+      'Business context:',
+      context || 'Not provided. Base the diagnosis only on visible image evidence.',
+      '',
+      'Use clear Markdown level-two headings for these seven sections:',
+      '1. Owner-friendly summary',
+      '2. Visible content and style',
+      '3. Visual marketing diagnosis',
+      '4. Target audience and offer assessment',
+      '5. Low-cost visual revision suggestions',
+      '6. Markdown Brief for designers or media buyers',
+      '7. Reusable English image-generation Prompt',
+      '',
+      'Use cautious language such as “may”, “appears to”, and “based on visible elements” for audience, offer, conversion risk, and business intent. Do not present inference as fact.',
+      'If business context is empty, do not invent brands, prices, sales, or advertising data.'
+    ] : [
       '请分析我上传的这张商业视觉图。请严格基于图片可见内容，并结合我提供的业务背景。',
       ...sharedEvidenceRules,
       '',
@@ -910,10 +881,23 @@ function buildChatGptAssistInstruction(template, businessContext = '') {
       '',
       '涉及目标人群、卖点、转化风险、商业意图时，请使用“可能”“看起来”“从画面推测”等谨慎措辞，并说明依据来自哪些可见元素。不要把推测写成事实。',
       '如果业务背景为空，请只基于图片判断，不要编造品牌、价格、销量或投放数据。'
-    ].join('\n');
+    ]).join('\n');
   }
 
-  const lines = [
+  const lines = useEnglish ? [
+    'Analyze the image I uploaded. Base every statement on visible evidence and do not invent hidden details.',
+    ...sharedEvidenceRules,
+    '',
+    'Use this Markdown structure:',
+    '1. Chinese Prompt in Simplified Chinese',
+    '2. English Prompt',
+    '3. Tags: 6-10 English tags covering subject, style, lighting, composition, mood, and visual technique',
+    '4. Negative Prompt in English',
+    '5. Final reusable English Prompt without platform-specific parameters',
+    '6. Three distinct variants, each with an English Prompt, use cases, and Negative Prompt',
+    '',
+    'Write headings, explanations, and use cases in English. Clearly mark uncertain details as uncertain.'
+  ] : [
     '请分析我上传的这张图片。请严格基于图片可见内容，不要编造不可见信息。',
     ...sharedEvidenceRules,
     '',
@@ -929,14 +913,21 @@ function buildChatGptAssistInstruction(template, businessContext = '') {
   ];
 
   if (template && template.instruction) {
-    lines.push(
+    lines.push(...(useEnglish ? [
+      '',
+      'Selected output template requirements:',
+      String(template.instruction).trim(),
+      '',
+      'These requirements come from PromptLens structured API templates. Do not output JSON or field names such as prompt_en, prompt_zh, prompt_tags, negative_prompt, json_prompt, or prompt_variants. Map the requirements into the Markdown sections above.',
+      'Keep the selected template style while following the structure above. Stay grounded in visible evidence and do not invent unavailable information.'
+    ] : [
       '',
       '所选输出模板要求：',
       String(template.instruction).trim(),
       '',
       '上面的模板要求来自 PromptLens 的结构化 API 模板。请不要输出 JSON，也不要输出 prompt_en、prompt_zh、prompt_tags、negative_prompt、json_prompt 或 prompt_variants 等字段名；请把这些要求映射到上面的 Markdown 小节中。',
       '请在满足上述结构的同时，保留这个模板要求的输出风格；严格基于图片可见内容回答，不要编造图片中不存在的信息。'
-    );
+    ]));
   }
 
   return lines.join('\n');
@@ -977,6 +968,11 @@ function showAssistStatus(message, tone) {
   elements.chatgptAssistStatus.textContent = message;
 }
 
+function showLocalizedAssistStatus(key, tone, params = {}) {
+  currentAssistStatus = { key, tone, params };
+  showAssistStatus(t(key, params), tone);
+}
+
 function renderChatGptAssistPanel(preparedImage, instruction) {
   currentResult = null;
   currentRawText = '';
@@ -989,7 +985,7 @@ function renderChatGptAssistPanel(preparedImage, instruction) {
   if (elements.chatgptAssistCard) elements.chatgptAssistCard.hidden = false;
   if (elements.chatgptInstructionOutput) elements.chatgptInstructionOutput.value = instruction;
   hideMarketingContextCard();
-  showAssistStatus('图片和指令已准备好。请下载图片、复制指令，并在 ChatGPT 中完成分析。', 'success');
+  showLocalizedAssistStatus('chatgptAssistReady', 'success');
 }
 
 function openChatGpt() {
@@ -1003,11 +999,14 @@ function openChatGpt() {
 
 /* ── Reverse prompt instruction ──────────────────────── */
 
-function buildReversePromptInstruction(template, businessContext = '') {
-  return window.PromptTemplates.buildFinalPrompt(template, { businessContext });
+function buildReversePromptInstruction(template, businessContext = '', outputLanguage = window.PromptLensI18n.getLanguage()) {
+  return window.PromptTemplates.buildFinalPrompt(template, {
+    businessContext,
+    outputLanguage
+  });
 }
 
-async function callVisionApi(preparedImage, template) {
+async function callVisionApi(preparedImage, template, outputLanguage) {
   const config = await loadConfig();
   const url = buildChatCompletionsUrl(config.apiBaseUrl);
   const controller = new AbortController();
@@ -1023,7 +1022,7 @@ async function callVisionApi(preparedImage, template) {
         content: [
           {
             type: 'text',
-            text: buildReversePromptInstruction(template, currentBusinessContext)
+            text: buildReversePromptInstruction(template, currentBusinessContext, outputLanguage)
           },
           {
             type: 'image_url',
@@ -1037,7 +1036,7 @@ async function callVisionApi(preparedImage, template) {
   };
 
   try {
-    setLoading('正在调用 AI 模型分析图片...', stepApi);
+    setLocalizedLoading('resultLoadingCallModel', stepApi);
     const startedAt = performance.now();
     const response = await fetch(url, {
       method: 'POST',
@@ -1052,24 +1051,24 @@ async function callVisionApi(preparedImage, template) {
     const responseText = await response.text();
     if (!response.ok) {
       if (response.status === 401 || response.status === 403) {
-        throw new Error('API 鉴权失败。请检查 API Key、模型权限或 Base URL。');
+        throw localizedError('errorApiAuth');
       }
-      throw new Error(`API 请求失败（${response.status}）。请检查配置或稍后重试。`);
+      throw localizedError('errorApiRequest', { status: response.status });
     }
 
     const responseJson = JSON.parse(responseText);
     const rawText = extractAssistantText(responseJson);
     const parsed = extractJSON(rawText);
     if (!parsed) {
-      throw new Error(`模型没有返回可解析的 JSON。原始返回：\n${rawText}`);
+      throw localizedError('errorApiJson', { detail: rawText });
     }
     return { parsed, rawText, usage: responseJson.usage || null, responseTimeMs: performance.now() - startedAt };
   } catch (error) {
     if (error && error.name === 'AbortError') {
-      throw new Error('API 请求超时（2 分钟）。请换更小的选区，或使用响应更快的模型。');
+      throw localizedError('errorApiTimeout');
     }
     if (error.message && error.message.includes('Failed to fetch')) {
-      throw new Error('无法连接到 AI API。请检查 Base URL 是否正确，以及是否已在设置中保存并授权网络权限。');
+      throw localizedError('errorApiConnect');
     }
     throw error;
   } finally {
@@ -1080,7 +1079,7 @@ async function callVisionApi(preparedImage, template) {
 function extractAssistantText(responseJson) {
   const choices = responseJson && responseJson.choices;
   if (!Array.isArray(choices) || choices.length === 0) {
-    throw new Error('API 响应中没有 choices。');
+    throw localizedError('errorApiChoices');
   }
   const content = choices[0] && choices[0].message && choices[0].message.content;
   if (typeof content === 'string') {
@@ -1089,7 +1088,7 @@ function extractAssistantText(responseJson) {
   if (Array.isArray(content)) {
     return content.map(item => typeof item.text === 'string' ? item.text : '').join('\n').trim();
   }
-  throw new Error('API 响应中没有可读取的 message.content。');
+  throw localizedError('errorApiContent');
 }
 
 function extractJSON(text) {
@@ -1120,22 +1119,22 @@ function extractJSON(text) {
 
 function validateResultSchema(parsed) {
   if (!parsed || typeof parsed !== 'object') {
-    throw new Error('模型返回的 JSON 不是对象。');
+    throw localizedError('errorSchemaObject');
   }
   if (typeof parsed.prompt_zh !== 'string' || !parsed.prompt_zh.trim()) {
-    throw new Error('模型返回缺少 prompt_zh 字段或字段为空。');
+    throw localizedError('errorSchemaPromptZh');
   }
   if (typeof parsed.prompt_en !== 'string' || !parsed.prompt_en.trim()) {
-    throw new Error('模型返回缺少 prompt_en 字段或字段为空。');
+    throw localizedError('errorSchemaPromptEn');
   }
   if (!Array.isArray(parsed.prompt_tags)) {
-    throw new Error('模型返回缺少 prompt_tags 数组字段。');
+    throw localizedError('errorSchemaTags');
   }
   if (typeof parsed.negative_prompt !== 'string') {
-    throw new Error('模型返回缺少 negative_prompt 字段。');
+    throw localizedError('errorSchemaNegative');
   }
   if (!parsed.json_prompt || typeof parsed.json_prompt !== 'object') {
-    throw new Error('模型返回缺少 json_prompt 对象字段。');
+    throw localizedError('errorSchemaJsonPrompt');
   }
   if (currentTemplate && window.PromptTemplates.isMarketingDiagnosisTemplate(currentTemplate)) {
     window.PromptMarketingDiagnosis.validateMarketingDiagnosisResult(parsed);
@@ -1162,7 +1161,7 @@ function safeHttpUrl(value) {
   }
 }
 
-async function maybeSaveHistory(input, result, template) {
+async function maybeSaveHistory(input, result, template, contentLanguage) {
   if (!window.PromptHistory || !await window.PromptHistory.isHistoryEnabled()) return;
   const imageUrl = input.type === 'image_url' ? safeHttpUrl(input.srcUrl) : '';
   const pageUrl = safeHttpUrl(input.pageUrl);
@@ -1174,6 +1173,7 @@ async function maybeSaveHistory(input, result, template) {
     inputType: input.type,
     templateId: template.id,
     templateName: template.name,
+    contentLanguage,
     promptEn: result.prompt_en || '',
     promptZh: result.prompt_zh || '',
     promptTags: Array.isArray(result.prompt_tags) ? result.prompt_tags : [],
@@ -1186,11 +1186,9 @@ async function maybeSaveHistory(input, result, template) {
   });
 }
 
-const MARKETING_CONTEXT_EXAMPLE = '这是一张独立站商品主图，目标是提高首屏点击和加购意愿，预算有限，希望优先给出低成本改图建议。';
-
 function fillMarketingContextExample() {
   if (!elements.marketingContextInput) return;
-  elements.marketingContextInput.value = MARKETING_CONTEXT_EXAMPLE;
+  elements.marketingContextInput.value = t('businessContextExample');
   elements.marketingContextInput.focus();
 }
 
@@ -1233,7 +1231,7 @@ async function analyzeInput(input) {
   elements.templateDescription.textContent = template.description;
 
   // ChatGPT Assist 分流
-  setLoading('正在准备图片和 ChatGPT 分析指令...', stepApi);
+  setLocalizedLoading('resultLoadingPrepareChatgpt', stepApi);
   const config = await loadConfig();
   if (config.analysisMode === 'chatgpt_assist') {
     let businessContext = '';
@@ -1241,7 +1239,7 @@ async function analyzeInput(input) {
       businessContext = await waitForMarketingContext();
       currentBusinessContext = businessContext;
     }
-    const instruction = buildChatGptAssistInstruction(template, businessContext);
+    const instruction = buildChatGptAssistInstruction(template, businessContext, window.PromptLensI18n.getLanguage());
     renderChatGptAssistPanel(prepared, instruction);
     return;
   }
@@ -1253,13 +1251,15 @@ async function analyzeInput(input) {
     currentBusinessContext = '';
   }
 
-  const { parsed, rawText, usage, responseTimeMs } = await callVisionApi(prepared, template);
+  const outputLanguage = window.PromptLensI18n.getLanguage();
+  const { parsed, rawText, usage, responseTimeMs } = await callVisionApi(prepared, template, outputLanguage);
   currentUsage = usage;
   currentResponseTimeMs = responseTimeMs;
   validateResultSchema(parsed);
   // ChatGPT Assist mode does not save history because PromptLens does not receive the ChatGPT web reply.
-  await maybeSaveHistory(input, parsed, template);
-  renderResult(parsed, rawText, template);
+  const displayTemplate = await window.PromptTemplates.getTemplateById(template.id);
+  await maybeSaveHistory(input, parsed, displayTemplate, outputLanguage);
+  renderResult(parsed, rawText, displayTemplate);
 }
 
 /* ── ChatGPT Auto Send helpers ──────────────────────── */
@@ -1273,7 +1273,7 @@ const CHATGPT_STATUS_POLL_MAX_ATTEMPTS = 45;
 
 function buildChatGptTransferPayload() {
   if (!currentAssistImage || !currentAssistImage.base64 || !currentAssistInstruction) {
-    throw new Error('图片或指令还没有准备好，请重新分析。');
+    throw localizedError('errorAssistNotReady');
   }
   return {
     imageBase64: currentAssistImage.base64,
@@ -1287,25 +1287,26 @@ async function requestChatGptPermission() {
   const origins = ['https://chatgpt.com/*'];
   const hasPermission = await chrome.permissions.contains({ origins });
   if (hasPermission) return true;
-  showAssistStatus('需要授权访问 chatgpt.com，才能尝试把图片和指令填入 ChatGPT。PromptLens 不会读取回复，也不会自动发送。', 'info');
+  showLocalizedAssistStatus('chatgptAssistPermissionNeeded', 'info');
   return chrome.permissions.request({ origins });
 }
 
 function getChatGptStatusMessage(status) {
   const messages = {
-    permission_denied: { tone: 'warning', message: '未授权访问 chatgpt.com。请使用下载图片和复制指令手动完成。' },
-    payload_missing: { tone: 'warning', message: '自动发送数据已过期。图片和指令仍在本页可用，请手动上传到 ChatGPT。' },
-    tab_open_failed: { tone: 'error', message: '无法打开 ChatGPT。请手动访问 https://chatgpt.com/。' },
-    script_injection_failed: { tone: 'warning', message: '无法连接 ChatGPT 页面。请下载图片、复制指令后手动上传。' },
-    input_not_found: { tone: 'warning', message: '已打开 ChatGPT，但没有找到输入框。请手动复制指令。' },
-    instruction_failed: { tone: 'warning', message: '已打开 ChatGPT，但指令填入失败。请手动复制指令。' },
-    image_input_not_found: { tone: 'warning', message: '已填入指令，但没有找到图片上传入口。请下载图片后手动上传。' },
-    image_attach_failed: { tone: 'warning', message: '已填入指令，但图片自动附加失败。请下载图片后手动上传。' },
-    partial_success_instruction_only: { tone: 'warning', message: '已填入指令，但图片自动附加失败。请下载图片后手动上传。' },
-    success_instruction_only: { tone: 'info', message: '已打开 ChatGPT 并填入指令。请确认图片是否已附加，然后手动发送。' },
-    success_instruction_and_image: { tone: 'success', message: '已尝试附加图片并填入指令。请在 ChatGPT 中确认后手动发送。' }
+    permission_denied: { tone: 'warning', key: 'chatgptAssistPermissionDenied' },
+    payload_missing: { tone: 'warning', key: 'chatgptAssistPayloadExpired' },
+    tab_open_failed: { tone: 'error', key: 'chatgptAssistTabOpenFailed' },
+    script_injection_failed: { tone: 'warning', key: 'chatgptAssistConnectFailed' },
+    input_not_found: { tone: 'warning', key: 'chatgptAssistInputNotFound' },
+    instruction_failed: { tone: 'warning', key: 'chatgptAssistInstructionFailed' },
+    image_input_not_found: { tone: 'warning', key: 'chatgptAssistImageInputNotFound' },
+    image_attach_failed: { tone: 'warning', key: 'chatgptAssistImageAttachFailed' },
+    partial_success_instruction_only: { tone: 'warning', key: 'chatgptAssistImageAttachFailed' },
+    success_instruction_only: { tone: 'info', key: 'chatgptAssistInstructionOnly' },
+    success_instruction_and_image: { tone: 'success', key: 'chatgptAssistSuccess' }
   };
-  return messages[status] || { tone: 'warning', message: '自动发送失败。请下载图片、复制指令后手动上传到 ChatGPT。' };
+  const match = messages[status] || { tone: 'warning', key: 'chatgptAssistAutoFailed' };
+  return { tone: match.tone, key: match.key, message: t(match.key) };
 }
 
 async function pollChatGptStatus(jobId) {
@@ -1316,7 +1317,7 @@ async function pollChatGptStatus(jobId) {
     const entry = stored[statusKey];
     if (entry && entry.status) {
       const msg = getChatGptStatusMessage(entry.status);
-      showAssistStatus(msg.message, msg.tone);
+      showLocalizedAssistStatus(msg.key, msg.tone);
       return;
     }
   }
@@ -1325,7 +1326,7 @@ async function pollChatGptStatus(jobId) {
 async function sendToChatGpt() {
   const granted = await requestChatGptPermission();
   if (!granted) {
-    showAssistStatus('未授权访问 chatgpt.com。请使用下载图片和复制指令手动完成。', 'warning');
+    showLocalizedAssistStatus('chatgptAssistPermissionDenied', 'warning');
     return;
   }
 
@@ -1334,9 +1335,9 @@ async function sendToChatGpt() {
     payload: buildChatGptTransferPayload()
   });
   if (!response || !response.ok) {
-    throw new Error(response && response.error || '无法打开 ChatGPT。');
+    throw new Error(response && response.error || t('chatgptAssistTabOpenFailed'));
   }
-  showAssistStatus('已打开 ChatGPT，将等待页面稳定后再填入图片和指令。请在 ChatGPT 页面确认后手动发送；如果没有出现图片，请回到本页下载图片手动上传。', 'info');
+  showLocalizedAssistStatus('chatgptAssistOpenedWaiting', 'info');
   pollChatGptStatus(response.jobId);
 }
 
@@ -1345,7 +1346,7 @@ async function sendToChatGpt() {
 if (elements.chatgptSend) {
   elements.chatgptSend.addEventListener('click', () => {
     sendToChatGpt().catch(error => {
-      showAssistStatus(`自动发送失败：${error.message}`, 'error');
+      showLocalizedAssistStatus('chatgptAssistAutoError', 'error', { detail: error.message });
     });
   });
 }
@@ -1353,14 +1354,14 @@ if (elements.chatgptSend) {
 if (elements.chatgptDownloadImage) {
   elements.chatgptDownloadImage.addEventListener('click', () => {
     if (!currentAssistImage) {
-      showAssistStatus('图片还没有准备好。请重新分析。', 'warning');
+      showLocalizedAssistStatus('chatgptAssistImageNotReady', 'warning');
       return;
     }
     try {
       downloadPreparedImage(currentAssistImage);
-      showAssistStatus('图片已开始下载。', 'success');
+      showLocalizedAssistStatus('chatgptAssistImageDownloadStarted', 'success');
     } catch (error) {
-      showAssistStatus('图片下载失败。你可以重新打开结果页，或改用框选截图。', 'error');
+      showLocalizedAssistStatus('chatgptAssistImageDownloadFailed', 'error');
     }
   });
 }
@@ -1369,7 +1370,7 @@ if (elements.chatgptCopyInstruction) {
   elements.chatgptCopyInstruction.addEventListener('click', () => {
     copyTextWithFeedback(elements.chatgptCopyInstruction, currentAssistInstruction).then(copied => {
       if (!copied) {
-        showAssistStatus('浏览器阻止了自动复制。请手动选中下方指令复制。', 'warning');
+        showLocalizedAssistStatus('chatgptAssistCopyBlocked', 'warning');
       }
     });
   });
@@ -1379,9 +1380,9 @@ if (elements.chatgptOpen) {
   elements.chatgptOpen.addEventListener('click', () => {
     try {
       openChatGpt();
-      showAssistStatus('已打开 ChatGPT。请上传下载的图片并粘贴指令。', 'info');
+      showLocalizedAssistStatus('chatgptAssistOpenedManual', 'info');
     } catch (error) {
-      showAssistStatus('无法自动打开 ChatGPT。请手动访问 https://chatgpt.com/。', 'error');
+      showLocalizedAssistStatus('chatgptAssistTabOpenFailed', 'error');
     }
   });
 }
@@ -1396,17 +1397,55 @@ if (elements.chatgptCopyOpen) {
     }
     try {
       openChatGpt();
-      showAssistStatus(copied ? '已复制指令并打开 ChatGPT。请上传下载的图片。' : '已打开 ChatGPT，但浏览器阻止了自动复制。请手动复制下方指令。', copied ? 'info' : 'warning');
+      showLocalizedAssistStatus(copied ? 'chatgptAssistCopiedAndOpened' : 'chatgptAssistOpenedCopyBlocked', copied ? 'info' : 'warning');
     } catch {
-      showAssistStatus(copied ? '指令已复制，但无法自动打开 ChatGPT。请手动访问 https://chatgpt.com/。' : '浏览器阻止了自动复制，也无法自动打开 ChatGPT。请手动复制指令并访问 https://chatgpt.com/。', 'error');
+      showLocalizedAssistStatus(copied ? 'chatgptAssistCopiedOpenFailed' : 'chatgptAssistCopyAndOpenFailed', 'error');
     }
   });
 }
 
+async function rerenderLocalizedResult() {
+  window.PromptLensI18n.apply(document);
+  if (currentTemplate) {
+    currentTemplate = await window.PromptTemplates.getTemplateById(currentTemplate.id);
+    elements.templateName.textContent = currentTemplate.name;
+    elements.templateDescription.textContent = currentTemplate.description;
+    renderNextStepHint(currentTemplate);
+  }
+  if (currentResult) {
+    renderMarketingDiagnosis(currentResult, currentTemplate);
+    renderPromptVariants(currentResult);
+  }
+  if (currentAssistImage && currentTemplate) {
+    currentAssistInstruction = buildChatGptAssistInstruction(
+      currentTemplate,
+      currentBusinessContext || '',
+      window.PromptLensI18n.getLanguage()
+    );
+    elements.chatgptInstructionOutput.value = currentAssistInstruction;
+  }
+  if (currentAssistStatus && !elements.chatgptAssistStatus.hidden) {
+    showAssistStatus(t(currentAssistStatus.key, currentAssistStatus.params), currentAssistStatus.tone);
+  }
+  if (!errorPanel.hidden && currentError) {
+    renderError(currentError);
+  } else if (!resultContent.hidden && currentResult) {
+    showResult();
+  } else if (!elements.marketingContextCard.hidden) {
+    showMarketingContextCard();
+  } else if (!loadingPanel.hidden && currentLoadingState) {
+    setLoading(t(currentLoadingState.key, currentLoadingState.params), currentLoadingState.activeStep);
+  }
+}
+
 async function main() {
+  await window.PromptLensI18n.init();
   setupCopyButtons();
   setupExportButtons();
-  setLoading('正在读取待分析输入...', stepRead);
+  setLocalizedLoading('resultStatusReadingInput', stepRead);
+  window.PromptLensI18n.onChange(() => {
+    rerenderLocalizedResult().catch(() => {});
+  });
 
   const input = await loadPendingInput();
   await loadRuntimeSettings();
@@ -1425,9 +1464,10 @@ async function main() {
 
 retryBtn.addEventListener('click', () => {
   if (!currentInput) {
-    showError('无法重试', '没有可重试的输入。请回到网页右键图片或框选截图。');
+    showError(t('errorCannotRetry'), t('errorNoRetryInput'));
     return;
   }
+  currentError = null;
   currentBusinessContext = null;
   analyzeInput({ ...currentInput }).catch(renderError);
 });

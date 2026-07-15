@@ -7,7 +7,17 @@
 }(typeof globalThis !== 'undefined' ? globalThis : window, function () {
   'use strict';
 
-  const DEFAULT_DISCLAIMER = '诊断结果基于图片内容和用户提供的业务背景生成，仅用于营销创意和视觉表达参考，不代表真实投放效果、商业结果或专业广告投放建议。';
+  const t = (key, params) => globalThis.PromptLensI18n ? globalThis.PromptLensI18n.t(key, params) : key;
+  const localizedError = (key, params = {}) => globalThis.PromptLensI18n.createError(key, params);
+
+  const MARKETING_DIMENSION_ORDER = Object.freeze(['attention', 'clarity', 'trust', 'differentiation', 'actionability']);
+  const MARKETING_DIMENSION_KEYS = Object.freeze({
+    attention: 'marketingDimensionAttention',
+    clarity: 'marketingDimensionClarity',
+    trust: 'marketingDimensionTrust',
+    differentiation: 'marketingDimensionDifferentiation',
+    actionability: 'marketingDimensionActionability'
+  });
 
   function normalizeSafeMarketingText(value) {
     if (typeof value !== 'string') return '';
@@ -89,7 +99,7 @@
         content_angles: normalizeStringArray(actions.content_angles),
         next_tests: normalizeStringArray(actions.next_tests)
       },
-      disclaimer: normalizeString(source.disclaimer) || DEFAULT_DISCLAIMER
+      disclaimer: normalizeString(source.disclaimer) || t('marketingDisclaimer')
     };
   }
 
@@ -99,7 +109,14 @@
 
   function formatScore(score) {
     if (!score || score.overall === null) return '';
-    return score.summary ? `${score.overall}/5 - ${score.summary}` : `${score.overall}/5`;
+    const lines = [score.summary ? `${score.overall}/5 - ${score.summary}` : `${score.overall}/5`];
+    MARKETING_DIMENSION_ORDER.forEach(id => {
+      const value = score.dimensions && score.dimensions[id];
+      if (value !== null && value !== undefined) {
+        lines.push(t('marketingDimensionScore', { label: t(MARKETING_DIMENSION_KEYS[id]), score: value }));
+      }
+    });
+    return lines.join('\n');
   }
 
   function getMarketingDiagnosisSections(result) {
@@ -107,89 +124,92 @@
     const score = normalized.marketing_diagnosis.marketing_readiness_score;
     return [
       {
-        title: '老板先看',
-        kicker: '业务快照',
+        title: t('marketingSnapshotTitle'),
+        kicker: t('marketingSnapshotKicker'),
         items: [
-          { label: '商业意图', value: normalized.business_snapshot.business_summary },
-          { label: '目标客户', value: normalized.business_snapshot.target_customer },
-          { label: '核心卖点', value: normalized.business_snapshot.core_offer },
-          { label: '转化钩子', value: normalized.business_snapshot.conversion_hook },
-          { label: '一句话判断', value: normalized.business_snapshot.quick_judgement }
+          { label: t('marketingBusinessIntent'), value: normalized.business_snapshot.business_summary },
+          { label: t('marketingTargetCustomer'), value: normalized.business_snapshot.target_customer },
+          { label: t('marketingCoreOffer'), value: normalized.business_snapshot.core_offer },
+          { label: t('marketingConversionHook'), value: normalized.business_snapshot.conversion_hook },
+          { label: t('marketingQuickJudgement'), value: normalized.business_snapshot.quick_judgement }
         ]
       },
       {
-        title: '营销诊断',
-        kicker: '营销诊断',
+        title: t('marketingDiagnosisTitle'),
+        kicker: t('marketingDiagnosisKicker'),
         items: [
-          { label: '视觉策略', value: normalized.marketing_diagnosis.visual_strategy },
-          { label: '信任信号', value: normalized.marketing_diagnosis.trust_signals },
-          { label: '情绪驱动', value: normalized.marketing_diagnosis.emotional_driver },
-          { label: '转化阻力', value: normalized.marketing_diagnosis.friction_points },
-          { label: '营销可用度', value: formatScore(score) }
+          { label: t('marketingVisualStrategy'), value: normalized.marketing_diagnosis.visual_strategy },
+          { label: t('marketingTrustSignals'), value: normalized.marketing_diagnosis.trust_signals },
+          { label: t('marketingEmotionalDriver'), value: normalized.marketing_diagnosis.emotional_driver },
+          { label: t('marketingFrictionPoints'), value: normalized.marketing_diagnosis.friction_points },
+          { label: t('marketingReadiness'), value: formatScore(score) }
         ]
       },
       {
-        title: '下一步怎么做',
-        kicker: '下一步行动',
+        title: t('marketingActionsTitle'),
+        kicker: t('marketingActionsKicker'),
         items: [
-          { label: '改进建议', value: formatList(normalized.next_actions.improvement_suggestions) },
-          { label: '低成本改编 brief', value: normalized.next_actions.ai_adaptation_brief },
-          { label: '设计/运营执行 brief', value: normalized.next_actions.designer_execution_brief },
-          { label: '内容角度', value: formatList(normalized.next_actions.content_angles) },
-          { label: '下一轮测试', value: formatList(normalized.next_actions.next_tests) }
+          { label: t('marketingImprovementSuggestions'), value: formatList(normalized.next_actions.improvement_suggestions) },
+          { label: t('marketingAiBrief'), value: normalized.next_actions.ai_adaptation_brief },
+          { label: t('marketingDesignerBrief'), value: normalized.next_actions.designer_execution_brief },
+          { label: t('marketingContentAngles'), value: formatList(normalized.next_actions.content_angles) },
+          { label: t('marketingNextTests'), value: formatList(normalized.next_actions.next_tests) }
         ]
       }
     ];
   }
 
-  function requireObject(value, message) {
+  function requireObject(value, error) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
-      throw new Error(message);
+      throw error;
     }
     return value;
   }
 
-  function requireNonEmptyString(value, message) {
+  function requireNonEmptyString(value, error) {
     if (typeof value !== 'string' || !value.trim()) {
-      throw new Error(message);
+      throw error;
     }
   }
 
-  function requireStringArray(value, message) {
+  function requireStringArray(value, error) {
     if (!Array.isArray(value) || !value.some(item => typeof item === 'string' && item.trim())) {
-      throw new Error(message);
+      throw error;
     }
   }
 
-  function requireScore(value, message) {
+  function requireScore(value, error) {
     const score = Number(value);
     if (!Number.isFinite(score) || score < 1 || score > 5) {
-      throw new Error(message);
+      throw error;
     }
   }
 
   function validateMarketingDiagnosisResult(result) {
-    const source = requireObject(result && result.marketing_diagnosis, '模型返回缺少 marketing_diagnosis 对象字段。');
-    const snapshot = requireObject(source.business_snapshot, '模型返回缺少 marketing_diagnosis.business_snapshot 对象字段。');
-    const diagnosis = requireObject(source.marketing_diagnosis, '模型返回缺少 marketing_diagnosis.marketing_diagnosis 对象字段。');
-    const actions = requireObject(source.next_actions, '模型返回缺少 marketing_diagnosis.next_actions 对象字段。');
-    const score = requireObject(diagnosis.marketing_readiness_score, '模型返回缺少 marketing_readiness_score 对象字段。');
+    const objectError = field => localizedError('errorMarketingObject', { field });
+    const fieldError = field => localizedError('errorMarketingField', { field });
+    const arrayError = field => localizedError('errorMarketingArray', { field });
+    const source = requireObject(result && result.marketing_diagnosis, objectError('marketing_diagnosis'));
+    const snapshot = requireObject(source.business_snapshot, objectError('marketing_diagnosis.business_snapshot'));
+    const diagnosis = requireObject(source.marketing_diagnosis, objectError('marketing_diagnosis.marketing_diagnosis'));
+    const actions = requireObject(source.next_actions, objectError('marketing_diagnosis.next_actions'));
+    const score = requireObject(diagnosis.marketing_readiness_score, objectError('marketing_readiness_score'));
 
-    requireNonEmptyString(snapshot.business_summary, '模型返回缺少 business_summary 字段或字段为空。');
-    requireNonEmptyString(snapshot.target_customer, '模型返回缺少 target_customer 字段或字段为空。');
-    requireNonEmptyString(snapshot.core_offer, '模型返回缺少 core_offer 字段或字段为空。');
-    requireNonEmptyString(snapshot.conversion_hook, '模型返回缺少 conversion_hook 字段或字段为空。');
-    requireNonEmptyString(snapshot.quick_judgement, '模型返回缺少 quick_judgement 字段或字段为空。');
-    requireNonEmptyString(diagnosis.visual_strategy, '模型返回缺少 visual_strategy 字段或字段为空。');
-    requireNonEmptyString(diagnosis.trust_signals, '模型返回缺少 trust_signals 字段或字段为空。');
-    requireNonEmptyString(diagnosis.emotional_driver, '模型返回缺少 emotional_driver 字段或字段为空。');
-    requireNonEmptyString(diagnosis.friction_points, '模型返回缺少 friction_points 字段或字段为空。');
-    requireScore(score.overall, '模型返回的 marketing_readiness_score.overall 必须是 1-5 的数字。');
-    requireStringArray(actions.improvement_suggestions, '模型返回缺少 improvement_suggestions 数组字段。');
-    requireNonEmptyString(actions.ai_adaptation_brief, '模型返回缺少 ai_adaptation_brief 字段或字段为空。');
-    requireNonEmptyString(actions.designer_execution_brief, '模型返回缺少 designer_execution_brief 字段或字段为空。');
-    requireStringArray(actions.content_angles, '模型返回缺少 content_angles 数组字段。');
-    requireStringArray(actions.next_tests, '模型返回缺少 next_tests 数组字段。');
+    requireNonEmptyString(snapshot.business_summary, fieldError('business_summary'));
+    requireNonEmptyString(snapshot.target_customer, fieldError('target_customer'));
+    requireNonEmptyString(snapshot.core_offer, fieldError('core_offer'));
+    requireNonEmptyString(snapshot.conversion_hook, fieldError('conversion_hook'));
+    requireNonEmptyString(snapshot.quick_judgement, fieldError('quick_judgement'));
+    requireNonEmptyString(diagnosis.visual_strategy, fieldError('visual_strategy'));
+    requireNonEmptyString(diagnosis.trust_signals, fieldError('trust_signals'));
+    requireNonEmptyString(diagnosis.emotional_driver, fieldError('emotional_driver'));
+    requireNonEmptyString(diagnosis.friction_points, fieldError('friction_points'));
+    requireScore(score.overall, localizedError('errorMarketingScore'));
+    requireStringArray(actions.improvement_suggestions, arrayError('improvement_suggestions'));
+    requireNonEmptyString(actions.ai_adaptation_brief, fieldError('ai_adaptation_brief'));
+    requireNonEmptyString(actions.designer_execution_brief, fieldError('designer_execution_brief'));
+    requireStringArray(actions.content_angles, arrayError('content_angles'));
+    requireStringArray(actions.next_tests, arrayError('next_tests'));
   }
 
   function buildMarketingDiagnosisCopyText(result) {
@@ -201,78 +221,78 @@
       });
       return lines;
     });
-    return [...sections, '免责声明', normalized.disclaimer].join('\n').replace(/\n{3,}/g, '\n\n').trim();
+    return [...sections, t('marketingDisclaimerLabel'), normalized.disclaimer].join('\n').replace(/\n{3,}/g, '\n\n').trim();
   }
 
   function buildMarketingDiagnosisMarkdown(result, meta = {}) {
     const normalized = normalizeMarketingDiagnosis(result);
     const score = normalized.marketing_diagnosis.marketing_readiness_score;
     const sections = [
-      '# 我用 AI 拆了一张商业视觉图',
+      `# ${t('marketingExportTitle')}`,
       '',
-      `- 应用：${normalizeString(meta.app) || 'PromptLens'}`,
-      `- 导出时间：${normalizeString(meta.exportedAt) || new Date().toISOString()}`,
-      `- 模板：${normalizeString(meta.templateName) || '视觉营销诊断'}`,
+      `- ${t('exportApp', { value: normalizeString(meta.app) || 'PromptLens' })}`,
+      `- ${t('exportedAt', { value: normalizeString(meta.exportedAt) || new Date().toISOString() })}`,
+      `- ${t('exportTemplate', { value: normalizeString(meta.templateName) || t('templateMarketingName') })}`,
       '',
-      '## 业务背景',
+      `## ${t('marketingExportBusinessContext')}`,
       '',
-      normalizeString(meta.businessContext) || '未提供业务背景；以下诊断仅基于图片可见内容生成。',
+      normalizeString(meta.businessContext) || t('marketingNoBusinessContext'),
       '',
-      '## 1. 老板先看：这张图在卖什么',
+      `## 1. ${t('marketingExportSection1')}`,
       '',
-      `- 商业意图：${normalized.business_snapshot.business_summary}`,
-      `- 核心卖点：${normalized.business_snapshot.core_offer}`,
-      `- 一句话判断：${normalized.business_snapshot.quick_judgement}`,
+      `- ${t('marketingBusinessIntent')}${t('commonLabelSeparator')}${normalized.business_snapshot.business_summary}`,
+      `- ${t('marketingCoreOffer')}${t('commonLabelSeparator')}${normalized.business_snapshot.core_offer}`,
+      `- ${t('marketingQuickJudgement')}${t('commonLabelSeparator')}${normalized.business_snapshot.quick_judgement}`,
       '',
-      '## 2. 它抓住了谁：目标客户和使用场景',
+      `## 2. ${t('marketingExportSection2')}`,
       '',
       normalized.business_snapshot.target_customer,
       '',
-      '## 3. 它为什么让人停下来：视觉策略和情绪钩子',
+      `## 3. ${t('marketingExportSection3')}`,
       '',
-      `- 视觉策略：${normalized.marketing_diagnosis.visual_strategy}`,
-      `- 情绪驱动：${normalized.marketing_diagnosis.emotional_driver}`,
-      `- 信任信号：${normalized.marketing_diagnosis.trust_signals}`,
+      `- ${t('marketingVisualStrategy')}${t('commonLabelSeparator')}${normalized.marketing_diagnosis.visual_strategy}`,
+      `- ${t('marketingEmotionalDriver')}${t('commonLabelSeparator')}${normalized.marketing_diagnosis.emotional_driver}`,
+      `- ${t('marketingTrustSignals')}${t('commonLabelSeparator')}${normalized.marketing_diagnosis.trust_signals}`,
       '',
-      '## 4. 它为什么可能影响成交：转化阻力',
+      `## 4. ${t('marketingExportSection4')}`,
       '',
       normalized.marketing_diagnosis.friction_points,
       '',
-      '## 5. 中小企业怎么低成本借鉴',
+      `## 5. ${t('marketingExportSection5')}`,
       '',
       formatList(normalized.next_actions.improvement_suggestions),
       '',
-      '## 6. 给 AI / 设计师 / 运营的执行 brief',
+      `## 6. ${t('marketingExportSection6')}`,
       '',
-      '### 给 AI 生成工具',
+      `### ${t('marketingExportAiTool')}`,
       '',
       normalized.next_actions.ai_adaptation_brief,
       '',
-      '### 给设计师或运营',
+      `### ${t('marketingExportDesigner')}`,
       '',
       normalized.next_actions.designer_execution_brief,
       '',
-      '## 7. 可以延展成哪些内容角度',
+      `## 7. ${t('marketingExportSection7')}`,
       '',
       formatList(normalized.next_actions.content_angles),
       '',
-      '## 8. 下一张图可以测试什么',
+      `## 8. ${t('marketingExportSection8')}`,
       '',
       formatList(normalized.next_actions.next_tests),
       '',
-      '## 营销可用度',
+      `## ${t('marketingReadiness')}`,
       '',
       formatScore(score),
       '',
-      '## 免责声明',
+      `## ${t('marketingDisclaimerLabel')}`,
       '',
-      DEFAULT_DISCLAIMER
+      normalized.disclaimer
     ];
     return sections.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
   }
 
   return {
-    DEFAULT_DISCLAIMER,
+    MARKETING_DIMENSION_ORDER,
     normalizeSafeMarketingText,
     validateMarketingDiagnosisResult,
     normalizeMarketingDiagnosis,
