@@ -1223,7 +1223,7 @@ Expected asset: `promptlens-v0.6.0.zip`, state `uploaded`.
 ```bash
 ssh oracle 'set -e; backup=/opt/promptlens/site-backup-$(date +%Y%m%d-%H%M%S); cp -a /opt/promptlens/site "$backup"; echo "$backup"'
 rsync -az --delete site/ oracle:/opt/promptlens/site/
-curl -fsSL https://bytewatcher.xyz/ | grep '"softwareVersion": "0.6.0"'
+curl -fsSL https://promptlens.bytewatcher.xyz/ | grep '"softwareVersion": "0.6.0"'
 ```
 
 Expected: website shows `"softwareVersion": "0.6.0"`.

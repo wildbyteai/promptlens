@@ -3,30 +3,42 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const root = path.resolve(__dirname, '..');
-const siteRoot = 'https://bytewatcher.xyz';
+const siteRoot = 'https://promptlens.bytewatcher.xyz';
 const pages = [
   { file: 'site/index.html', url: `${siteRoot}/`, title: 'PromptLens — Reverse image prompts and visual marketing diagnosis' },
   { file: 'site/privacy/index.html', url: `${siteRoot}/privacy/`, title: 'Privacy Policy — PromptLens' },
   { file: 'site/support/index.html', url: `${siteRoot}/support/`, title: 'Support — PromptLens' }
 ];
+const socialImageUrl = `${siteRoot}/assets/promptlens-result.jpg`;
 
 function read(file) {
   return fs.readFileSync(path.join(root, file), 'utf8');
 }
 
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 for (const page of pages) {
   const source = read(page.file);
-  assert.match(source, new RegExp(`<link rel="canonical" href="${page.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}">`), `${page.file} missing canonical`);
-  assert.match(source, /<link rel="alternate" hreflang="en" href="https:\/\/bytewatcher\.xyz\/?(?:privacy\/|support\/)?">/, `${page.file} missing en hreflang`);
-  assert.match(source, /<link rel="alternate" hreflang="zh-CN" href="https:\/\/bytewatcher\.xyz\/?(?:privacy\/|support\/)?\?lang=zh-CN">/, `${page.file} missing zh-CN hreflang`);
-  assert.match(source, /<link rel="alternate" hreflang="x-default" href="https:\/\/bytewatcher\.xyz\/?(?:privacy\/|support\/)?">/, `${page.file} missing x-default hreflang`);
-  for (const property of ['og:type', 'og:title', 'og:description', 'og:image', 'og:url']) {
+  const pageUrlPattern = escapeRegExp(page.url);
+  const socialImagePattern = escapeRegExp(socialImageUrl);
+  assert.match(source, new RegExp(`<link rel="canonical" href="${pageUrlPattern}">`), `${page.file} missing canonical`);
+  assert.match(source, new RegExp(`<link rel="alternate" hreflang="en" href="${pageUrlPattern}">`), `${page.file} missing en hreflang`);
+  assert.match(source, new RegExp(`<link rel="alternate" hreflang="zh-CN" href="${pageUrlPattern}\\?lang=zh-CN">`), `${page.file} missing zh-CN hreflang`);
+  assert.match(source, new RegExp(`<link rel="alternate" hreflang="x-default" href="${pageUrlPattern}">`), `${page.file} missing x-default hreflang`);
+  for (const property of ['og:type', 'og:title', 'og:description']) {
     assert.match(source, new RegExp(`<meta property="${property}" content="[^"]+">`), `${page.file} missing ${property}`);
   }
-  for (const name of ['twitter:card', 'twitter:title', 'twitter:description', 'twitter:image']) {
+  assert.match(source, new RegExp(`<meta property="og:image" content="${socialImagePattern}">`), `${page.file} missing og:image`);
+  assert.match(source, new RegExp(`<meta property="og:url" content="${pageUrlPattern}">`), `${page.file} missing og:url`);
+  for (const name of ['twitter:card', 'twitter:title', 'twitter:description']) {
     assert.match(source, new RegExp(`<meta name="${name}" content="[^"]+">`), `${page.file} missing ${name}`);
   }
+  assert.match(source, new RegExp(`<meta name="twitter:image" content="${socialImagePattern}">`), `${page.file} missing twitter:image`);
   assert.match(source, /<script type="application\/ld\+json">[\s\S]+?<\/script>/, `${page.file} missing JSON-LD`);
+  assert.match(source, new RegExp(`"url": "${pageUrlPattern}"`), `${page.file} JSON-LD uses the wrong URL`);
+  assert.doesNotMatch(source, /https:\/\/bytewatcher\.xyz/, `${page.file} still references the apex domain`);
 }
 
 const index = read('site/index.html');
@@ -36,12 +48,14 @@ assert.match(index, /"softwareVersion": "0\.6\.0"/);
 
 const robots = read('site/robots.txt');
 assert.match(robots, /User-agent: \*/);
-assert.match(robots, /Sitemap: https:\/\/bytewatcher\.xyz\/sitemap\.xml/);
+assert.match(robots, new RegExp(`Sitemap: ${escapeRegExp(`${siteRoot}/sitemap.xml`)}`));
+assert.doesNotMatch(robots, /https:\/\/bytewatcher\.xyz/, 'robots.txt still references the apex domain');
 
 const sitemap = read('site/sitemap.xml');
 for (const page of pages) {
-  assert.match(sitemap, new RegExp(`<loc>${page.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}</loc>`));
+  assert.match(sitemap, new RegExp(`<loc>${escapeRegExp(page.url)}</loc>`));
 }
+assert.doesNotMatch(sitemap, /https:\/\/bytewatcher\.xyz/, 'sitemap.xml still references the apex domain');
 
 const i18n = read('site/assets/i18n.js');
 assert.match(i18n, /PromptLens — Reverse image prompts and visual marketing diagnosis/);
