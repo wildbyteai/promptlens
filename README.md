@@ -13,6 +13,10 @@
 </p>
 
 <p align="center">
+  <a href="https://promptlens.bytewatcher.xyz/">Official website</a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/github/license/wildbyteai/promptlens" alt="License" />
   <img src="https://img.shields.io/badge/Chrome-MV3-4285F4" alt="Chrome MV3" />
   <img src="https://img.shields.io/badge/backend-none-22c55e" alt="No backend" />

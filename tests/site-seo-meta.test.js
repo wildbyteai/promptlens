@@ -68,7 +68,11 @@ const readmeZhCn = read('README.zh-CN.md');
 const readmeZhTw = read('README.zh-TW.md');
 const security = read('SECURITY.md');
 const privacyPractices = read('docs/chrome-web-store/privacy-practices.md');
+const officialWebsiteLinkPattern = new RegExp(`<a href="${escapeRegExp(`${siteRoot}/`)}">[^<]+<\\/a>`);
 
+assert.match(readmeEn, officialWebsiteLinkPattern);
+assert.match(readmeZhCn, officialWebsiteLinkPattern);
+assert.match(readmeZhTw, officialWebsiteLinkPattern);
 assert.match(readmeEn, /implemented v0\.6\.0:[\s\S]*ChatGPT Plus Assist[\s\S]*experimental ChatGPT handoff/i);
 assert.match(readmeEn, /wait for the ChatGPT page to settle[\s\S]*attempt to attach the image and fill the instruction/i);
 assert.match(readmeZhCn, /已落地到 v0\.6\.0：[\s\S]*ChatGPT Plus 辅助模式[\s\S]*实验性 ChatGPT 交接/);
