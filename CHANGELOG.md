@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+No changes yet.
+
+## 0.7.0 - 2026-07-31
+
 ### Features
 - Add a unified Prompt Compiler that shares evidence, language, Negative Prompt, variant, and platform rules across API analysis and ChatGPT Assist.
 - Add structured-output and target image-generation platform settings.

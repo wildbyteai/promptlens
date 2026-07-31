@@ -21,6 +21,7 @@
   <img src="https://img.shields.io/badge/Chrome-MV3-4285F4" alt="Chrome MV3" />
   <img src="https://img.shields.io/badge/backend-none-22c55e" alt="No backend" />
   <img src="https://img.shields.io/badge/build-none-7c3aed" alt="No build step" />
+  <a href="https://linux.do/"><img src="https://img.shields.io/badge/LINUX-DO-FFB003?labelColor=000000" alt="LINUX DO" /></a>
 </p>
 
 PromptLens is a lightweight image-to-prompt Chrome MV3 extension and reverse image prompt generator. It sends a web image or a selected screenshot region to your own OpenAI-compatible or Anthropic Vision API and generates reusable prompts for Midjourney, Stable Diffusion, commercial visual analysis, and visual marketing diagnosis.
@@ -130,10 +131,10 @@ Press Esc or click Cancel to exit selection mode.
 
 ## First Success path
 
-PromptLens v0.6 focuses on helping users complete either an API-based analysis or a no-API-key ChatGPT Plus Assist flow:
+PromptLens v0.7 focuses on helping users complete either an API-based analysis or a no-API-key ChatGPT Plus Assist flow:
 
 1. Open the options page.
-2. Configure your own OpenAI-compatible Vision API: Provider/Base URL, API Key, and a model that supports image input.
+2. Configure your own OpenAI-compatible or Anthropic Vision API: Provider/Base URL, API Key, and a model that supports image input.
 3. Save settings.
 4. Analyze a page image with the context menu, or use area capture when site permissions or remote image loading get in the way.
 5. Copy a prompt/tags/variants result, or export a Markdown brief from the visual marketing diagnosis template.
@@ -227,7 +228,7 @@ Development principles:
 
 ## Roadmap status
 
-The current branch has implemented v0.6.0: First Success onboarding, clearer provider setup guidance, contextual result next steps, marketing context examples, visual marketing diagnosis, Warm Studio UI refresh, summarized history cards, built-in / custom templates, provider presets, keyboard shortcut, result export, token usage, optional local history, complete Simplified Chinese / English extension UI, Chrome Web Store preparation, ChatGPT Plus Assist mode for no-API-key workflows, and experimental ChatGPT handoff that can open ChatGPT, wait for the page to settle, and attempt to attach the prepared image and fill the instruction after optional user permission.
+The current branch has implemented v0.7.0: First Success onboarding, clearer provider setup guidance, contextual result next steps, marketing context examples, visual marketing diagnosis, Warm Studio UI refresh, summarized history cards, built-in / custom templates, provider presets, keyboard shortcut, result export, token usage, optional local history, complete Simplified Chinese / English extension UI, unified prompt compilation, provider adapters, structured output validation, Chrome Web Store preparation, ChatGPT Plus Assist mode for no-API-key workflows, and experimental ChatGPT handoff that can open ChatGPT, wait for the page to settle, and attempt to attach the prepared image and fill the instruction after optional user permission.
 
 Future feedback-driven directions:
 

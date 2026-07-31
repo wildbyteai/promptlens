@@ -6,26 +6,26 @@
   <title>Privacy Policy — PromptLens</title>
   <meta name="theme-color" content="#3f3a32">
   <link rel="icon" href="../assets/favicon.png" type="image/png">
-  <meta name="description" content="Privacy Policy for PromptLens, a local-first Chrome extension that uses your configured OpenAI-compatible Vision API.">
+  <meta name="description" content="Privacy Policy for PromptLens, a local-first Chrome extension that uses your configured OpenAI-compatible or Anthropic Vision API.">
   <link rel="canonical" href="https://promptlens.bytewatcher.xyz/privacy/">
   <link rel="alternate" hreflang="en" href="https://promptlens.bytewatcher.xyz/privacy/">
   <link rel="alternate" hreflang="zh-CN" href="https://promptlens.bytewatcher.xyz/privacy/?lang=zh-CN">
   <link rel="alternate" hreflang="x-default" href="https://promptlens.bytewatcher.xyz/privacy/">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Privacy Policy — PromptLens">
-  <meta property="og:description" content="Privacy details for PromptLens, a local-first Chrome extension that sends images only to your configured OpenAI-compatible Vision API.">
+  <meta property="og:description" content="Privacy details for PromptLens, a local-first Chrome extension that sends images only to your configured OpenAI-compatible or Anthropic Vision API.">
   <meta property="og:image" content="https://promptlens.bytewatcher.xyz/assets/promptlens-result.jpg">
   <meta property="og:url" content="https://promptlens.bytewatcher.xyz/privacy/">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Privacy Policy — PromptLens">
-  <meta name="twitter:description" content="Privacy details for PromptLens, a local-first Chrome extension that sends images only to your configured OpenAI-compatible Vision API.">
+  <meta name="twitter:description" content="Privacy details for PromptLens, a local-first Chrome extension that sends images only to your configured OpenAI-compatible or Anthropic Vision API.">
   <meta name="twitter:image" content="https://promptlens.bytewatcher.xyz/assets/promptlens-result.jpg">
   <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "WebPage",
   "name": "Privacy Policy — PromptLens",
-  "description": "Privacy details for PromptLens, a local-first Chrome extension that sends images only to your configured OpenAI-compatible Vision API.",
+  "description": "Privacy details for PromptLens, a local-first Chrome extension that sends images only to your configured OpenAI-compatible or Anthropic Vision API.",
   "url": "https://promptlens.bytewatcher.xyz/privacy/"
 }
   </script>
@@ -58,7 +58,7 @@
         <p class="eyebrow">Privacy Policy</p>
         <h1>PromptLens Privacy Policy</h1>
         <p>PromptLens is a frontend-only Chrome extension. This policy explains what stays in your browser, what is sent to your configured AI provider, and what PromptLens does not collect.</p>
-        <p class="last-updated">Last updated: July 1, 2026</p>
+        <p class="last-updated">Last updated: July 31, 2026</p>
       </div>
     </section>
 
@@ -69,17 +69,22 @@
         <p>When you trigger analysis, selected image data is sent directly from your browser to the AI API endpoint you configure.</p>
 
         <h2>2. What PromptLens does</h2>
-        <p>PromptLens lets you right-click a web image or select a visible page region, processes that image in your browser, and calls your configured OpenAI-compatible Vision API to generate prompt results.</p>
+        <p>PromptLens lets you right-click a web image or select a visible page region, processes that image in your browser, and calls your configured OpenAI-compatible or Anthropic Vision API to generate prompt results.</p>
         <p>PromptLens does not provide an AI model, proxy, API key, account system, or payment service.</p>
 
         <h2>3. Data stored locally</h2>
-        <p>PromptLens stores settings such as API Base URL, API key, model name, selected template, image processing preferences, and local history preference in your browser.</p>
+        <p>PromptLens stores settings such as API protocol, Base URL, API key, model name, structured-output mode, target platform, selected template, analysis mode, interface language, image processing preferences, and local history preference in your browser.</p>
         <p>Current configuration keys stored in <code>chrome.storage.local</code> include:</p>
         <ul>
           <li><code>apiBaseUrl</code></li>
           <li><code>apiKey</code></li>
           <li><code>apiModel</code></li>
+          <li><code>modelAdapter</code></li>
+          <li><code>structuredOutputMode</code></li>
+          <li><code>targetPlatform</code></li>
           <li><code>activeTemplateId</code></li>
+          <li><code>analysisMode</code></li>
+          <li><code>uiLanguage</code></li>
           <li><code>historyEnabled</code></li>
           <li><code>maxImageSide</code></li>
           <li><code>jpegQuality</code></li>
@@ -88,7 +93,7 @@
         <p>Your API key is stored locally in Chrome extension storage. It is not sent to PromptLens, but browser-local storage is not a hardware security vault. Use PromptLens only on devices, browser profiles, and extension environments you trust.</p>
 
         <h2>4. Data sent to your configured AI provider</h2>
-        <p>When you trigger analysis, selected image data and the prompt template request are sent directly from your browser to the OpenAI-compatible Vision API endpoint you configure.</p>
+        <p>When you trigger analysis, the normalized image, compiled prompt instructions, selected structured-output contract, and model name are sent directly from your browser to the OpenAI-compatible or Anthropic Vision API endpoint you configure. The API key is sent in the protocol-specific authentication header.</p>
         <p>Your configured AI provider may process, log, retain, or use requests according to its own terms and privacy policy. PromptLens does not control third-party provider behavior. Only configure API providers and endpoints you trust.</p>
 
         <h2>5. Data PromptLens does not collect</h2>
@@ -101,7 +106,7 @@
         </ul>
 
         <h2>6. Optional local history</h2>
-        <p>Local history is off by default. When enabled, it stores text results, source domain, source image URL, page URL, template metadata, and structured output in IndexedDB. It does not save image thumbnails.</p>
+        <p>Local history is off by default. When enabled, it stores text results, source domain, source image URL, page URL, template metadata, structured output, and local audit metadata in IndexedDB. Audit metadata includes Prompt Hash, Schema and Prompt Compiler versions, target platform, model adapter and model ID, finish reason, output validation status, and validation warnings. It does not save image thumbnails.</p>
         <p>Complete source URLs are local history metadata and may include signed query parameters, private path details, or customer/project/brand information. If you do not want PromptLens to retain this local metadata, keep local history disabled, delete individual history items, or clear all history from the options page.</p>
 
         <h2>7. Permissions</h2>
@@ -140,7 +145,7 @@
         <p><code>activeTab</code> and <code>scripting</code> are used only after you start screenshot selection. PromptLens does not continuously scan pages in the background. You can refuse remote image read permission and use screenshot selection instead.</p>
 
         <h2>8. Third-party AI providers</h2>
-        <p>PromptLens is compatible with OpenAI-style Vision API services, but you choose the provider, endpoint, API key, and model. Review your provider's privacy policy, retention policy, and terms before sending images or prompts.</p>
+        <p>PromptLens supports OpenAI-compatible and Anthropic Messages Vision APIs, but you choose the provider, endpoint, API key, and model. Review your provider's privacy policy, retention policy, and terms before sending images or prompts.</p>
 
         <h2>9. Data deletion</h2>
         <p>You can delete PromptLens data by:</p>
@@ -171,6 +176,7 @@
         <a href="https://github.com/wildbyteai/promptlens">GitHub</a>
         <a href="../privacy/">Privacy Policy</a>
         <a href="../support/">Support</a>
+        <a href="https://linux.do/">LINUX DO</a>
         <a href="https://github.com/wildbyteai/promptlens/security">Security</a>
         <a href="https://github.com/wildbyteai/promptlens/blob/main/LICENSE">License</a>
       </nav>

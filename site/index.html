@@ -6,19 +6,19 @@
   <title>PromptLens — Reverse-engineer image prompts from web images</title>
   <meta name="theme-color" content="#3f3a32">
   <link rel="icon" href="./assets/favicon.png" type="image/png">
-  <meta name="description" content="PromptLens is a local-first Chrome extension that analyzes web images or selected screenshot regions with your own OpenAI-compatible Vision API.">
+  <meta name="description" content="PromptLens is a local-first Chrome extension that analyzes web images or selected screenshot regions with your own OpenAI-compatible or Anthropic Vision API.">
   <link rel="canonical" href="https://promptlens.bytewatcher.xyz/">
   <link rel="alternate" hreflang="en" href="https://promptlens.bytewatcher.xyz/">
   <link rel="alternate" hreflang="zh-CN" href="https://promptlens.bytewatcher.xyz/?lang=zh-CN">
   <link rel="alternate" hreflang="x-default" href="https://promptlens.bytewatcher.xyz/">
   <meta property="og:type" content="website">
   <meta property="og:title" content="PromptLens — Reverse image prompts and visual marketing diagnosis">
-  <meta property="og:description" content="Local-first Chrome extension for image-to-prompt analysis, visual marketing diagnosis, and reusable prompts for Midjourney, Stable Diffusion, and OpenAI-compatible Vision APIs.">
+  <meta property="og:description" content="Local-first Chrome extension for image-to-prompt analysis, visual marketing diagnosis, and reusable prompts through OpenAI-compatible or Anthropic Vision APIs.">
   <meta property="og:image" content="https://promptlens.bytewatcher.xyz/assets/promptlens-result.jpg">
   <meta property="og:url" content="https://promptlens.bytewatcher.xyz/">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="PromptLens — Reverse image prompts and visual marketing diagnosis">
-  <meta name="twitter:description" content="Local-first Chrome extension for image-to-prompt analysis, visual marketing diagnosis, and reusable prompts for Midjourney, Stable Diffusion, and OpenAI-compatible Vision APIs.">
+  <meta name="twitter:description" content="Local-first Chrome extension for image-to-prompt analysis, visual marketing diagnosis, and reusable prompts through OpenAI-compatible or Anthropic Vision APIs.">
   <meta name="twitter:image" content="https://promptlens.bytewatcher.xyz/assets/promptlens-result.jpg">
   <script type="application/ld+json">
 {
@@ -27,10 +27,10 @@
   "name": "PromptLens",
   "applicationCategory": "BrowserApplication",
   "operatingSystem": "Chrome",
-  "description": "Local-first Chrome extension for image-to-prompt analysis, visual marketing diagnosis, and reusable prompts for Midjourney, Stable Diffusion, and OpenAI-compatible Vision APIs.",
+  "description": "Local-first Chrome extension for image-to-prompt analysis, visual marketing diagnosis, and reusable prompts through OpenAI-compatible or Anthropic Vision APIs.",
   "url": "https://promptlens.bytewatcher.xyz/",
   "downloadUrl": "https://github.com/wildbyteai/promptlens/releases",
-  "softwareVersion": "0.6.0",
+  "softwareVersion": "0.7.0",
   "offers": {
     "@type": "Offer",
     "price": "0",
@@ -70,7 +70,7 @@
         <div class="hero-copy">
           <p class="eyebrow">Local-first Chrome MV3 extension</p>
           <h1>Reverse-engineer image prompts from any web image.</h1>
-          <p class="hero-lede">PromptLens is a local-first Chrome extension that analyzes web images or selected screenshot regions with your own OpenAI-compatible Vision API.</p>
+          <p class="hero-lede">PromptLens is a local-first Chrome extension that analyzes web images or selected screenshot regions with your own OpenAI-compatible or Anthropic Vision API.</p>
           <ul class="trust-list" aria-label="PromptLens trust points">
             <li>No PromptLens backend.</li>
             <li>Bring your own API key.</li>
@@ -114,7 +114,7 @@
           </article>
           <article class="card">
             <h3>Bring your own model</h3>
-            <p>Use any OpenAI-compatible Vision API by configuring your Base URL, API key, and model.</p>
+            <p>Use an OpenAI-compatible or Anthropic Vision API by configuring the protocol, Base URL, API key, and model.</p>
           </article>
           <article class="card">
             <h3>Structured prompt output</h3>
@@ -156,7 +156,7 @@
           <article class="step-card">
             <span class="step-number">3</span>
             <h3>Call your API</h3>
-            <p>The prepared image is sent directly to your configured OpenAI-compatible Vision API.</p>
+            <p>The prepared image is sent directly to the OpenAI-compatible or Anthropic API endpoint you configure.</p>
           </article>
         </div>
         <div class="callout">
@@ -183,7 +183,7 @@
             <img src="./assets/promptlens-options.jpg" alt="Configure your own provider" width="1100" height="760" loading="lazy">
             <div>
               <h3>Configure your own provider</h3>
-              <p>Set your OpenAI-compatible Base URL, API key, model, and image preferences.</p>
+              <p>Set the API protocol, Base URL, API key, model, structured-output mode, target platform, and image preferences.</p>
             </div>
           </article>
           <article class="screenshot-feature">
@@ -301,7 +301,7 @@
         <div class="faq-list">
           <details>
             <summary>Does PromptLens provide an AI model or API key?</summary>
-            <p>No. PromptLens is a frontend-only extension. You bring your own OpenAI-compatible Vision API endpoint, API key, and model.</p>
+            <p>No. PromptLens is a frontend-only extension. You bring your own OpenAI-compatible or Anthropic Vision API endpoint, API key, and model.</p>
           </details>
           <details>
             <summary>Does PromptLens upload images to its own server?</summary>
@@ -337,6 +337,7 @@
         <a href="https://github.com/wildbyteai/promptlens">GitHub</a>
         <a href="./privacy/">Privacy Policy</a>
         <a href="./support/">Support</a>
+        <a href="https://linux.do/">LINUX DO</a>
         <a href="https://github.com/wildbyteai/promptlens/security">Security</a>
         <a href="https://github.com/wildbyteai/promptlens/blob/main/LICENSE">License</a>
       </nav>

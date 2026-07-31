@@ -21,6 +21,7 @@
   <img src="https://img.shields.io/badge/Chrome-MV3-4285F4" alt="Chrome MV3" />
   <img src="https://img.shields.io/badge/backend-none-22c55e" alt="无需后端" />
   <img src="https://img.shields.io/badge/build-none-7c3aed" alt="无需构建" />
+  <a href="https://linux.do/"><img src="https://img.shields.io/badge/LINUX-DO-FFB003?labelColor=000000" alt="LINUX DO" /></a>
 </p>
 
 PromptLens 是一个轻量级 Chrome MV3 图片反推提示词工具，也可以作为图片转提示词、AI 识图生成提示词和商业视觉诊断工作流使用。它会把网页图片或框选截图发送到你自己配置的 OpenAI-compatible 或 Anthropic Vision API，并生成可复制到 Midjourney、Stable Diffusion 或其他图像生成工具中的提示词。
@@ -129,10 +130,10 @@ PromptLens 不提供内置模型服务。你需要自行准备支持视觉输入
 
 ## 首次成功路径
 
-PromptLens v0.6 优先帮助用户完成 API 自动分析，或在没有 API Key 时完成 ChatGPT Plus 辅助流程：
+PromptLens v0.7 优先帮助用户完成 API 自动分析，或在没有 API Key 时完成 ChatGPT Plus 辅助流程：
 
 1. 打开设置页。
-2. 配置你自己的 OpenAI-compatible Vision API：Provider/Base URL、API Key，以及支持图片输入的模型。
+2. 配置你自己的 OpenAI-compatible 或 Anthropic Vision API：Provider/Base URL、API Key，以及支持图片输入的模型。
 3. 保存设置。
 4. 通过右键网页图片开始分析；如果站点权限或远程图片读取受限，使用框选截图。
 5. 复制 Prompt、Tags 或专业变体，或在视觉营销诊断模板中导出 Markdown Brief。
@@ -224,7 +225,7 @@ node --check result.js
 
 ## 路线图状态
 
-当前分支已落地到 v0.6.0：首次成功引导、更清晰的 Provider 设置说明、结果页下一步提示、营销业务背景示例、视觉营销诊断、Warm Studio 视觉升级、摘要式历史卡片、内置 / 自定义模板、Provider 预设、快捷键、结果导出、Token usage、可选本地历史记录、完整的简体中文 / 英文扩展界面、Chrome Web Store 发布准备、面向无 API Key 工作流的 ChatGPT Plus 辅助模式，以及在用户按需授权后可打开 ChatGPT、等待页面稳定并尝试附加图片和填入指令的实验性 ChatGPT 交接。
+当前分支已落地到 v0.7.0：首次成功引导、更清晰的 Provider 设置说明、结果页下一步提示、营销业务背景示例、视觉营销诊断、Warm Studio 视觉升级、摘要式历史卡片、内置 / 自定义模板、Provider 预设、快捷键、结果导出、Token usage、可选本地历史记录、完整的简体中文 / 英文扩展界面、统一 Prompt Compiler、模型适配器和结构化输出校验、Chrome Web Store 发布准备、面向无 API Key 工作流的 ChatGPT Plus 辅助模式，以及在用户按需授权后可打开 ChatGPT、等待页面稳定并尝试附加图片和填入指令的实验性 ChatGPT 交接。
 
 后续仍保留为反馈驱动的方向：
 

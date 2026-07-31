@@ -2,6 +2,10 @@
 
 ## 未发布
 
+暂无。
+
+## 0.7.0 - 2026-07-31
+
 ### 新功能
 - 新增统一 Prompt Compiler，为 API 自动分析和 ChatGPT Assist 共享证据、语言、Negative Prompt、变体和平台规则。
 - 新增结构化输出模式和目标图像生成平台设置。

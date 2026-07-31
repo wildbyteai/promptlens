@@ -22,4 +22,9 @@ for (const file of files.slice(0, 3)) {
   assert.match(source, new RegExp(releaseRoot.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 }
 
+const releaseChecklist = fs.readFileSync(path.join(root, 'docs/chrome-web-store/release-checklist.md'), 'utf8');
+assert.doesNotMatch(releaseChecklist, /Run model test/);
+assert.match(releaseChecklist, /Run a real-image analysis/);
+assert.match(releaseChecklist, /partial-success warning/);
+
 console.log('site release link tests passed');

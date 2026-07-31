@@ -1,10 +1,10 @@
-# PromptLens v0.6.0 Release Checklist
+# PromptLens v0.7.0 Release Checklist
 
 Use this checklist before publishing the GitHub Release artifact or submitting to Chrome Web Store.
 
 ## Version and manifest
 
-- [ ] `manifest.json` version is `0.6.0`.
+- [ ] `manifest.json` version is `0.7.0`.
 - [ ] `manifest.json` uses Manifest V3.
 - [ ] Required permissions are still limited to `contextMenus`, `storage`, `activeTab`, and `scripting`.
 - [ ] `commands` registers the screenshot shortcut description.
@@ -13,8 +13,8 @@ Use this checklist before publishing the GitHub Release artifact or submitting t
 ## Packaging
 
 - [ ] Run `bash scripts/package-extension.sh`.
-- [ ] Confirm `dist/promptlens-v0.6.0.zip` exists.
-- [ ] Run `unzip -Z1 dist/promptlens-v0.6.0.zip | sort`.
+- [ ] Confirm `dist/promptlens-v0.7.0.zip` exists.
+- [ ] Run `unzip -Z1 dist/promptlens-v0.7.0.zip | sort`.
 - [ ] Confirm the zip contains `manifest.json`, root extension scripts/pages, `_locales/**`, and `icons/**`.
 - [ ] Confirm the zip does not contain `.git/`, `docs/`, `site/`, `dist/`, README files, screenshot source files, or `skills-lock.json`.
 
@@ -26,10 +26,12 @@ Use this checklist before publishing the GitHub Release artifact or submitting t
 - [ ] ChatGPT handoff failure keeps manual download/copy fallback available.
 - [ ] Confirm Chrome reports no manifest error.
 - [ ] Open the options page and save AI Base URL, API Key, Model, and default template.
-- [ ] Run model test and confirm success/failure UI does not expose unnecessary remote error detail.
-- [ ] Right-click a normal web image and start analysis.
+- [ ] Run a real-image analysis with each provider protocol claimed in the release notes and confirm remote error UI does not expose unnecessary response details.
+- [ ] Right-click a normal web image and confirm the selected structured-output mode completes successfully.
 - [ ] Right-click a page and use screenshot selection.
 - [ ] Press `Alt+Shift+S` and confirm screenshot selection starts, or document any browser shortcut conflict.
+- [ ] Change the target image-generation platform and confirm the result metadata reflects the selected platform.
+- [ ] Exercise an incomplete or truncated structured response and confirm PromptLens shows a partial-success warning instead of full success.
 - [ ] Confirm result page can copy individual fields, copy all fields, download JSON, and download Markdown.
 - [ ] Create, copy, edit, delete, export, and import a custom template.
 - [ ] Confirm local history is off by default.
@@ -37,10 +39,10 @@ Use this checklist before publishing the GitHub Release artifact or submitting t
 
 ## GitHub Release
 
-- [ ] Confirm `v0.6.0` tag does not already exist locally or remotely before creating it.
-- [ ] Create annotated tag `v0.6.0`.
-- [ ] Create GitHub Release `v0.6.0`.
-- [ ] Upload `dist/promptlens-v0.6.0.zip` as the Release artifact.
+- [ ] Confirm `v0.7.0` tag does not already exist locally or remotely before creating it.
+- [ ] Create annotated tag `v0.7.0`.
+- [ ] Create GitHub Release `v0.7.0`.
+- [ ] Upload `dist/promptlens-v0.7.0.zip` as the Release artifact.
 - [ ] Confirm the Release page shows the uploaded zip.
 
 ## Website

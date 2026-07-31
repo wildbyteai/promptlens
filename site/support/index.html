@@ -91,10 +91,13 @@
             <h2>Configure your AI provider</h2>
             <p>PromptLens does not provide an AI model or API key. Open the options page and configure:</p>
             <ul>
-              <li><strong>AI Base URL:</strong> an HTTPS OpenAI-compatible endpoint, for example <code>https://api.openai.com/v1</code>.</li>
+              <li><strong>API protocol:</strong> OpenAI-compatible or Anthropic Messages API.</li>
+              <li><strong>AI Base URL:</strong> an HTTPS endpoint, for example <code>https://api.openai.com/v1</code> or <code>https://api.anthropic.com/v1</code>.</li>
               <li><strong>API Key:</strong> your provider key.</li>
               <li><strong>Model:</strong> a model that supports vision input.</li>
               <li><strong>Template:</strong> the output structure you want PromptLens to request.</li>
+              <li><strong>Structured output:</strong> prompt instructions, JSON object, or native JSON Schema where supported.</li>
+              <li><strong>Target platform:</strong> generic, Stable Diffusion, Flux, ComfyUI, or Midjourney.</li>
             </ul>
             <p>Local development endpoints may use <code>http://localhost</code> or <code>http://127.0.0.1</code>.</p>
           </section>
@@ -124,7 +127,7 @@
               </article>
               <article>
                 <h3>Model does not support vision input</h3>
-                <p>Choose a model that accepts image input through an OpenAI-compatible vision request format.</p>
+                <p>Choose a model that accepts image input through the configured OpenAI-compatible or Anthropic Vision API protocol.</p>
               </article>
               <article>
                 <h3>Remote image cannot be read</h3>
@@ -165,6 +168,7 @@
         <a href="https://github.com/wildbyteai/promptlens">GitHub</a>
         <a href="../privacy/">Privacy Policy</a>
         <a href="../support/">Support</a>
+        <a href="https://linux.do/">LINUX DO</a>
         <a href="https://github.com/wildbyteai/promptlens/security">Security</a>
         <a href="https://github.com/wildbyteai/promptlens/blob/main/LICENSE">License</a>
       </nav>

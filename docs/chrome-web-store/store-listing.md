@@ -3,7 +3,7 @@
 ## Basic details
 
 - Extension name: PromptLens
-- Version for this release: 0.6.0
+- Version for this release: 0.7.0
 - Category suggestion: Productivity or Developer Tools
 - Language: English listing first; Chinese copy can be adapted from README files.
 
@@ -13,7 +13,7 @@ Reverse-engineer reusable image prompts from web images or selected screenshot r
 
 ## Detailed description
 
-PromptLens is a lightweight Chrome MV3 extension for analyzing web images and selected screenshot regions. It sends the selected image only to the OpenAI-compatible Vision API endpoint configured by the user, then returns structured prompt material that can be reused in image generation workflows.
+PromptLens is a lightweight Chrome MV3 extension for analyzing web images and selected screenshot regions. It sends the selected image only to the OpenAI-compatible or Anthropic Vision API endpoint configured by the user, then returns structured prompt material that can be reused in image generation workflows.
 
 PromptLens is designed to stay transparent and local-first. It has no built-in backend service, no account system, no payment system, and no telemetry. API keys and settings are stored in the browser with `chrome.storage.local`.
 
@@ -21,8 +21,9 @@ Core capabilities:
 
 - Right-click a web image and generate reverse image prompts.
 - Select a visible page region for `blob:` images, hotlink-protected images, or cases where remote image permission is not granted.
-- Configure your own AI Base URL, API Key, and vision-capable model.
-- Use provider presets for OpenAI, DeepSeek, Alibaba, SiliconFlow, Groq, OpenRouter, Ollama, or a custom OpenAI-compatible endpoint.
+- Configure the API protocol, AI Base URL, API Key, and vision-capable model.
+- Use provider presets for OpenAI, Anthropic, DeepSeek, Alibaba, SiliconFlow, Groq, OpenRouter, Ollama, or a custom endpoint.
+- Choose a structured-output mode and target image-generation platform.
 - Choose built-in output templates or create custom templates.
 - Copy individual fields, copy all results, or download JSON and Markdown.
 - Optionally keep local text history in the browser. History is off by default and does not save image thumbnails.

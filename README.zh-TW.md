@@ -21,9 +21,10 @@
   <img src="https://img.shields.io/badge/Chrome-MV3-4285F4" alt="Chrome MV3" />
   <img src="https://img.shields.io/badge/backend-none-22c55e" alt="無需後端" />
   <img src="https://img.shields.io/badge/build-none-7c3aed" alt="無需建置" />
+  <a href="https://linux.do/"><img src="https://img.shields.io/badge/LINUX-DO-FFB003?labelColor=000000" alt="LINUX DO" /></a>
 </p>
 
-PromptLens 是一個輕量級 Chrome MV3 圖片反推提示詞工具，也可以作為圖片轉提示詞、AI 識圖生成提示詞和商業視覺診斷工作流使用。它會把網頁圖片或框選截圖傳送到你自己設定的 OpenAI-compatible Vision API，並產生可複製到 Midjourney、Stable Diffusion 或其他圖像生成工具中的提示詞。
+PromptLens 是一個輕量級 Chrome MV3 圖片反推提示詞工具，也可以作為圖片轉提示詞、AI 識圖生成提示詞和商業視覺診斷工作流使用。它會把網頁圖片或框選截圖傳送到你自己設定的 OpenAI-compatible 或 Anthropic Vision API，並產生可複製到 Midjourney、Stable Diffusion 或其他圖像生成工具中的提示詞。
 
 它的目標是提供一個簡單、透明、可自託管思路的圖片提示詞反推工具：不登入、不付費、不內建後端、不綁定特定模型服務。
 
@@ -32,13 +33,13 @@ PromptLens 是一個輕量級 Chrome MV3 圖片反推提示詞工具，也可以
 - **右鍵圖片分析**：在網頁圖片上按右鍵，產生反向圖片提示詞。
 - **框選截圖分析**：對目前可見頁面區域框選截圖並分析，適合 `blob:` 圖片、防盜鏈圖片或未授權遠端圖片。
 - **自訂模型服務**：自行設定 AI Base URL、API Key 和 Model。
-- **OpenAI-compatible Vision API**：請求格式相容 `/chat/completions` 的視覺模型介面。
+- **模型適配器**：支援 OpenAI-compatible `/chat/completions`，以及透過 `tool_use` 回傳結構化結果的 Anthropic Messages API。
 - **結構化結果**：輸出中文提示詞、English Prompt、Tags、Negative Prompt、JSON Prompt 和 Raw JSON。
 - **內建輸出模板**：提供詳細分析、自然語言、標籤加權、快速複製和視覺行銷診斷等輸出格式。
 - **視覺行銷診斷**：面向商業視覺圖的可選業務分析，輸出老闆摘要、行銷診斷、低成本改編 brief 和可發布 Markdown 案例初稿。
 - **自訂模板**：支援複製內建模板、新建、編輯、刪除、匯入和匯出自訂模板。
 - **ChatGPT Plus 輔助模式**：適合有 ChatGPT Plus / Pro 但沒有 API Key 的使用者；PromptLens 準備圖片和指令，並可打開 ChatGPT、等待頁面穩定後嘗試附加圖片並填入指令，供你確認後手動送出。
-- **Provider 預設**：提供 OpenAI、DeepSeek、Alibaba、SiliconFlow、Groq、OpenRouter、Ollama 和 Custom。
+- **Provider 預設**：提供 OpenAI、Anthropic、DeepSeek、Alibaba、SiliconFlow、Groq、OpenRouter、Ollama 和 Custom。
 - **介面語言**：預設簡體中文，可在設定頁切換英文，涵蓋設定、結果、歷史、右鍵選單、框選提示、錯誤與匯出文案。
 - **快捷鍵框選**：支援 `Alt+Shift+S` 觸發框選截圖，可在 `chrome://extensions/shortcuts` 修改。
 - **可選本機歷史記錄**：預設關閉；開啟後儲存文字結果、來源網域、原始圖片 URL、頁面 URL 和模板資訊，不儲存圖片縮圖。
@@ -63,10 +64,10 @@ PromptLens 刻意不包含以下能力：
 1. 使用者在網頁中右鍵圖片，或啟動框選截圖。
 2. 擴充功能讀取圖片 URL、data URL 或目前分頁可見截圖。
 3. 圖片會在本機被校驗、裁切、壓縮，並統一轉換為 JPEG。
-4. 結果頁按選定模板呼叫使用者設定的 OpenAI-compatible Vision API。
+4. 結果頁透過所選 OpenAI-compatible 或 Anthropic Adapter 呼叫使用者設定的 Vision API。
 5. 模型返回 JSON 後，結果頁展示並提供複製、JSON 下載和 Markdown 下載。
 
-PromptLens 提供兩種分析路徑：API 自動分析會呼叫你設定的 OpenAI-compatible Vision API 並展示結構化結果；ChatGPT Plus 輔助模式不呼叫 API，而是在本機產生 JPEG 圖片和 ChatGPT 指令，供你在 chatgpt.com 使用。實驗性 ChatGPT 交接可打開 ChatGPT，等待 ChatGPT 頁面穩定後嘗試附加圖片並填入指令，但不會自動送出訊息。
+PromptLens 提供兩種分析路徑：API 自動分析會呼叫你設定的 OpenAI-compatible 或 Anthropic Vision API 並展示結構化結果；ChatGPT Plus 輔助模式不呼叫 API，而是在本機產生 JPEG 圖片和 ChatGPT 指令，供你在 chatgpt.com 使用。實驗性 ChatGPT 交接可打開 ChatGPT，等待 ChatGPT 頁面穩定後嘗試附加圖片並填入指令，但不會自動送出訊息。
 
 PromptLens 不提供內建模型服務。你需要自行準備支援視覺輸入的 API 服務。
 
@@ -93,6 +94,7 @@ PromptLens 不提供內建模型服務。你需要自行準備支援視覺輸入
 
 1. 在 Chrome 擴充功能詳情頁點擊「擴充功能選項」。
 2. 填寫：
+   - **API 協議**：OpenAI-compatible 或 Anthropic Messages API。
    - **AI Base URL**：例如 `https://api.openai.com/v1`。
    - **API Key**：你的模型服務密鑰。
    - **Model**：支援視覺輸入的模型名稱。
@@ -128,10 +130,10 @@ PromptLens 不提供內建模型服務。你需要自行準備支援視覺輸入
 
 ## 首次成功路徑
 
-PromptLens v0.6 優先幫助使用者完成 API 自動分析，或在沒有 API Key 時完成 ChatGPT Plus 輔助流程：
+PromptLens v0.7 優先幫助使用者完成 API 自動分析，或在沒有 API Key 時完成 ChatGPT Plus 輔助流程：
 
 1. 開啟設定頁。
-2. 設定你自己的 OpenAI-compatible Vision API：Provider/Base URL、API Key，以及支援圖片輸入的模型。
+2. 設定你自己的 OpenAI-compatible 或 Anthropic Vision API：Provider/Base URL、API Key，以及支援圖片輸入的模型。
 3. 儲存設定。
 4. 透過右鍵網頁圖片開始分析；如果站點權限或遠端圖片讀取受限，使用框選截圖。
 5. 複製 Prompt、Tags 或專業變體，或在視覺行銷診斷模板中匯出 Markdown Brief。
@@ -223,7 +225,7 @@ node --check result.js
 
 ## 路線圖狀態
 
-目前分支已落地到 v0.6.0：首次成功引導、更清楚的 Provider 設定說明、結果頁下一步提示、行銷業務背景範例、視覺行銷診斷、Warm Studio 視覺升級、摘要式歷史卡片、內建 / 自訂模板、Provider 預設、快捷鍵、結果匯出、Token usage、可選本機歷史記錄、基礎 i18n、Chrome Web Store 發布準備、面向無 API Key 工作流的 ChatGPT Plus 輔助模式，以及在使用者按需授權後可打開 ChatGPT、等待頁面穩定並嘗試附加圖片和填入指令的實驗性 ChatGPT 交接。
+目前分支已落地到 v0.7.0：首次成功引導、更清楚的 Provider 設定說明、結果頁下一步提示、行銷業務背景範例、視覺行銷診斷、Warm Studio 視覺升級、摘要式歷史卡片、內建 / 自訂模板、Provider 預設、快捷鍵、結果匯出、Token usage、可選本機歷史記錄、完整的簡體中文 / 英文擴充功能介面、統一 Prompt Compiler、模型適配器和結構化輸出校驗、Chrome Web Store 發布準備、面向無 API Key 工作流的 ChatGPT Plus 輔助模式，以及在使用者按需授權後可打開 ChatGPT、等待頁面穩定並嘗試附加圖片和填入指令的實驗性 ChatGPT 交接。
 
 後續仍保留為回饋驅動的方向：
 

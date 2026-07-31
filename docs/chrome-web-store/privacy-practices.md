@@ -1,6 +1,6 @@
 # Chrome Web Store Privacy Practices Notes
 
-This document supports Chrome Web Store privacy-practices form preparation for PromptLens v0.6.0. It is not legal advice.
+This document supports Chrome Web Store privacy-practices form preparation for PromptLens v0.7.0. It is not legal advice.
 
 ## Product privacy boundary
 
@@ -13,22 +13,26 @@ PromptLens stores the following in `chrome.storage.local` and IndexedDB:
 - AI Base URL.
 - API Key.
 - Model name.
+- Model adapter / API protocol.
+- Structured-output mode.
+- Target image-generation platform.
+- Analysis mode and interface language.
 - Default output template.
 - Custom templates.
 - Local history setting.
 - Image normalization settings, including maximum image side length and JPEG quality.
 - Optional local history entries in the browser-local IndexedDB database when the user enables history.
 
-Optional local history entries contain text results, source domain, timestamps, and template metadata. PromptLens does not save image thumbnails in local history.
+Optional local history entries contain text results, source domain, source image/page URLs, timestamps, template metadata, and structured output. New records also store local audit metadata such as Prompt Hash, Schema and Prompt Compiler versions, target platform, model adapter and model ID, finish reason, output validation status, and validation warnings. PromptLens does not save image thumbnails in local history.
 
 ## Data transmitted remotely
 
-PromptLens sends data to the user's configured OpenAI-compatible Vision API endpoint when the user starts analysis. The request can include:
+PromptLens sends data to the user's configured OpenAI-compatible or Anthropic Vision API endpoint when the user starts analysis. The request can include:
 
 - The selected image or screenshot region, normalized locally before upload.
-- The selected prompt template instructions.
+- The compiled prompt instructions and structured-output contract selected by the user.
 - The configured model name.
-- The user's API Key in the API request authorization header.
+- The user's API Key in the protocol-specific authentication header: `Authorization: Bearer` for OpenAI-compatible requests or `x-api-key` for Anthropic Messages requests.
 
 The project maintainer does not receive this data unless the user configures an endpoint operated by the maintainer.
 

@@ -10,6 +10,7 @@ const pages = [
   { file: 'site/support/index.html', url: `${siteRoot}/support/`, title: 'Support — PromptLens' }
 ];
 const socialImageUrl = `${siteRoot}/assets/promptlens-result.jpg`;
+const linuxDoUrl = 'https://linux.do/';
 
 function read(file) {
   return fs.readFileSync(path.join(root, file), 'utf8');
@@ -38,13 +39,14 @@ for (const page of pages) {
   assert.match(source, new RegExp(`<meta name="twitter:image" content="${socialImagePattern}">`), `${page.file} missing twitter:image`);
   assert.match(source, /<script type="application\/ld\+json">[\s\S]+?<\/script>/, `${page.file} missing JSON-LD`);
   assert.match(source, new RegExp(`"url": "${pageUrlPattern}"`), `${page.file} JSON-LD uses the wrong URL`);
+  assert.match(source, new RegExp(`<a href="${escapeRegExp(linuxDoUrl)}">LINUX DO<\\/a>`), `${page.file} missing LINUX DO community link`);
   assert.doesNotMatch(source, /https:\/\/bytewatcher\.xyz/, `${page.file} still references the apex domain`);
 }
 
 const index = read('site/index.html');
 assert.match(index, /"@type": "SoftwareApplication"/);
 assert.match(index, /"downloadUrl": "https:\/\/github\.com\/wildbyteai\/promptlens\/releases"/);
-assert.match(index, /"softwareVersion": "0\.6\.0"/);
+assert.match(index, /"softwareVersion": "0\.7\.0"/);
 
 const robots = read('site/robots.txt');
 assert.match(robots, /User-agent: \*/);
@@ -68,17 +70,35 @@ const readmeZhCn = read('README.zh-CN.md');
 const readmeZhTw = read('README.zh-TW.md');
 const security = read('SECURITY.md');
 const privacyPractices = read('docs/chrome-web-store/privacy-practices.md');
+const storeListing = read('docs/chrome-web-store/store-listing.md');
+const privacyPage = read('site/privacy/index.html');
+const supportPage = read('site/support/index.html');
+const manifest = JSON.parse(read('manifest.json'));
 const officialWebsiteLinkPattern = new RegExp(`<a href="${escapeRegExp(`${siteRoot}/`)}">[^<]+<\\/a>`);
 
 assert.match(readmeEn, officialWebsiteLinkPattern);
 assert.match(readmeZhCn, officialWebsiteLinkPattern);
 assert.match(readmeZhTw, officialWebsiteLinkPattern);
-assert.match(readmeEn, /implemented v0\.6\.0:[\s\S]*ChatGPT Plus Assist[\s\S]*experimental ChatGPT handoff/i);
+for (const source of [readmeEn, readmeZhCn, readmeZhTw]) {
+  assert.match(source, /https:\/\/linux\.do\//, 'README missing LINUX DO community link');
+}
+assert.match(readmeEn, /implemented v0\.7\.0:[\s\S]*ChatGPT Plus Assist[\s\S]*experimental ChatGPT handoff/i);
 assert.match(readmeEn, /wait for the ChatGPT page to settle[\s\S]*attempt to attach the image and fill the instruction/i);
-assert.match(readmeZhCn, /已落地到 v0\.6\.0：[\s\S]*ChatGPT Plus 辅助模式[\s\S]*实验性 ChatGPT 交接/);
+assert.match(readmeEn, /Configure your own OpenAI-compatible or Anthropic Vision API/);
+assert.match(readmeZhCn, /已落地到 v0\.7\.0：[\s\S]*ChatGPT Plus 辅助模式[\s\S]*实验性 ChatGPT 交接/);
 assert.match(readmeZhCn, /等待 ChatGPT 页面稳定[\s\S]*尝试附加图片并填入指令/);
-assert.match(readmeZhTw, /已落地到 v0\.6\.0：[\s\S]*ChatGPT Plus 輔助模式[\s\S]*實驗性 ChatGPT 交接/);
+assert.match(readmeZhCn, /配置你自己的 OpenAI-compatible 或 Anthropic Vision API/);
+assert.match(readmeZhTw, /已落地到 v0\.7\.0：[\s\S]*ChatGPT Plus 輔助模式[\s\S]*實驗性 ChatGPT 交接/);
 assert.match(readmeZhTw, /等待 ChatGPT 頁面穩定[\s\S]*嘗試附加圖片並填入指令/);
+assert.equal(manifest.version, '0.7.0');
+assert.match(security, /\| 0\.7\.x \| 当前版本，支持安全修复 \|/);
+assert.match(readmeZhTw, /Anthropic Messages API/);
+assert.match(privacyPractices, /OpenAI-compatible or Anthropic Vision API/);
+assert.match(privacyPractices, /`x-api-key`/);
+assert.match(storeListing, /OpenAI, Anthropic, DeepSeek/);
+assert.match(privacyPage, /local audit metadata/);
+assert.match(privacyPage, /Anthropic Messages Vision APIs/);
+assert.match(supportPage, /API protocol:<\/strong> OpenAI-compatible or Anthropic Messages API/);
 assert.doesNotMatch(readmeEn, /implemented v0\.5\.0:/);
 assert.doesNotMatch(readmeZhCn, /已落地到 v0\.5\.0：/);
 assert.doesNotMatch(readmeZhTw, /已落地到 v0\.5\.0：/);
