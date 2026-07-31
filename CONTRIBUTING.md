@@ -134,6 +134,8 @@ PR 建议包含：
 
 涉及隐私、安全、权限或模型请求格式的改动，请在 PR 描述中单独说明。
 
-## 二期功能
+## 路线图与后续工作
 
-二期方向已经整理在 [docs/ROADMAP.md](docs/ROADMAP.md)。如果要实现 roadmap 中的功能，请优先拆成小 PR，避免一次性引入大范围架构变化。
+早期 v0.2—v0.4 路线图中的模板、导出、Provider 预设、快捷键、本地历史、图片预处理和视觉营销诊断已经落地。当前版本以 [manifest.json](manifest.json) 和 [CHANGELOG.zh-CN.md](CHANGELOG.zh-CN.md) 为准。
+
+已完成里程碑、未完成项和明确不做的边界统一记录在 [docs/ROADMAP.md](docs/ROADMAP.md)。新增功能应基于当前代码架构和真实用户反馈单独立项，并拆成小 PR；不要把历史里程碑继续当作待实现清单。
